@@ -5,8 +5,75 @@
   text-align: center;
 }
 
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: #1a1a1a;
+  color: #eee;
+}
+
+.navbar__spacer {
+  flex: 1;
+}
+
+.navbar__login {
+  display: flex;
+  align-items: center;
+}
+
+.navbar__name {
+  font-size: 0.95rem;
+}
+
+.navbar__log-in-btn {
+  background: transparent;
+  border: 1px solid #666;
+  color: #eee;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.navbar__log-in-btn:hover {
+  border-color: #888;
+  background: #333;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #252525;
+  color: #eee;
+  padding: 2rem 3rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.match-modal__text {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
 .app {
   min-height: 100vh;
+  padding-top: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,7 +94,13 @@
 
 .normal-mode-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.8;
+  opacity: 0.5;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 0;
 }
 
 .status {
@@ -38,6 +111,40 @@
 .waiting {
   font-size: 0.85rem;
   color: #888;
+}
+
+.app--game {
+  align-items: flex-start;
+  padding-top: 3rem;
+}
+
+.game-page {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.game-page .cm-editor {
+  text-align: left;
+}
+.game-page .cm-scroller {
+  text-align: left;
+}
+.game-page .cm-content {
+  text-align: left;
+}
+.game-page .cm-line {
+  text-align: left;
+}
+
+.game-player-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .logo {

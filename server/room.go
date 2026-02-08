@@ -17,6 +17,7 @@ func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 }
 
 func (r *Room) Start() {
+	// match found -> Game begins
 	match := EnvelopeFromType(MsgMatchFound, nil)
 	r.Broadcast(MustMarshal(match))
 	start := EnvelopeFromType(MsgGameStart, GameStartPayload{

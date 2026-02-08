@@ -10,12 +10,11 @@ export interface GameScreenProps {
   vimMode?: boolean
   readOnly?: boolean
   placeholder?: string
-  height?: string
+  height: string
+  width: string
   theme?: 'light' | 'dark'
   extensions?: Extension[]
 }
-
-const defaultHeight = '300px'
 
 export function GameScreen({
   value = '',
@@ -23,7 +22,8 @@ export function GameScreen({
   vimMode = true,
   readOnly = false,
   placeholder = '',
-  height = defaultHeight,
+  height,
+  width,
   theme = 'dark',
   extensions: extraExtensions = [],
 }: GameScreenProps) {
@@ -43,6 +43,7 @@ export function GameScreen({
       value={value}
       onChange={onChange}
       height={height}
+      width={width}
       theme={theme}
       basicSetup={true}
       editable={!readOnly}
