@@ -1,0 +1,12 @@
+.landing {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing__buttons {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+}
