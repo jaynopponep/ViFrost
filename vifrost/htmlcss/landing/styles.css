@@ -35,20 +35,6 @@ body {
   min-height: 100vh;
 }
 
-a {
-  font-weight: 500;
-  color: var(--colorAccent);
-  text-decoration: inherit;
-}
-a:hover {
-  color: var(--colorAccentHover);
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -84,7 +70,6 @@ button:focus-visible {
   box-sizing: border-box;
 }
 
-/* Left: Logo */
 .navbar__logo {
   display: flex;
   align-items: center;
@@ -98,14 +83,6 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.navbar__logo-icon span {
-  font-family: 'Courier New', monospace;
-  font-weight: bold;
-  font-size: 12px;
-  color: #122932;
-  letter-spacing: -1px;
 }
 
 .navbar__title {
@@ -133,19 +110,9 @@ button:focus-visible {
   transition: background-color 0.2s ease;
 }
 
-.navbar__icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
 .navbar__login {
   display: flex;
   align-items: center;
-}
-
-.navbar__name {
-  font-family: 'Georgia', serif;
-  font-size: 14px;
-  color: #ffffff;
 }
 
 .navbar__log-in-btn {
@@ -163,7 +130,7 @@ button:focus-visible {
 }
 
 .landing {
-  min-height: calc(100vh - 60px); /* subtract navbar height */
+  min-height: calc(100vh - 60px);
   display: flex;
   align-items: center;
   justify-content: center;

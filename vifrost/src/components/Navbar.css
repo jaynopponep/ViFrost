@@ -25,13 +25,6 @@
   justify-content: center;
 }
 
-.navbar__logo-icon span {
-  font-family: 'Courier New', monospace;
-  font-weight: bold;
-  font-size: 12px;
-  color: #122932;
-  letter-spacing: -1px;
-}
 
 .navbar__title {
   font-family: 'Georgia', serif;
@@ -59,9 +52,6 @@
   transition: background-color 0.2s ease;
 }
 
-.navbar__icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
 
 /* Login */
 .navbar__login {

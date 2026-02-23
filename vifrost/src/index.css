@@ -12,14 +12,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: var(--colorAccent);
-  text-decoration: inherit;
-}
-a:hover {
-  color: var(--colorAccentHover);
-}
 
 body {
   margin: 0;
@@ -31,10 +23,6 @@ body {
   width: 100%;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
 
 button {
   border-radius: 8px;
