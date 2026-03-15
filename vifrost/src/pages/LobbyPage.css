@@ -23,11 +23,43 @@
 }
 
 .lobby {
-  min-height: 100vh;
+  flex: 1;
   padding-top: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.hint {
+  position: absolute;
+  bottom: 0;
+}
+
+.hint_text {
+  color: #FFFFFF;
+  font-size: 18px;
+  animation: 10s ease-in 0.5s infinite normal fade-in;
+}
+
+/* animations below */
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 .lobby__card {

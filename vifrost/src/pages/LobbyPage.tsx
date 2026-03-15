@@ -1,15 +1,36 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { useWebSocket } from '../hooks/useWebSocket'
 import type { Envelope, GameStartPayload } from '../hooks/useWebSocket'
 import type { AppOutletContext } from '../App'
 import './LobbyPage.css'
+import hintData from '../data/hints.json'
+
+interface Hint {
+  id: number;
+  title: string;
+}
 
 const MATCH_MODAL_DELAY_MS = 3000
 
 export function LobbyPage() {
   const navigate = useNavigate()
   const { username } = useOutletContext<AppOutletContext>()
+
+  const [hint, setHint] = useState<Hint | null>(null)
+
+  const pickHint = () => {
+    const randomIdx = Math.floor(Math.random() * hintData.length)
+    setHint(hintData[randomIdx])
+  }
+
+  const formatHint = (hint: string) => {
+    return "Hint: " + hint
+  }
+
+  useEffect(() => {
+    pickHint()
+  }, [])
 
   const joinWhenOpenRef = useRef(false)
   const gameDataRef = useRef<GameStartPayload | null>(null)
@@ -100,6 +121,11 @@ export function LobbyPage() {
           {isOpen && (
             <p className="lobby__waiting">Waiting for a worthy opponent...</p>
           )}
+        </div>
+        <div className="hint">
+          <h1 className="hint_text" onAnimationIteration={pickHint}>
+            {hint ? formatHint(hint.title) : ''}
+          </h1>
         </div>
       </main>
     </>
