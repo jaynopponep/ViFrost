@@ -1,0 +1,10 @@
+[
+  {
+    "id": 1,
+	"title": "See a repetitive fix? Use 'qa' to build a macro to improve efficiency"
+  },
+  {
+    "id": 2,
+	"title": "'x' in normal mode deletes the next character, a better choice than entering insert mode then moving to its right to delete."
+  }
+]

@@ -1,11 +1,13 @@
 .landing {
-  min-height: 100vh;
   display: flex;
+  flex-direction: column;
+  flex: 1;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
-.landing__buttons {
+.match_button {
   display: flex;
   gap: 3rem;
   align-items: center;

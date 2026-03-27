@@ -2,6 +2,7 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  min-height: 100vh; /* page should stretch to 100% of the viewport height */
 
   color: var(--colorText);
   background-color: var(--colorMain);
@@ -21,6 +22,9 @@ body {
 
 #root {
   width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 
