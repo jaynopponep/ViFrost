@@ -132,7 +132,7 @@ export function LobbyPage() {
             </div>
 
             {isOpen ? (
-              <>
+              <div className="lobby-finding-group">
                 <h1 className="lobby-finding-text">
                   Finding match
                   <span className="lobby-dots">
@@ -142,7 +142,7 @@ export function LobbyPage() {
                   </span>
                 </h1>
                 <p className="lobby-status-sub">Searching for an opponent</p>
-              </>
+              </div>
             ) : (
               <>
                 <button

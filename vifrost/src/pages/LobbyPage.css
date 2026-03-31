@@ -126,6 +126,14 @@
     50%      { opacity: 1;    transform: scale(1);   }
 }
 
+/* finding match group */
+.lobby-finding-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
 /* finding match text */
 .lobby-finding-text {
     font-size: 1.44rem;
