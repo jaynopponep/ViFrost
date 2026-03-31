@@ -11,4 +11,9 @@ export const palette: Palette = {
   colorAccentHover: '#535bf2',
   colorDanger: '#f87171',
   colorOverlay: 'rgba(0, 0, 0, 0.6)',
+  colorSubtleBg: '#ffffff14',
+  colorSoftBorder: '#ffffff1a',
+  colorStatCard: '#212121',
+  colorPanel: '#1b1b1b',
+  colorZebra: '#ffffff0f',
 };
