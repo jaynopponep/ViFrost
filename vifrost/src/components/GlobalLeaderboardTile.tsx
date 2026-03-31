@@ -1,0 +1,107 @@
+export interface GlobalLeaderboardTileProps {
+  currentUser: string;
+}
+
+type LeaderboardRow = {
+  id: number;
+  player: string;
+  wins: number;
+  losses: number;
+  mmr: number;
+  change: number;
+};
+
+function formatMmr(v: number) {
+  return v.toLocaleString("en-US");
+}
+
+export function GlobalLeaderboardTile({
+  currentUser,
+}: GlobalLeaderboardTileProps) {
+  const rows: LeaderboardRow[] = [
+    {
+      id: 1,
+      player: "FrostByte",
+      wins: 132,
+      losses: 21,
+      mmr: 2134,
+      change: 18,
+    },
+    { id: 2, player: "Glacier", wins: 119, losses: 27, mmr: 2087, change: 6 },
+    {
+      id: 3,
+      player: "ZeroKelvin",
+      wins: 110,
+      losses: 33,
+      mmr: 2041,
+      change: -9,
+    },
+    { id: 7, player: "ArifMan", wins: 72, losses: 41, mmr: 1482, change: 24 },
+    { id: 8, player: "SnowCrash", wins: 69, losses: 39, mmr: 1463, change: -3 },
+  ];
+
+  return (
+    <section className="w-full rounded-2xl border border-[var(--colorBorder)] bg-[var(--colorSurfaceAlt)] p-6 lg:max-w-[800px]">
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-lg font-semibold tracking-wide text-[var(--colorText)]">
+          Global Leaderboard
+        </h2>
+        <div className="rounded-md bg-[color-mix(in_oklab,var(--colorText)_8%,transparent)] px-3 py-1 text-xs font-medium text-[var(--colorTextMuted)]">
+          Ranked - Season 4
+        </div>
+      </div>
+
+      <div className="mt-5 overflow-hidden rounded-xl border border-[color-mix(in_oklab,var(--colorText)_10%,transparent)] bg-[color-mix(in_oklab,var(--colorSurfaceAlt)_55%,var(--colorMain)_45%)]">
+        <div className="grid grid-cols-[48px_1fr_52px_60px_108px_72px] gap-x-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--colorTextMuted)]">
+          <div>#</div>
+          <div>Player</div>
+          <div className="text-center">W</div>
+          <div className="text-center">L</div>
+          <div className="text-center">MMR</div>
+          <div className="text-right">Change</div>
+        </div>
+
+        <div className="divide-y divide-[color-mix(in_oklab,var(--colorText)_10%,transparent)]">
+          {rows.map((r) => {
+            const isYou = r.player === currentUser;
+            const changeText = `${r.change >= 0 ? "+" : ""}${r.change}`;
+            const changeColor =
+              r.change >= 0
+                ? "text-[var(--colorAccent)]"
+                : "text-[var(--colorDanger)]";
+
+            return (
+              <div
+                key={r.id}
+                className={[
+                  "grid grid-cols-[48px_1fr_52px_60px_108px_72px] gap-x-3 px-4 py-3 items-center text-sm",
+                  isYou
+                    ? "bg-[color-mix(in_oklab,var(--colorText)_8%,transparent)]"
+                    : "bg-transparent",
+                ].join(" ")}
+              >
+                <div className="text-[var(--colorTextMuted)]">{r.id}</div>
+                <div className="font-medium text-[var(--colorText)]">
+                  {r.player}
+                  {isYou ? " (You)" : ""}
+                </div>
+                <div className="text-center text-[var(--colorTextMuted)]">
+                  {r.wins}
+                </div>
+                <div className="text-center text-[var(--colorTextMuted)]">
+                  {r.losses}
+                </div>
+                <div className="text-center font-medium text-[var(--colorTextMuted)]">
+                  {formatMmr(r.mmr)}
+                </div>
+                <div className={`text-right font-semibold ${changeColor}`}>
+                  {changeText}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
