@@ -239,7 +239,7 @@
 }
 
 .lobby-ascii {
-    font-family: monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 8px;
     line-height: 1.1;
     color: var(--colorCyan);
