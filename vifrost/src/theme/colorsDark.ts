@@ -16,4 +16,5 @@ export const palette: Palette = {
   colorStatCard: '#212121',
   colorPanel: '#1b1b1b',
   colorZebra: '#ffffff0f',
+  colorAvatarName: '#ffffff',
 };

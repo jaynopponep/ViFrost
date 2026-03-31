@@ -1,15 +1,35 @@
 package main
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 )
 
+func generateColors() (string, string) {
+	h1 := rand.Intn(360)
+	h2 := rand.Intn(360)
+	diff := h1 - h2
+	if diff < 0 {
+		diff = -diff
+	}
+	if diff > 180 {
+		diff = 360 - diff
+	}
+	if diff < 60 {
+		h2 = (h1 + 60 + rand.Intn(241)) % 360
+	}
+	return fmt.Sprintf("hsl(%d, 65%%, 55%%)", h1), fmt.Sprintf("hsl(%d, 65%%, 55%%)", h2)
+}
+
 func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 	roomID := hub.NextRoomID()
+	c1, c2 := generateColors()
 	return &Room{
 		ID:      roomID,
 		Hub:     hub,
 		Players: [2]*Player{p1, p2},
+		Colors:  [2]string{c1, c2},
 		Snippet: DefaultSnippet,
 		Timer:   GameDurationSec,
 		done:    make(chan struct{}),
@@ -20,12 +40,28 @@ func (r *Room) Start() {
 	// match found -> Game begins
 	match := EnvelopeFromType(MsgMatchFound, nil)
 	r.Broadcast(MustMarshal(match))
-	start := EnvelopeFromType(MsgGameStart, GameStartPayload{
-		RoomID:   r.ID,
-		Snippet:  r.Snippet,
-		Duration: GameDurationSec,
-	})
-	r.Broadcast(MustMarshal(start))
+	for i, p := range r.Players {
+		if p == nil {
+			continue
+		}
+		opponent := r.Players[1-i]
+		opponentName := ""
+		if opponent != nil {
+			opponentName = opponent.Username
+		}
+		start := EnvelopeFromType(MsgGameStart, GameStartPayload{
+			RoomID:        r.ID,
+			Snippet:       r.Snippet,
+			Duration:      GameDurationSec,
+			OpponentName:  opponentName,
+			PlayerColor:   r.Colors[i],
+			OpponentColor: r.Colors[1-i],
+		})
+		select {
+		case p.Send <- MustMarshal(start):
+		default:
+		}
+	}
 
 	ticker := time.NewTicker(TickIntervalSec * time.Second)
 	defer ticker.Stop()

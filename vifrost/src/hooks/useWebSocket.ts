@@ -9,6 +9,9 @@ export type GameStartPayload = {
   roomId: string
   snippet: string
   duration: number
+  opponentName: string
+  playerColor: string
+  opponentColor: string
 }
 
 export type KeybindPayload = {
@@ -88,7 +91,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     ws.send(JSON.stringify({ type, payload: payload ?? null }))
   }, [])
 
-  const sendJoinQueue = useCallback(() => send('join_queue'), [send])
+  const sendJoinQueue = useCallback((username: string) => send('join_queue', { username }), [send])
   const sendKeybind = useCallback(
     (payload: KeybindPayload) => send('keybind', payload),
     [send]

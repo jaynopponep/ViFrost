@@ -14,6 +14,7 @@ export interface Palette {
   colorStatCard: string;
   colorPanel: string;
   colorZebra: string;
+  colorAvatarName: string;
 }
 
 export const palette: Palette = {
@@ -32,4 +33,5 @@ export const palette: Palette = {
   colorStatCard: '#d4d8dd',
   colorPanel: '#cdd2d8',
   colorZebra: '#1118270f',
+  colorAvatarName: '#ffffff',
 };
