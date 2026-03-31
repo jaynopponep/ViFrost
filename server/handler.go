@@ -24,9 +24,10 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	id := "player-" + strconv.FormatUint(playerIDGen.Add(1), 10)
 	player := &Player{
-		ID:   id,
-		Conn: conn,
-		Send: make(chan []byte, 256),
+		ID:     id,
+		Conn:   conn,
+		Send:   make(chan []byte, 256),
+		active: true,
 	}
 	LogInfo("client connected: %s", player.ID)
 
@@ -36,6 +37,9 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 
 func (p *Player) readPump(hub *Hub) {
 	defer func() {
+		p.mu.Lock()
+		p.active = false
+		p.mu.Unlock()
 		if p.Room != nil {
 			p.Room.EndGame()
 		}
@@ -56,6 +60,11 @@ func (p *Player) readPump(hub *Hub) {
 		}
 		switch e.Type {
 		case MsgJoinQueue:
+			if m, ok := e.Payload.(map[string]interface{}); ok {
+				if name, ok := m["username"].(string); ok {
+					p.Username = name
+				}
+			}
 			hub.Enqueue(p)
 		case MsgKeybind:
 			if p.Room == nil {

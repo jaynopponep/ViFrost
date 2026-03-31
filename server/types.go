@@ -13,9 +13,12 @@ type Envelope struct {
 }
 
 type GameStartPayload struct {
-	RoomID   string `json:"roomId"`
-	Snippet  string `json:"snippet"`
-	Duration int    `json:"duration"`
+	RoomID        string `json:"roomId"`
+	Snippet       string `json:"snippet"`
+	Duration      int    `json:"duration"`
+	OpponentName  string `json:"opponentName"`
+	PlayerColor   string `json:"playerColor"`
+	OpponentColor string `json:"opponentColor"`
 }
 
 type KeybindPayload struct {
@@ -39,11 +42,13 @@ type ErrorPayload struct {
 
 type Player struct {
 	ID       string
+	Username string
 	Conn     *websocket.Conn // <- TCP connection for each player's browser window open
 	Send     chan []byte
 	Room     *Room
 	Keybinds []KeybindPayload
 	Score    int
+	active   bool
 	mu       sync.Mutex
 }
 
@@ -51,6 +56,7 @@ type Room struct {
 	ID      string
 	Hub     *Hub
 	Players [2]*Player
+	Colors  [2]string
 	Snippet string
 	Timer   int
 	done    chan struct{}
