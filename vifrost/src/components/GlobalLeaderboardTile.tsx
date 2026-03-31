@@ -1,3 +1,5 @@
+import globalLeaderboardData from "../data/globalLeaderboard.json";
+
 export interface GlobalLeaderboardTileProps {
   currentUser: string;
 }
@@ -11,6 +13,8 @@ type LeaderboardRow = {
   change: number;
 };
 
+const rows: LeaderboardRow[] = globalLeaderboardData as LeaderboardRow[];
+
 function formatMmr(v: number) {
   return v.toLocaleString("en-US");
 }
@@ -18,27 +22,6 @@ function formatMmr(v: number) {
 export function GlobalLeaderboardTile({
   currentUser,
 }: GlobalLeaderboardTileProps) {
-  const rows: LeaderboardRow[] = [
-    {
-      id: 1,
-      player: "FrostByte",
-      wins: 132,
-      losses: 21,
-      mmr: 2134,
-      change: 18,
-    },
-    { id: 2, player: "Glacier", wins: 119, losses: 27, mmr: 2087, change: 6 },
-    {
-      id: 3,
-      player: "ZeroKelvin",
-      wins: 110,
-      losses: 33,
-      mmr: 2041,
-      change: -9,
-    },
-    { id: 7, player: "ArifMan", wins: 72, losses: 41, mmr: 1482, change: 24 },
-    { id: 8, player: "SnowCrash", wins: 69, losses: 39, mmr: 1463, change: -3 },
-  ];
 
   return (
     <section className="w-full rounded-2xl border border-[var(--colorBorder)] bg-[var(--colorSurfaceAlt)] p-6 lg:max-w-[800px]">

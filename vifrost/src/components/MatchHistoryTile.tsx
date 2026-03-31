@@ -1,5 +1,6 @@
 import { useOutletContext } from "react-router-dom";
 import type { AppOutletContext } from "../App";
+import matchHistoryData from "../data/matchHistory.json";
 
 type MatchRow = {
   opponent: string;
@@ -16,16 +17,7 @@ export function MatchHistoryTile() {
   const { username } = useOutletContext<AppOutletContext>();
   const safeName = username ?? "ArifMan";
 
-  const matches: MatchRow[] = [
-    { opponent: "SnowCrash", matchLength: "18:23", accuracy: 92, result: "W" },
-    { opponent: "ZeroKelvin", matchLength: "22:47", accuracy: 88, result: "W" },
-    { opponent: "Glacier", matchLength: "15:05", accuracy: 79, result: "L" },
-    { opponent: "FrostByte", matchLength: "27:11", accuracy: 84, result: "L" },
-    { opponent: "ArcticFox", matchLength: "13:56", accuracy: 90, result: "W" },
-    { opponent: "BlizzardKing", matchLength: "19:34", accuracy: 76, result: "L" },
-    { opponent: "IceShard", matchLength: "11:42", accuracy: 94, result: "W" },
-    { opponent: "ChillWind", matchLength: "16:29", accuracy: 81, result: "L" },
-  ];
+  const matches: MatchRow[] = matchHistoryData as MatchRow[];
 
   const gamesPlayed = matches.length;
   const wins = matches.filter((m) => m.result === "W").length;
