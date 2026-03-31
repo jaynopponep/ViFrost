@@ -11,4 +11,5 @@ export const palette: Palette = {
   colorAccentHover: '#535bf2',
   colorDanger: '#f87171',
   colorOverlay: 'rgba(0, 0, 0, 0.6)',
+  colorAvatarName: '#ffffff',
 };

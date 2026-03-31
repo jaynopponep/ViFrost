@@ -16,7 +16,7 @@ type Hub struct {
 
 func NewHub() *Hub {
 	h := &Hub{
-		waiting: make(chan *Player, 2), // waiting queue, threshold of 2 must be in here to initiate a game by running h.matchmaking() loop
+		waiting: make(chan *Player, 2),  // waiting queue, threshold of 2 must be in here to initiate a game by running h.matchmaking() loop
 		rooms:   make(map[string]*Room), // active rooms
 	}
 	go h.matchmaking()
@@ -26,6 +26,12 @@ func NewHub() *Hub {
 func (h *Hub) matchmaking() {
 	var queue []*Player
 	for p := range h.waiting {
+		p.mu.Lock()
+		alive := p.active
+		p.mu.Unlock()
+		if !alive {
+			continue
+		}
 		queue = append(queue, p)
 		if len(queue) >= 2 {
 			room := NewRoom(h, queue[0], queue[1])
