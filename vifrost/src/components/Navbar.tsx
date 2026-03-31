@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
 export interface NavbarProps {
@@ -19,12 +19,12 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
   return (
     <nav className="navbar">
       {/* Left: Logo */}
-      <div className="navbar__logo">
+      <Link to="/" className="navbar__logo">
         <div className="navbar__logo-icon">
           <img src="/Icon.svg" alt="ViFrost" />
         </div>
         <span className="navbar__title">ViFrost</span>
-      </div>
+      </Link>
 
       {/* Right: Icons + Login */}
       <div className="navbar__right">
