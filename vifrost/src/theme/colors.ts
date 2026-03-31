@@ -9,6 +9,11 @@ export interface Palette {
   colorAccentHover: string;
   colorDanger: string;
   colorOverlay: string;
+  colorSubtleBg: string;
+  colorSoftBorder: string;
+  colorStatCard: string;
+  colorPanel: string;
+  colorZebra: string;
   colorAvatarName: string;
 }
 
@@ -23,5 +28,10 @@ export const palette: Palette = {
   colorAccentHover: '#535bf2',
   colorDanger: '#ef4444',
   colorOverlay: 'rgba(0, 0, 0, 0.5)',
+  colorSubtleBg: '#11182714',
+  colorSoftBorder: '#1118271a',
+  colorStatCard: '#d4d8dd',
+  colorPanel: '#cdd2d8',
+  colorZebra: '#1118270f',
   colorAvatarName: '#ffffff',
 };

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
 export interface NavbarProps {
@@ -14,6 +15,7 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
     onUsernameSet(trimmed);
   };
 
+  const navigate = useNavigate();
   return (
     <nav className="navbar">
       {/* Left: Logo */}
@@ -27,7 +29,7 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
       {/* Right: Icons + Login */}
       <div className="navbar__right">
         <button className="navbar__stats-btn" title="Stats">
-		  <img src="LeaderboardIcon.svg" alt="Leaderboard" />
+          <img src="LeaderboardIcon.svg" alt="Leaderboard" />
         </button>
 
         <div className="navbar__login">
@@ -37,9 +39,9 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
             <button
               type="button"
               className="navbar__log-in-btn"
-              onClick={handleLoginClick}
+              onClick={() => navigate("/profile")}
             >
-			  <img src="/AvatarIcon.svg" alt="Avatar"/>
+              <img src="/AvatarIcon.svg" alt="Avatar" />
             </button>
           )}
         </div>
