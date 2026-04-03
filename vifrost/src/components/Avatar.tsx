@@ -1,4 +1,3 @@
-import { palette } from "../theme/theme";
 import "./Avatar.css";
 
 interface AvatarProps {
@@ -16,7 +15,7 @@ export function Avatar({ name, side, color }: AvatarProps) {
       {side === "opponent" && (
         <span
           className="avatar-name"
-          style={{ color: palette.colorAvatarName }}
+          style={{ color: 'var(--colorAvatarName)' }}
         >
           {name}
         </span>
@@ -25,7 +24,7 @@ export function Avatar({ name, side, color }: AvatarProps) {
       {side === "player" && (
         <span
           className="avatar-name"
-          style={{ color: palette.colorAvatarName }}
+          style={{ color: 'var(--colorAvatarName)' }}
         >
           {name}
         </span>
