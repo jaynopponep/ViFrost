@@ -96,3 +96,22 @@
     transform: scale(1.15);
     box-shadow: 0 0 12px var(--colorCyanGlow);
 }
+
+.navbar__theme-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #ede8f5;
+  display: flex;
+  align-items: center;
+}
+
+.navbar__theme-btn svg {
+  height: 24px;
+  width: 24px;
+}
+
+.navbar__theme-btn:hover {
+  color: var(--colorCyan);
+}

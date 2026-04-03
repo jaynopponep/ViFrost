@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
 export interface NavbarProps {
@@ -6,15 +7,7 @@ export interface NavbarProps {
   onUsernameSet: (name: string) => void;
 }
 
-export function Navbar({ username, onUsernameSet }: NavbarProps) {
-  const handleLoginClick = () => {
-    const value = window.prompt("Enter username");
-    if (value == null) return;
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    onUsernameSet(trimmed);
-  };
-
+export function Navbar({ username }: NavbarProps) {
   const navigate = useNavigate();
   return (
     <nav className="navbar">
@@ -31,6 +24,8 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
         <button className="navbar__stats-btn" title="Stats">
           <img src="LeaderboardIcon.svg" alt="Leaderboard" />
         </button>
+
+        <AnimatedThemeToggler className="navbar__theme-btn" />
 
         <div className="navbar__login">
           {username ? (
