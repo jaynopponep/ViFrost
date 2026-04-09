@@ -5,6 +5,7 @@ import type { Envelope, GameStartPayload } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
 import "./LobbyPage.css";
 import hintData from "../data/hints.json";
+import { animationFrames } from "../data/animationFrames";
 
 interface Hint {
   id: number;
@@ -17,6 +18,7 @@ export function LobbyPage() {
   const navigate = useNavigate();
   const { username } = useOutletContext<AppOutletContext>();
 
+  // hint rotation
   const [hint, setHint] = useState<Hint | null>(null);
 
   const pickHint = () => {
@@ -32,6 +34,16 @@ export function LobbyPage() {
     pickHint();
   }, []);
 
+  // ascii animation at 30fps
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((prev) => (prev + 1) % animationFrames.length);
+    }, 1000 / 30);
+    return () => clearInterval(interval);
+  }, []);
+
+  // match found state for modal
   const [matchFound, setMatchFound] = useState(false);
   const joinWhenOpenRef = useRef(false);
   const gameDataRef = useRef<GameStartPayload | null>(null);
@@ -44,7 +56,7 @@ export function LobbyPage() {
     }
   }, [navigate]);
 
-  const { status, lastMessage, connect, sendJoinQueue, isOpen } = useWebSocket({
+  const { status, connect, sendJoinQueue, isOpen } = useWebSocket({
     connectImmediately: false,
     onMessage: useCallback(
       (envelope: Envelope) => {
@@ -104,30 +116,75 @@ export function LobbyPage() {
           </div>
         </div>
       )}
-      <main className="lobby">
-        <div className="lobby-card">
-          <button
-            type="button"
-            className="lobby-join-button"
-            onClick={handleJoinQueue}
-            disabled={joinDisabled}
-          >
-            {status === "connecting" ? "Connecting…" : "Join Queue"}
-          </button>
-          {!username && <p className="lobby-hint">Login to play.</p>}
-          <p className="lobby-status">
-            WS: <strong>{status}</strong>
-            {lastMessage && (
+
+      <main className="lobby-layout">
+        {/* left panel: spinner, status, queue stats */}
+        <section className="lobby-panel lobby-panel--left">
+          <div className="lobby-status-block">
+            <div className="lobby-spinner-wrap">
+              <div className="lobby-spinner">
+                <div className="lobby-spinner__track lobby-spinner__track--outer"></div>
+                <div className="lobby-spinner__arc lobby-spinner__arc--outer"></div>
+                <div className="lobby-spinner__track lobby-spinner__track--mid"></div>
+                <div className="lobby-spinner__arc lobby-spinner__arc--mid"></div>
+                <div className="lobby-spinner__core"></div>
+              </div>
+            </div>
+
+            {isOpen ? (
+              <div className="lobby-finding-group">
+                <h1 className="lobby-finding-text">
+                  Finding match
+                  <span className="lobby-dots">
+                    <span className="lobby-dot">.</span>
+                    <span className="lobby-dot">.</span>
+                    <span className="lobby-dot">.</span>
+                  </span>
+                </h1>
+                <p className="lobby-status-sub">Searching for an opponent</p>
+              </div>
+            ) : (
               <>
-                {" "}
-                · Last: <strong>{lastMessage.type}</strong>
+                <button
+                  type="button"
+                  className="lobby-join-btn"
+                  onClick={handleJoinQueue}
+                  disabled={joinDisabled}
+                >
+                  {status === "connecting" ? "Connecting..." : "Join Queue"}
+                </button>
+                {!username && (
+                  <p className="lobby-login-hint">Login to play.</p>
+                )}
               </>
             )}
-          </p>
-          {isOpen && (
-            <p className="lobby-waiting">Waiting for a worthy opponent...</p>
-          )}
-        </div>
+
+            <div className="lobby-divider"></div>
+
+            {/* queue stats, values will come from websocket later */}
+            <ul className="lobby-queue-stats">
+              <li className="lobby-queue-stats__row">
+                <span className="lobby-queue-stats__label">Players online</span>
+                <span className="lobby-queue-stats__value">-</span>
+              </li>
+              <li className="lobby-queue-stats__row">
+                <span className="lobby-queue-stats__label">In queue</span>
+                <span className="lobby-queue-stats__value">-</span>
+              </li>
+              <li className="lobby-queue-stats__row">
+                <span className="lobby-queue-stats__label">Avg. wait</span>
+                <span className="lobby-queue-stats__value">-</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* right panel: ascii penguin animation */}
+        <section className="lobby-panel lobby-panel--right">
+          <pre className="lobby-ascii">{animationFrames[frame]}</pre>
+        </section>
+
+        {/* hint bar spanning bottom */}
         <div className="hint">
           <h1 className="hint-text" onAnimationIteration={pickHint}>
             {hint ? formatHint(hint.title) : ""}

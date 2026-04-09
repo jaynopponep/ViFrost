@@ -17,4 +17,8 @@ export const palette: Palette = {
   colorPanel: '#1b1b1b',
   colorZebra: '#ffffff0f',
   colorAvatarName: '#ffffff',
+  colorCyan: '#9de3f7',
+  colorCyanDim: 'rgba(157, 227, 247, 0.14)',
+  colorCyanGlow: 'rgba(157, 227, 247, 0.28)',
+  colorPink: '#e3c0d3',
 };

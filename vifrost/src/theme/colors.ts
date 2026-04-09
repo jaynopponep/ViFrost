@@ -15,6 +15,10 @@ export interface Palette {
   colorPanel: string;
   colorZebra: string;
   colorAvatarName: string;
+  colorCyan: string;
+  colorCyanDim: string;
+  colorCyanGlow: string;
+  colorPink: string;
 }
 
 export const palette: Palette = {
@@ -34,4 +38,8 @@ export const palette: Palette = {
   colorPanel: '#cdd2d8',
   colorZebra: '#1118270f',
   colorAvatarName: '#ffffff',
+  colorCyan: '#0891b2',
+  colorCyanDim: 'rgba(8, 145, 178, 0.1)',
+  colorCyanGlow: 'rgba(8, 145, 178, 0.2)',
+  colorPink: '#be185d',
 };
