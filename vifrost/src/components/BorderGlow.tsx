@@ -13,6 +13,7 @@ interface BorderGlowProps {
   animated?: boolean;
   colors?: string[];
   fillOpacity?: number;
+  onClick?: () => void;
 }
 
 function parseHSL(hslStr: string): { h: number; s: number; l: number } {
@@ -83,6 +84,7 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
   animated = false,
   colors = ['#c084fc', '#f472b6', '#38bdf8'],
   fillOpacity = 0.5,
+  onClick,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -167,17 +169,19 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
       onPointerMove={handlePointerMove}
       onPointerEnter={() => setIsHovered(true)}
       onPointerLeave={() => setIsHovered(false)}
+      onClick={onClick}
       className={`relative grid isolate border border-white/15 ${className}`}
       style={{
         background: backgroundColor,
         borderRadius: `${borderRadius}px`,
         transform: 'translate3d(0, 0, 0.01px)',
         boxShadow: 'rgba(0,0,0,0.1) 0 1px 2px, rgba(0,0,0,0.1) 0 2px 4px, rgba(0,0,0,0.1) 0 4px 8px, rgba(0,0,0,0.1) 0 8px 16px, rgba(0,0,0,0.1) 0 16px 32px, rgba(0,0,0,0.1) 0 32px 64px',
+        cursor: onClick ? 'pointer' : undefined,
       }}
     >
       {/* mesh gradient border */}
       <div
-        className="absolute inset-0 rounded-[inherit] -z-[1]"
+        className="absolute inset-[-1px] rounded-[inherit] -z-[1]"
         style={{
           border: '1px solid transparent',
           background: [
@@ -194,7 +198,7 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
 
       {/* mesh gradient fill near edges */}
       <div
-        className="absolute inset-0 rounded-[inherit] -z-[1]"
+        className="absolute inset-[-1px] rounded-[inherit] -z-[1]"
         style={{
           border: '1px solid transparent',
           background: fillBg.join(', '),
@@ -219,7 +223,7 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
           maskComposite: 'subtract, add, add, add, add, add',
           WebkitMaskComposite: 'source-out, source-over, source-over, source-over, source-over, source-over',
           opacity: borderOpacity * fillOpacity,
-          mixBlendMode: 'soft-light',
+          mixBlendMode: 'var(--borderGlowFillBlend)' as React.CSSProperties['mixBlendMode'],
           transition: isVisible ? 'opacity 0.25s ease-out' : 'opacity 0.75s ease-in-out',
         } as React.CSSProperties}
       />
@@ -232,7 +236,7 @@ const BorderGlow: React.FC<BorderGlowProps> = ({
           maskImage: `conic-gradient(from ${angleDeg} at center, black 2.5%, transparent 10%, transparent 90%, black 97.5%)`,
           WebkitMaskImage: `conic-gradient(from ${angleDeg} at center, black 2.5%, transparent 10%, transparent 90%, black 97.5%)`,
           opacity: glowOpacity,
-          mixBlendMode: 'plus-lighter',
+          mixBlendMode: 'var(--borderGlowBlend)' as React.CSSProperties['mixBlendMode'],
           transition: isVisible ? 'opacity 0.25s ease-out' : 'opacity 0.75s ease-in-out',
         } as React.CSSProperties}
       >

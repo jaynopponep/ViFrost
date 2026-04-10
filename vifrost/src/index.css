@@ -67,6 +67,8 @@
   --colorPanel: #cfe4e0;
   --colorZebra: rgba(15, 40, 50, 0.05);
   --colorAvatarName: #0f2832;
+  --borderGlowBlend: normal;
+  --borderGlowFillBlend: screen;
   --colorCyan: #0e7490;
   --colorCyanDim: rgba(14, 116, 144, 0.12);
   --colorCyanGlow: rgba(14, 116, 144, 0.22);
@@ -197,6 +199,8 @@ button:focus-visible {
   --colorPanel: #1b1b1b;
   --colorZebra: #ffffff0f;
   --colorAvatarName: #ffffff;
+  --borderGlowBlend: plus-lighter;
+  --borderGlowFillBlend: soft-light;
   --colorCyan: #9de3f7;
   --colorCyanDim: rgba(157, 227, 247, 0.14);
   --colorCyanGlow: rgba(157, 227, 247, 0.28);
