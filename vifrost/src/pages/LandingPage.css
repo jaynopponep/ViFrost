@@ -5,10 +5,91 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
+  background: var(--colorMain);
 }
 
-.match_button {
+.landing__logo-wrap {
+  margin-bottom: 1.5rem;
+  animation: logo-float 4s ease-in-out infinite;
+}
+
+.landing__logo {
+  width: 68px;
+  height: auto;
+  display: block;
+  color: var(--colorCyan);
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-7px); }
+}
+
+.landing__wordmark {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--colorText);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  margin-bottom: 0.6rem;
+  text-align: center;
+}
+
+.landing__tagline {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--colorCyan) 70%, transparent);
+  letter-spacing: 0.02em;
+  margin-bottom: 3.25rem;
+  text-align: center;
+}
+
+.landing__cards {
   display: flex;
-  gap: 3rem;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.landing__card-inner {
+  width: 210px;
+  min-height: 175px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 0.875rem;
+  padding: 1.5rem;
+}
+
+.landing__card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--colorCyanDim);
+  border: 1px solid var(--colorCyanGlow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.landing__card-inner:hover .landing__card-icon {
+  background: var(--colorCyanGlow);
+  border-color: var(--colorCyan);
+}
+
+.landing__card-icon svg {
+  width: 26px;
+  height: 26px;
+  color: var(--colorCyan);
+}
+
+.landing__card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--colorText);
+  letter-spacing: 0.06em;
 }
