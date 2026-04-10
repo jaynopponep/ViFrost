@@ -39,7 +39,7 @@
 
 /* left panel: spinner + stats, glassmorphic look */
 .lobby-panel--left {
-    background: rgba(13, 11, 24, 0.85);
+    background: color-mix(in srgb, var(--colorMain) 88%, transparent);
     border-right: 1px solid var(--colorBorder);
     display: flex;
     align-items: center;
@@ -270,7 +270,7 @@
 }
 
 .hint-text {
-    color: #ffffff;
+    color: var(--colorPink);
     font-size: 18px;
     animation: 10s ease-in 0.5s infinite normal fade-in;
 }
