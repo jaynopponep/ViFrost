@@ -11,6 +11,8 @@
     box-sizing: border-box;
     border-bottom: 1px solid var(--colorBorder);
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
 }
 
 /* Left: Logo */
