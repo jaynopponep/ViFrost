@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
@@ -7,6 +8,9 @@ export interface NavbarProps {
 }
 
 export function Navbar({ username, onUsernameSet }: NavbarProps) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const handleLoginClick = () => {
     const value = window.prompt("Enter username");
     if (value == null) return;
@@ -16,33 +20,67 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
   };
 
   const navigate = useNavigate();
+
+  const handleAvatarClick = () => {
+    setDropdownOpen((prev) => !prev);
+  };
+
+  const handleLoginOption = () => {
+    setDropdownOpen(false);
+    handleLoginClick();
+  };
+
+  const handleProfileOption = () => {
+    setDropdownOpen(false);
+    navigate("/profile");
+  };
+
   return (
     <nav className="navbar">
       {/* Left: Logo */}
-      <Link to="/" className="navbar__logo">
-        <div className="navbar__logo-icon">
+      <Link to="/" className="navbar-logo">
+        <div className="navbar-logo-icon">
           <img src="/Icon.svg" alt="ViFrost" />
         </div>
-        <span className="navbar__title">ViFrost</span>
+        <span className="navbar-title">ViFrost</span>
       </Link>
 
-      {/* Right: Icons + Login */}
-      <div className="navbar__right">
-        <button className="navbar__stats-btn" title="Stats">
+      <div className="navbar-right">
+        <button className="navbar-stats-btn" title="Stats">
           <img src="LeaderboardIcon.svg" alt="Leaderboard" />
         </button>
 
-        <div className="navbar__login">
+        <div className="navbar-login" ref={dropdownRef}>
           {username ? (
-            <span className="navbar__name">{username}</span>
+            <span className="navbar-name">{username}</span>
           ) : (
-            <button
-              type="button"
-              className="navbar__log-in-btn"
-              onClick={() => navigate("/profile")}
-            >
-              <img src="/AvatarIcon.svg" alt="Avatar" />
-            </button>
+            <>
+              <button
+                type="button"
+                className="navbar-log-in-btn"
+                onClick={handleAvatarClick}
+              >
+                <img src="/AvatarIcon.svg" alt="Avatar" />
+              </button>
+              {dropdownOpen && (
+                <div className="navbar-dropdown">
+                  <button
+                    type="button"
+                    className="navbar-dropdown-item"
+                    onClick={handleLoginOption}
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    className="navbar-dropdown-item"
+                    onClick={handleProfileOption}
+                  >
+                    Profile
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
