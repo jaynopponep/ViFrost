@@ -25,12 +25,17 @@ func generateColors() (string, string) {
 func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
+	snippet, err := LoadRandomSnippet(SnippetsDir)
+	if err != nil {
+		LogErr("failed to load snippet: %v", err)
+		snippet = ""
+	}
 	return &Room{
 		ID:      roomID,
 		Hub:     hub,
 		Players: [2]*Player{p1, p2},
 		Colors:  [2]string{c1, c2},
-		Snippet: DefaultSnippet,
+		Snippet: snippet,
 		Timer:   GameDurationSec,
 		done:    make(chan struct{}),
 	}

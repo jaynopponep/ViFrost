@@ -24,4 +24,4 @@ const (
 	TickIntervalSec = 1
 )
 
-const DefaultSnippet = "func main() {\n\tfmt.Println(\"hello\")\n}"
+const SnippetsDir = "code_snippets"

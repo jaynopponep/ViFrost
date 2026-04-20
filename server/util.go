@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
 	"os"
+	"path/filepath"
 )
 
 var logger = log.New(os.Stdout, "[vifrost] ", log.LstdFlags)
@@ -34,4 +36,26 @@ func LogInfo(format string, args ...interface{}) {
 
 func LogErr(format string, args ...interface{}) {
 	logger.Printf("[ERR] "+format, args...)
+}
+
+func LoadRandomSnippet(dir string) (string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return "", err
+	}
+	var files []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			files = append(files, e.Name())
+		}
+	}
+	if len(files) == 0 {
+		return "", nil
+	}
+	chosen := files[rand.Intn(len(files))]
+	data, err := os.ReadFile(filepath.Join(dir, chosen))
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }

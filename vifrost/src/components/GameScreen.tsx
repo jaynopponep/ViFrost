@@ -1,5 +1,5 @@
 import type { Extension } from '@codemirror/state'
-import { javascript } from '@codemirror/lang-javascript'
+import { python } from '@codemirror/lang-python'
 import { vim } from '@replit/codemirror-vim'
 import CodeMirror from '@uiw/react-codemirror'
 import { useMemo } from 'react'
@@ -29,7 +29,7 @@ export function GameScreen({
 }: GameScreenProps) {
   const extensions = useMemo(() => {
     const exts: Extension[] = [
-      javascript(),
+      python(),
       ...extraExtensions,
     ]
     if (vimMode) {
