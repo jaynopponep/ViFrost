@@ -1,106 +1,131 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"
+import leaderboardData from "../data/globalLeaderboard.json"
+import profileData from "../data/profile.json"
+import { Achievement } from "./profile/Achievement"
+import { ActivityHeatmap } from "./profile/ActivityHeatmap"
+import { CommandBar } from "./profile/CommandBar"
+import { ProfileHeader } from "./profile/ProfileHeader"
+import { RatingChart } from "./profile/RatingChart"
+import { StatBlock } from "./ui/stat-block"
 
 export interface PlayerProfileTileProps {
-  username: string;
+  username: string
 }
 
-const STAT_CARD =
-  "rounded-xl border border-[color:var(--colorSoftBorder)] bg-[var(--colorStatCard)] p-4";
+type LeaderboardRowLite = { player: string; rating: number }
 
-const STAT_LABEL =
-  "text-xs font-semibold tracking-widest text-[var(--colorTextMuted)]";
+const LIFETIME_WINS = 72
+const LIFETIME_LOSSES = 41
+const LIFETIME_GAMES = LIFETIME_WINS + LIFETIME_LOSSES
+const LIFETIME_WIN_RATE = Math.round((LIFETIME_WINS / LIFETIME_GAMES) * 100)
+
+const ACHIEVEMENTS_EARNED = profileData.achievements.filter((a) => a.earned).length
+const ACHIEVEMENTS_TOTAL = 32 // static "X / 32" display — the full set is aspirational
 
 export function PlayerProfileTile({ username }: PlayerProfileTileProps) {
-  const initial = (username[0] ?? "A").toUpperCase();
-  const navigate = useNavigate();
-  const accentGradient =
-    "linear-gradient(135deg, var(--colorAccent), var(--colorAccentHover))";
-  const accentGradientHorizontal =
-    "linear-gradient(90deg, var(--colorAccent), var(--colorAccentHover))";
+  const rows = leaderboardData as LeaderboardRowLite[]
+  const myRow = rows.find((r) => r.player === username)
+  const rating = myRow?.rating ?? 1482
+  const navigate = useNavigate()
 
   return (
-    <section className="w-full rounded-2xl border border-[color:var(--colorBorder)] bg-[var(--colorSurfaceAlt)] p-6 lg:max-w-[390px]">
-      <h2 className="text-lg font-semibold tracking-wide text-[var(--colorText)]">
-        Player Profile
-      </h2>
+    <div className="flex w-full flex-col gap-4">
+      <ProfileHeader
+        username={profileData.username}
+        handle={profileData.handle}
+        joined={profileData.joined}
+        bio={profileData.bio}
+        rating={rating}
+      />
 
-      <div className="mt-5 flex items-center gap-4">
-        <div
-          className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-semibold text-[var(--colorSurfaceAlt)]"
-          style={{ backgroundImage: accentGradient }}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <StatBlock
+          label="Rating"
+          value={rating.toLocaleString("en-US")}
+          sub={`Peak ${profileData.peak.toLocaleString("en-US")}`}
+          accent
+        />
+        <StatBlock
+          label="Percentile"
+          value={profileData.percentile}
+          sub="of ranked players"
+        />
+        <StatBlock
+          label="Win Rate"
+          value={`${LIFETIME_WIN_RATE}%`}
+          sub={`${LIFETIME_WINS}W · ${LIFETIME_LOSSES}L`}
+        />
+        <StatBlock
+          label="Streak"
+          value={`${profileData.streak}W`}
+          sub="current · peak 8W"
+          accent
+        />
+        <StatBlock
+          label="APM"
+          value={profileData.apm}
+          sub="avg actions/min"
+        />
+        <StatBlock
+          label="Avg. Match"
+          value={profileData.avgMatch}
+          sub="median duration"
+        />
+      </div>
+
+      <RatingChart />
+
+      <ActivityHeatmap />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
+        {/* Commands panel */}
+        <section className="rounded-[10px] border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)] p-5">
+          <div className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
+            Most used commands
+          </div>
+          {profileData.commands.map((c) => (
+            <CommandBar
+              key={c.label}
+              label={c.label}
+              count={c.count}
+              pct={c.pct}
+            />
+          ))}
+        </section>
+
+        {/* Achievements panel */}
+        <section className="rounded-[10px] border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)] p-5">
+          <div className="mb-3.5 flex items-baseline justify-between">
+            <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
+              Achievements
+            </div>
+            <div className="font-mono text-[11px] text-[var(--colorTextMuted)]">
+              {ACHIEVEMENTS_EARNED} / {ACHIEVEMENTS_TOTAL}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            {profileData.achievements.map((a) => (
+              <Achievement
+                key={a.title}
+                glyph={a.glyph}
+                title={a.title}
+                sub={a.sub}
+                earned={a.earned}
+              />
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <div className="mt-2 text-right">
+        <button
+          type="button"
+          onClick={() => navigate("/match-history")}
+          className="cursor-pointer font-mono text-[12px] text-[var(--colorTextMuted)] underline underline-offset-4 hover:text-[var(--colorCyan)]"
         >
-          {initial}
-        </div>
-
-        <div className="flex flex-col">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-semibold text-[var(--colorText)]">
-              {username}
-            </span>
-            <span className="rounded-full bg-[var(--colorSubtleBg)] px-3 py-1 text-xs font-medium text-[var(--colorTextMuted)]">
-              Ranked - 1,482 MMR
-            </span>
-          </div>
-          <span className="mt-1 text-xs text-[var(--colorTextMuted)]">
-            Current user
-          </span>
-        </div>
+          View full match history →
+        </button>
       </div>
-
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        <div className={STAT_CARD}>
-          <div className={STAT_LABEL}>WINS</div>
-          <div className="mt-2 text-3xl font-bold text-[var(--colorText)]">
-            72
-          </div>
-          <div className="mt-1 text-xs text-[var(--colorTextMuted)]">
-            Last 10: 7-3
-          </div>
-        </div>
-
-        <div className={STAT_CARD}>
-          <div className={STAT_LABEL}>LOSSES</div>
-          <div className="mt-2 text-3xl font-bold text-[var(--colorText)]">
-            41
-          </div>
-          <div className="mt-1 text-xs text-[var(--colorTextMuted)]">
-            Streak: 3 W
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-5 rounded-xl border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)] p-4">
-        <div className="flex items-center justify-between">
-          <div className={STAT_LABEL}>NEXT RANK: DIAMOND</div>
-          <div className="text-xs font-semibold text-[var(--colorTextMuted)]">
-            68%
-          </div>
-        </div>
-
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--colorSoftBorder)]">
-          <div
-            className="h-full w-[68%]"
-            style={{ backgroundImage: accentGradientHorizontal }}
-          />
-        </div>
-
-        <div className="mt-3 text-xs text-[var(--colorTextMuted)]">
-          Win 3 more ranked games to promote.
-        </div>
-      </div>
-
-      <p className="mt-6 text-xs leading-relaxed text-[var(--colorTextMuted)]">
-        Casual games are not counted toward your ranked MMR, but they still
-        appear in your match history.
-      </p>
-
-      <button
-        type="button"
-        className="mt-3 text-left text-xs font-medium text-[var(--colorTextMuted)] underline underline-offset-4"
-        onClick={() => navigate("/match-history")}
-      >
-        View full match history &rarr;
-      </button>
-    </section>
-  );
+    </div>
+  )
 }
