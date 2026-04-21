@@ -5,6 +5,7 @@ import matchHistoryData from "../data/matchHistory.json"
 import { MatchFilterBar, type MatchFilter } from "./match/MatchFilterBar"
 import { MatchRow, type MatchRowData } from "./match/MatchRow"
 import { StatBlock } from "./ui/stat-block"
+import { TileHeader } from "./ui/tile-header"
 
 const MATCHES: MatchRowData[] = matchHistoryData as MatchRowData[]
 
@@ -74,21 +75,20 @@ export function MatchHistoryTile() {
 
   return (
     <div className="flex w-full flex-col gap-7">
-      {/* Header */}
-      <div className="flex items-baseline justify-between">
-        <div>
-          <h1 className="m-0 font-mono text-[32px] font-medium text-[var(--colorText)]">
-            Match History
-          </h1>
-          <div className="mt-1.5 text-sm text-[var(--colorTextMuted)]">
+      <TileHeader
+        title="Match History"
+        subtitle={
+          <>
             Last {MATCHES.length} matches · current streak{" "}
             <span className="font-mono text-[var(--colorCyan)]">{streak}W</span>
+          </>
+        }
+        trailing={
+          <div className="rounded-md bg-[var(--colorCyanDim)] px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--colorCyan)]">
+            Latest · {safeName}
           </div>
-        </div>
-        <div className="rounded-md bg-[var(--colorCyanDim)] px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--colorCyan)]">
-          Latest · {safeName}
-        </div>
-      </div>
+        }
+      />
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

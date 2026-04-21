@@ -1,3 +1,6 @@
+import { Panel } from "../ui/panel"
+import { SectionLabel } from "../ui/section-label"
+
 const CELL = 11
 const GAP = 3
 
@@ -27,12 +30,10 @@ export function ActivityHeatmap() {
   const width = 52 * (CELL + GAP)
   const height = 7 * (CELL + GAP)
   return (
-    <section className="rounded-[10px] border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)] p-5">
+    <Panel>
       <div className="mb-4 flex items-baseline justify-between">
         <div>
-          <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
-            Activity
-          </div>
+          <SectionLabel>Activity</SectionLabel>
           <div className="mt-1 text-sm text-[var(--colorText)]">
             {TOTAL_MATCHES} matches in the last year
           </div>
@@ -81,6 +82,6 @@ export function ActivityHeatmap() {
           })}
         </svg>
       </div>
-    </section>
+    </Panel>
   )
 }

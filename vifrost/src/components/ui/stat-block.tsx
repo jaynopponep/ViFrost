@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { SectionLabel } from "./section-label"
 
 export interface StatBlockProps {
   label: string
@@ -23,9 +24,7 @@ export function StatBlock({
         className,
       )}
     >
-      <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
-        {label}
-      </div>
+      <SectionLabel>{label}</SectionLabel>
       <div
         className={cn(
           "mt-1.5 font-mono text-[22px] font-medium leading-none",

@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react"
+import { Panel } from "../ui/panel"
+import { SectionLabel } from "../ui/section-label"
 
 const CURRENT_RATING = 1482
 
@@ -56,12 +58,10 @@ export function RatingChart() {
   }, [slice])
 
   return (
-    <section className="rounded-[10px] border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)] p-5">
+    <Panel>
       <div className="mb-3.5 flex items-baseline justify-between">
         <div>
-          <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
-            Rating · last {slice.length} matches
-          </div>
+          <SectionLabel>Rating · last {slice.length} matches</SectionLabel>
           <div className="mt-1 font-mono text-[22px] text-[var(--colorText)]">
             {CURRENT_RATING.toLocaleString("en-US")}{" "}
             <span
@@ -127,6 +127,6 @@ export function RatingChart() {
         <path d={area} fill="url(#ratingFill)" />
         <path d={path} fill="none" stroke="var(--colorCyan)" strokeWidth="1.5" />
       </svg>
-    </section>
+    </Panel>
   )
 }

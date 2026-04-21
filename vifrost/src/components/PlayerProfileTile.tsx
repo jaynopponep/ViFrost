@@ -6,6 +6,8 @@ import { ActivityHeatmap } from "./profile/ActivityHeatmap"
 import { CommandBar } from "./profile/CommandBar"
 import { ProfileHeader } from "./profile/ProfileHeader"
 import { RatingChart } from "./profile/RatingChart"
+import { Panel } from "./ui/panel"
+import { SectionLabel } from "./ui/section-label"
 import { StatBlock } from "./ui/stat-block"
 
 export interface PlayerProfileTileProps {
@@ -78,11 +80,8 @@ export function PlayerProfileTile({ username }: PlayerProfileTileProps) {
       <ActivityHeatmap />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
-        {/* Commands panel */}
-        <section className="rounded-[10px] border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)] p-5">
-          <div className="mb-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
-            Most used commands
-          </div>
+        <Panel>
+          <SectionLabel className="mb-3.5">Most used commands</SectionLabel>
           {profileData.commands.map((c) => (
             <CommandBar
               key={c.label}
@@ -91,14 +90,11 @@ export function PlayerProfileTile({ username }: PlayerProfileTileProps) {
               pct={c.pct}
             />
           ))}
-        </section>
+        </Panel>
 
-        {/* Achievements panel */}
-        <section className="rounded-[10px] border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)] p-5">
+        <Panel>
           <div className="mb-3.5 flex items-baseline justify-between">
-            <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
-              Achievements
-            </div>
+            <SectionLabel>Achievements</SectionLabel>
             <div className="font-mono text-[11px] text-[var(--colorTextMuted)]">
               {ACHIEVEMENTS_EARNED} / {ACHIEVEMENTS_TOTAL}
             </div>
@@ -114,7 +110,7 @@ export function PlayerProfileTile({ username }: PlayerProfileTileProps) {
               />
             ))}
           </div>
-        </section>
+        </Panel>
       </div>
 
       <div className="mt-2 text-right">

@@ -7,6 +7,7 @@ import {
 } from "./leaderboard/LeaderboardRow"
 import { PodiumCard } from "./leaderboard/PodiumCard"
 import { TierBadge } from "./ui/tier-badge"
+import { TileHeader } from "./ui/tile-header"
 import { ProgressiveBlur } from "./ui/progressive-blur"
 
 export interface GlobalLeaderboardTileProps {
@@ -72,17 +73,10 @@ export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProp
 
   return (
     <div className="flex w-full flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-baseline justify-between">
-        <div>
-          <h1 className="m-0 font-mono text-[32px] font-medium text-[var(--colorText)]">
-            Leaderboard
-          </h1>
-          <div className="mt-1.5 text-sm text-[var(--colorTextMuted)]">
-            Season 4 · 200 ranked players · ends in 23 days
-          </div>
-        </div>
-      </div>
+      <TileHeader
+        title="Leaderboard"
+        subtitle="Season 4 · 200 ranked players · ends in 23 days"
+      />
 
       {/* Podium */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
