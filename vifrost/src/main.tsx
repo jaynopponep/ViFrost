@@ -9,6 +9,7 @@ import { LobbyPage } from "./pages/LobbyPage.tsx";
 import { GamePage } from "./pages/GamePage.tsx";
 import { ProfilePage } from "./pages/ProfilePage.tsx";
 import { MatchHistoryPage } from "./pages/MatchHistoryPage.tsx";
+import { LeaderboardPage } from "./pages/LeaderboardPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
       { path: "game", element: <GamePage /> },
       { path: "profile", element: <ProfilePage /> },
       { path: "match-history", element: <MatchHistoryPage /> },
+      { path: "leaderboard", element: <LeaderboardPage /> },
     ],
   },
 ]);

@@ -21,7 +21,12 @@ export function Navbar({ username }: NavbarProps) {
 
       {/* Right: Icons + Login */}
       <div className="navbar__right">
-        <button className="navbar__stats-btn" title="Stats">
+        <button
+          type="button"
+          className="navbar__stats-btn"
+          title="Leaderboard"
+          onClick={() => navigate("/leaderboard")}
+        >
           <img src="LeaderboardIcon.svg" alt="Leaderboard" />
         </button>
 
