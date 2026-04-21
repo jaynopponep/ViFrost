@@ -73,6 +73,13 @@
   --colorCyanDim: rgba(14, 116, 144, 0.12);
   --colorCyanGlow: rgba(14, 116, 144, 0.22);
   --colorPink: #be185d;
+  --colorAccentBorder: rgba(14, 116, 144, 0.35);
+  --colorAccentSoft: rgba(14, 116, 144, 0.08);
+  --avatarL1: 0.82;
+  --avatarL2: 0.68;
+  --avatarC1: 0.05;
+  --avatarC2: 0.06;
+  --avatarInitial: rgba(15, 40, 50, 0.9);
 }
 
 body {
@@ -110,6 +117,7 @@ button:focus-visible {
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: 'Figtree Variable', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -185,19 +193,19 @@ button:focus-visible {
   /* ViFrost palette – dark mode */
   --colorMain: #122932;
   --colorSurface: #111111;
-  --colorSurfaceAlt: #252525;
-  --colorBorder: #2e2e2e;
+  --colorSurfaceAlt: #14303a;
+  --colorBorder: #1f3d4a;
   --colorText: rgba(255, 255, 255, 0.87);
   --colorTextMuted: #888888;
   --colorAccent: #646cff;
   --colorAccentHover: #535bf2;
   --colorDanger: #f87171;
   --colorOverlay: rgba(0, 0, 0, 0.6);
-  --colorSubtleBg: #ffffff14;
-  --colorSoftBorder: #ffffff1a;
-  --colorStatCard: #212121;
-  --colorPanel: #1b1b1b;
-  --colorZebra: #ffffff0f;
+  --colorSubtleBg: #ffffff0f;
+  --colorSoftBorder: #ffffff14;
+  --colorStatCard: #122832;
+  --colorPanel: #0d2230;
+  --colorZebra: #ffffff0a;
   --colorAvatarName: #ffffff;
   --borderGlowBlend: plus-lighter;
   --borderGlowFillBlend: soft-light;
@@ -205,6 +213,13 @@ button:focus-visible {
   --colorCyanDim: rgba(157, 227, 247, 0.14);
   --colorCyanGlow: rgba(157, 227, 247, 0.28);
   --colorPink: #e3c0d3;
+  --colorAccentBorder: rgba(157, 227, 247, 0.35);
+  --colorAccentSoft: rgba(157, 227, 247, 0.08);
+  --avatarL1: 0.35;
+  --avatarL2: 0.22;
+  --avatarC1: 0.08;
+  --avatarC2: 0.05;
+  --avatarInitial: rgba(255, 255, 255, 0.9);
 }
 
 ::view-transition-old(root), ::view-transition-new(root) {
@@ -215,9 +230,6 @@ button:focus-visible {
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
