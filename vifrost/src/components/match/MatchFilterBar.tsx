@@ -23,11 +23,12 @@ export function MatchFilterBar({
               key={f}
               type="button"
               onClick={() => onFilterChange(f)}
-              className="cursor-pointer rounded-[6px] border px-3.5 py-[7px] font-mono text-[12px]"
+              className="cursor-pointer rounded-[6px] border px-3.5 py-[7px] font-mono text-[12px] transition-colors"
               style={{
-                backgroundColor: active
-                  ? "var(--colorAccentSoft)"
-                  : "transparent",
+                backgroundImage: active
+                  ? "linear-gradient(135deg, var(--colorCyanDim), var(--colorAccentSoft))"
+                  : "none",
+                backgroundColor: active ? undefined : "transparent",
                 borderColor: active
                   ? "var(--colorAccentBorder)"
                   : "var(--colorBorder)",
