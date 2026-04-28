@@ -73,6 +73,7 @@
   --colorCyanDim: rgba(14, 116, 144, 0.12);
   --colorCyanGlow: rgba(14, 116, 144, 0.22);
   --colorPink: #be185d;
+  --colorPinkDim: rgba(190, 24, 93, 0.12);
   --colorAccentBorder: rgba(14, 116, 144, 0.35);
   --colorAccentSoft: rgba(14, 116, 144, 0.08);
   --avatarL1: 0.82;
@@ -109,9 +110,12 @@ button {
 button:hover {
   border-color: var(--colorAccent);
 }
-button:focus,
+button:focus {
+  outline: none;
+}
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--colorAccentBorder);
+  outline-offset: 2px;
 }
 
 @theme inline {
@@ -213,6 +217,7 @@ button:focus-visible {
   --colorCyanDim: rgba(157, 227, 247, 0.14);
   --colorCyanGlow: rgba(157, 227, 247, 0.28);
   --colorPink: #e3c0d3;
+  --colorPinkDim: rgba(227, 192, 211, 0.14);
   --colorAccentBorder: rgba(157, 227, 247, 0.35);
   --colorAccentSoft: rgba(157, 227, 247, 0.08);
   --avatarL1: 0.35;
