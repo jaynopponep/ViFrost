@@ -1,4 +1,5 @@
 import { Settings, Share2 } from "lucide-react"
+import { IconButton } from "../ui/icon-button"
 import { TierBadge } from "../ui/tier-badge"
 
 export interface ProfileHeaderProps {
@@ -50,20 +51,12 @@ export function ProfileHeader({
       </div>
 
       <div className="flex gap-2">
-        <button
-          type="button"
-          className="grid h-9 w-9 place-items-center !p-0 rounded-md border border-[color:var(--colorSoftBorder)] bg-[var(--colorStatCard)] text-[var(--colorText)] transition-colors hover:border-[color:var(--colorAccentBorder)] hover:bg-[var(--colorCyanDim)] hover:text-[var(--colorCyan)]"
-          title="Share"
-        >
+        <IconButton title="Share">
           <Share2 size={18} />
-        </button>
-        <button
-          type="button"
-          className="grid h-9 w-9 place-items-center !p-0 rounded-md border border-[color:var(--colorSoftBorder)] bg-[var(--colorStatCard)] text-[var(--colorText)] transition-colors hover:border-[color:var(--colorAccentBorder)] hover:bg-[var(--colorCyanDim)] hover:text-[var(--colorCyan)]"
-          title="Settings"
-        >
+        </IconButton>
+        <IconButton title="Settings">
           <Settings size={18} />
-        </button>
+        </IconButton>
       </div>
     </section>
   )

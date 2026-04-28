@@ -12,7 +12,7 @@ export function Backlight({ blur = 20, children, className }: BacklightProps) {
   return (
     <div className={className}>
       <svg width="0" height="0" aria-hidden="true">
-        <filter id={id} y="-50%" x="-50%" width="200%" height="200%">
+        <filter id={id} y="-150%" x="-150%" width="400%" height="400%">
           <feGaussianBlur
             in="SourceGraphic"
             stdDeviation={blur}
