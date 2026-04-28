@@ -87,7 +87,13 @@ export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProp
 
       {/* You summary */}
       {myRow ? (
-        <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-[color:var(--colorSoftBorder)] bg-[var(--colorSurfaceAlt)] px-4 py-3 sm:flex-row sm:items-center">
+        <div
+          className="relative flex flex-col items-start justify-between gap-3 overflow-hidden rounded-xl border border-[color:var(--colorSoftBorder)] px-4 py-3 sm:flex-row sm:items-center"
+          style={{
+            backgroundImage:
+              "linear-gradient(110deg, var(--colorCyanDim) 0%, var(--colorSurfaceAlt) 45%, var(--colorSurfaceAlt) 65%, var(--colorPinkDim) 100%)",
+          }}
+        >
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <span className="font-mono text-xs uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
               You
@@ -110,7 +116,11 @@ export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProp
             <button
               type="button"
               onClick={jumpToMe}
-              className="rounded-md bg-[var(--colorCyanDim)] px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--colorCyan)] transition-colors hover:bg-[var(--colorCyanGlow)]"
+              className="rounded-md px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--colorCyan)] transition-[filter] hover:brightness-125"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, var(--colorCyanDim), var(--colorCyanGlow))",
+              }}
             >
               Jump to your rank ↓
             </button>

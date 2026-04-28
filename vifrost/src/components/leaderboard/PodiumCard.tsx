@@ -25,29 +25,47 @@ export interface PodiumCardProps {
 export function PodiumCard({ row, position }: PodiumCardProps) {
   const color = MEDAL_COLORS[position]
   const winRate = Math.round((row.wins / Math.max(row.wins + row.losses, 1)) * 1000) / 10
+  // #1 gets a bigger, brighter halo + a sheen strip; #2/#3 stay subtler.
+  const glowSize = position === 1 ? 240 : position === 2 ? 180 : 150
+  const glowAlpha = position === 1 ? "55" : position === 2 ? "38" : "2a"
   return (
     <div
       className="relative overflow-hidden rounded-[12px] border-2 bg-[var(--colorPanel)] px-[22px] py-5"
       style={{
         borderColor: `color-mix(in srgb, ${color} 72%, var(--colorText) 28%)`,
+        backgroundImage:
+          position === 1
+            ? `linear-gradient(165deg, color-mix(in srgb, ${color} 10%, transparent) 0%, transparent 55%)`
+            : undefined,
       }}
     >
+      {position === 1 ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px"
+          style={{
+            background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+          }}
+        />
+      ) : null}
       <div
         className="pointer-events-none absolute"
         style={{
-          top: -40,
-          right: -40,
-          width: 160,
-          height: 160,
+          top: -glowSize / 4,
+          right: -glowSize / 4,
+          width: glowSize,
+          height: glowSize,
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${color}33, transparent 72%)`,
+          background: `radial-gradient(circle, ${color}${glowAlpha}, transparent 72%)`,
         }}
       />
 
       <div className="relative flex items-center gap-3.5">
         <div
-          className="w-11 font-mono text-[42px] font-light leading-none"
-          style={{ color }}
+          className="w-11 bg-clip-text font-mono text-[42px] font-light leading-none text-transparent"
+          style={{
+            backgroundImage: `linear-gradient(160deg, ${color} 0%, color-mix(in srgb, ${color} 55%, var(--colorText) 45%) 100%)`,
+          }}
         >
           {position}
         </div>
