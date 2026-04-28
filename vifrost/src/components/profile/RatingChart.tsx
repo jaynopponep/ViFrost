@@ -108,9 +108,14 @@ export function RatingChart() {
         className="block"
       >
         <defs>
-          <linearGradient id="ratingFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--colorCyan)" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="var(--colorCyan)" stopOpacity="0" />
+          <linearGradient id="ratingFill" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stopColor="var(--colorCyan)" stopOpacity="0.32" />
+            <stop offset="55%" stopColor="var(--colorCyan)" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="var(--colorPink)" stopOpacity="0.05" />
+          </linearGradient>
+          <linearGradient id="ratingStroke" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="var(--colorCyan)" />
+            <stop offset="100%" stopColor="var(--colorPink)" />
           </linearGradient>
         </defs>
         {[0.25, 0.5, 0.75].map((f) => (
@@ -125,7 +130,7 @@ export function RatingChart() {
           />
         ))}
         <path d={area} fill="url(#ratingFill)" />
-        <path d={path} fill="none" stroke="var(--colorCyan)" strokeWidth="1.5" />
+        <path d={path} fill="none" stroke="url(#ratingStroke)" strokeWidth="1.5" />
       </svg>
     </Panel>
   )

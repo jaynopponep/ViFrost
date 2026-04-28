@@ -6,12 +6,13 @@ const GAP = 3
 
 const MONTHS = ["Nov","Dec","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct"]
 
+// Heat progression: cyan (quiet days) pink (activity).
 const LEVEL_COLORS = [
   "color-mix(in srgb, var(--colorText) 6%, transparent)",
   "color-mix(in srgb, var(--colorCyan) 22%, transparent)",
-  "color-mix(in srgb, var(--colorCyan) 45%, transparent)",
-  "color-mix(in srgb, var(--colorCyan) 72%, transparent)",
-  "var(--colorCyan)",
+  "color-mix(in srgb, var(--colorCyan) 50%, transparent)",
+  "color-mix(in srgb, var(--colorPink) 55%, transparent)",
+  "var(--colorPink)",
 ]
 
 // 52 weeks × 7 days = 364 cells. Deterministic.

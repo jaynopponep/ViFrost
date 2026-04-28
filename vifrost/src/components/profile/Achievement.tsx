@@ -13,9 +13,17 @@ export function Achievement({ glyph, title, sub, earned }: AchievementProps) {
       className={cn(
         "flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors",
         earned
-          ? "border-[color:var(--colorAccentBorder)] bg-[var(--colorAccentSoft)]"
+          ? "border-[color:var(--colorAccentBorder)]"
           : "border-[color:var(--colorBorder)] opacity-45",
       )}
+      style={
+        earned
+          ? {
+              backgroundImage:
+                "linear-gradient(135deg, var(--colorCyanDim) 0%, var(--colorAccentSoft) 35%, transparent 90%)",
+            }
+          : undefined
+      }
     >
       <div
         className={cn(
