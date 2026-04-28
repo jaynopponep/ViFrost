@@ -28,8 +28,18 @@ export function StatBlock({
       <div
         className={cn(
           "mt-1.5 font-mono text-[22px] font-medium leading-none",
-          accent ? "text-[var(--colorCyan)]" : "text-[var(--colorText)]",
+          accent
+            ? "bg-clip-text text-transparent"
+            : "text-[var(--colorText)]",
         )}
+        style={
+          accent
+            ? {
+                backgroundImage:
+                  "linear-gradient(135deg, var(--colorCyan) 0%, var(--colorPink) 130%)",
+              }
+            : undefined
+        }
       >
         {value}
       </div>
