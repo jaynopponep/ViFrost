@@ -15,6 +15,7 @@ const (
 	MsgGameEnd     = "game_end"
 	MsgLeave       = "leave"
 	MsgError       = "error"
+	MsgScoreUpdate = "score_update"
 	MsgPing        = "ping"
 	MsgPong        = "pong"
 )

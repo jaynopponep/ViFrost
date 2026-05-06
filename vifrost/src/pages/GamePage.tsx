@@ -1,27 +1,38 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation, Navigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 import { EditorView } from "@codemirror/view";
 import { GameScreen } from "../components/GameScreen";
 import { Avatar } from "../components/Avatar";
-import type { GameStartPayload } from "../hooks/useWebSocket";
+import type { GameStartPayload, ScoreUpdateServerPayload } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
 import "./GamePage.css";
 
 export function GamePage() {
   const location = useLocation();
-  const { username } = useOutletContext<AppOutletContext>();
+  const { username, sendScoreUpdate, lastMessage } = useOutletContext<AppOutletContext>();
   const gameData = location.state as GameStartPayload | null;
 
   const [editorValue, setEditorValue] = useState(gameData?.snippet ?? "");
   const [playerScore, setPlayerScore] = useState(0);
-  const [opponentScore] = useState(0);
+  const [opponentScore, setOpponentScore] = useState(0);
+
+  const sendScoreUpdateRef = useRef(sendScoreUpdate);
+  sendScoreUpdateRef.current = sendScoreUpdate;
+
+  useEffect(() => {
+    if (lastMessage?.type === "score_update") {
+      const payload = lastMessage.payload as ScoreUpdateServerPayload;
+      setPlayerScore(payload.myScore);
+      setOpponentScore(payload.opponentScore);
+    }
+  }, [lastMessage]);
 
   const scoreExtension = useMemo(
     () => [
       EditorView.updateListener.of((update) => {
         if (update.selectionSet || update.docChanged) {
-          setPlayerScore((prev) => prev - 10);
+          sendScoreUpdateRef.current(-10);
         }
       }),
     ],

@@ -40,6 +40,15 @@ type ErrorPayload struct {
 	Message string `json:"message"`
 }
 
+type ScoreUpdateClientPayload struct {
+	Delta int `json:"delta"`
+}
+
+type ScoreUpdateServerPayload struct {
+	MyScore       int `json:"myScore"`
+	OpponentScore int `json:"opponentScore"`
+}
+
 type Player struct {
 	ID       string
 	Username string

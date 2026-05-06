@@ -77,6 +77,17 @@ func (p *Player) readPump(hub *Hub) {
 				continue
 			}
 			p.Room.HandleKeybind(p, payload)
+		case MsgScoreUpdate:
+			if p.Room == nil {
+				sendErr(p, "not in a game")
+				continue
+			}
+			delta, ok := parseScoreUpdatePayload(e.Payload)
+			if !ok {
+				sendErr(p, "invalid score_update payload")
+				continue
+			}
+			p.Room.HandleScoreUpdate(p, delta)
 		case MsgPing:
 			select {
 			case p.Send <- MustMarshal(EnvelopeFromType(MsgPong, nil)):
@@ -85,6 +96,18 @@ func (p *Player) readPump(hub *Hub) {
 		default:
 		}
 	}
+}
+
+func parseScoreUpdatePayload(p interface{}) (int, bool) {
+	m, ok := p.(map[string]interface{})
+	if !ok {
+		return 0, false
+	}
+	delta, ok := m["delta"].(float64)
+	if !ok {
+		return 0, false
+	}
+	return int(delta), true
 }
 
 func parseKeybindPayload(p interface{}) (KeybindPayload, bool) {

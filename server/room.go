@@ -127,6 +127,39 @@ func (r *Room) HandleKeybind(from *Player, payload KeybindPayload) {
 	}
 }
 
+func (r *Room) HandleScoreUpdate(from *Player, delta int) {
+	from.mu.Lock()
+	from.Score += delta
+	from.mu.Unlock()
+
+	for i, p := range r.Players {
+		if p == nil {
+			continue
+		}
+		opponent := r.Players[1-i]
+
+		p.mu.Lock()
+		myScore := p.Score
+		p.mu.Unlock()
+
+		var opScore int
+		if opponent != nil {
+			opponent.mu.Lock()
+			opScore = opponent.Score
+			opponent.mu.Unlock()
+		}
+
+		msg := EnvelopeFromType(MsgScoreUpdate, ScoreUpdateServerPayload{
+			MyScore:       myScore,
+			OpponentScore: opScore,
+		})
+		select {
+		case p.Send <- MustMarshal(msg):
+		default:
+		}
+	}
+}
+
 func (r *Room) EndGame() {
 	r.mu.Lock()
 	if r.ended {
