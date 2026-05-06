@@ -1,5 +1,5 @@
 .navbar {
-    background: rgba(44, 81, 76, 0.85);
+    background: var(--navbarBg);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     display: flex;
@@ -38,7 +38,7 @@
 }
 
 .navbar-title {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     font-weight: 600;
     font-size: 1.48rem;
     color: #ede8f5;
@@ -75,7 +75,7 @@
 }
 
 .navbar-name {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     font-size: 14px;
     color: #ede8f5;
     letter-spacing: 0.04em;
@@ -92,7 +92,9 @@
     height: 32px;
     width: 32px;
     border-radius: 50%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .navbar-log-in-btn img:hover {
@@ -118,7 +120,7 @@
     background: none;
     border: none;
     color: #ede8f5;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     font-size: 13px;
     letter-spacing: 0.04em;
     padding: 10px 16px;

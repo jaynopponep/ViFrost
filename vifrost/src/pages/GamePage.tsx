@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation, Navigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
+import { EditorView } from "@codemirror/view";
 import { GameScreen } from "../components/GameScreen";
 import { Avatar } from "../components/Avatar";
 import type { GameStartPayload } from "../hooks/useWebSocket";
@@ -13,6 +14,19 @@ export function GamePage() {
   const gameData = location.state as GameStartPayload | null;
 
   const [editorValue, setEditorValue] = useState(gameData?.snippet ?? "");
+  const [playerScore, setPlayerScore] = useState(0);
+  const [opponentScore] = useState(0);
+
+  const scoreExtension = useMemo(
+    () => [
+      EditorView.updateListener.of((update) => {
+        if (update.selectionSet || update.docChanged) {
+          setPlayerScore((prev) => prev - 10);
+        }
+      }),
+    ],
+    [],
+  );
 
   if (!gameData) {
     return <Navigate to="/" replace />;
@@ -21,14 +35,32 @@ export function GamePage() {
   return (
     <main className="game">
       <div className="game-arena">
-        <div className="game-panel">
-          {username && (
+        <div className="game-arena-header">
+          <div className="game-arena-header-player">
+            {username && (
+              <Avatar
+                name={username}
+                side="player"
+                color={gameData.playerColor}
+              />
+            )}
+          </div>
+          <div className="game-score">
+            <span className="game-score-label">SCORE</span>
+            <span className="game-score-value">
+              {playerScore} - {opponentScore}
+            </span>
+          </div>
+          <div className="game-arena-header-opponent">
             <Avatar
-              name={username}
-              side="player"
-              color={gameData.playerColor}
+              name={gameData.opponentName || "Opponent"}
+              side="opponent"
+              color={gameData.opponentColor}
             />
-          )}
+          </div>
+        </div>
+
+        <div className="game-arena-screens">
           <GameScreen
             value={editorValue}
             onChange={setEditorValue}
@@ -36,18 +68,8 @@ export function GamePage() {
             height="400px"
             width="600px"
             theme="dark"
+            extensions={scoreExtension}
           />
-        </div>
-
-        <div className="game-panel">
-          <div className="game-panel-opponent-header">
-            <Avatar
-              name={gameData.opponentName || "Opponent"}
-              side="opponent"
-              color={gameData.opponentColor}
-            />
-            :
-          </div>
           <div className="game-opponent-screen">
             <GameScreen
               value={gameData.snippet}
