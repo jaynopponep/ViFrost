@@ -5,11 +5,14 @@ import "./Navbar.css";
 export interface NavbarProps {
   username: string | null;
   onUsernameSet: (name: string) => void;
+  onLogout: () => void;
 }
 
-export function Navbar({ username, onUsernameSet }: NavbarProps) {
+export function Navbar({ username, onUsernameSet, onLogout }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const navigate = useNavigate();
 
   const handleLoginClick = () => {
     const value = window.prompt("Enter username");
@@ -18,8 +21,6 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
     if (!trimmed) return;
     onUsernameSet(trimmed);
   };
-
-  const navigate = useNavigate();
 
   const handleAvatarClick = () => {
     setDropdownOpen((prev) => !prev);
@@ -33,6 +34,11 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
   const handleProfileOption = () => {
     setDropdownOpen(false);
     navigate("/profile");
+  };
+
+  const handleLogoutClick = () => {
+    setDropdownOpen(false);
+    onLogout();
   };
 
   return (
@@ -51,36 +57,40 @@ export function Navbar({ username, onUsernameSet }: NavbarProps) {
         </button>
 
         <div className="navbar-login" ref={dropdownRef}>
-          {username ? (
-            <span className="navbar-name">{username}</span>
-          ) : (
-            <>
+          <button
+            type="button"
+            className="navbar-log-in-btn"
+            onClick={handleAvatarClick}
+          >
+            <img src="/AvatarIcon.svg" alt="Avatar" />
+          </button>
+          {dropdownOpen && (
+            <div className="navbar-dropdown">
               <button
                 type="button"
-                className="navbar-log-in-btn"
-                onClick={handleAvatarClick}
+                className="navbar-dropdown-item"
+                onClick={handleProfileOption}
               >
-                <img src="/AvatarIcon.svg" alt="Avatar" />
+                Profile
               </button>
-              {dropdownOpen && (
-                <div className="navbar-dropdown">
-                  <button
-                    type="button"
-                    className="navbar-dropdown-item"
-                    onClick={handleLoginOption}
-                  >
-                    Login
-                  </button>
-                  <button
-                    type="button"
-                    className="navbar-dropdown-item"
-                    onClick={handleProfileOption}
-                  >
-                    Profile
-                  </button>
-                </div>
+              {username ? (
+                <button
+                  type="button"
+                  className="navbar-dropdown-item"
+                  onClick={handleLogoutClick}
+                >
+                  Logout
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="navbar-dropdown-item"
+                  onClick={handleLoginOption}
+                >
+                  Login
+                </button>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

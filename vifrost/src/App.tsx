@@ -19,9 +19,14 @@ function App() {
     sessionStorage.setItem(USERNAME_KEY, name)
   }
 
+  const clearUsername = () => {
+    setUsernameState(null)
+    sessionStorage.removeItem(USERNAME_KEY)
+  }
+
   return (
     <>
-      <Navbar username={username} onUsernameSet={setUsername} />
+      <Navbar username={username} onUsernameSet={setUsername} onLogout={clearUsername} />
       <Outlet context={{ username, setUsername } satisfies AppOutletContext} />
     </>
   )
