@@ -14,6 +14,7 @@ export interface AppOutletContext {
   isWsOpen: boolean
   sendJoinQueue: (username: string) => void
   sendScoreUpdate: (delta: number) => void
+  sendRunCode: (code: string) => void
   lastMessage: Envelope | null
 }
 
@@ -32,7 +33,7 @@ function App() {
     sessionStorage.removeItem(USERNAME_KEY)
   }
 
-  const { status, lastMessage, connect, sendJoinQueue, sendScoreUpdate } = useWebSocket({
+  const { status, lastMessage, connect, sendJoinQueue, sendScoreUpdate, sendRunCode } = useWebSocket({
     connectImmediately: false,
   })
 
@@ -49,6 +50,7 @@ function App() {
             isWsOpen: status === 'open',
             sendJoinQueue,
             sendScoreUpdate,
+            sendRunCode,
             lastMessage,
           } satisfies AppOutletContext
         }

@@ -32,6 +32,11 @@ export type ScoreUpdateServerPayload = {
 
 export type ErrorPayload = { message: string }
 
+export type RunResultPayload = {
+  results: boolean[]
+  delta: number
+}
+
 export type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error'
 
 const DEFAULT_WS_URL = `ws://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8080/ws`
@@ -99,6 +104,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const sendJoinQueue = useCallback((username: string) => send('join_queue', { username }), [send])
   const sendKeybind = useCallback((payload: KeybindPayload) => send('keybind', payload), [send])
   const sendScoreUpdate = useCallback((delta: number) => send('score_update', { delta }), [send])
+  const sendRunCode = useCallback((code: string) => send('run_code', { code }), [send])
   const sendPing = useCallback(() => send('ping'), [send])
   const sendLeave = useCallback(() => send('leave'), [send])
 
@@ -119,6 +125,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     sendJoinQueue,
     sendKeybind,
     sendScoreUpdate,
+    sendRunCode,
     sendPing,
     sendLeave,
     isOpen: status === 'open',

@@ -25,19 +25,20 @@ func generateColors() (string, string) {
 func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
-	snippet, err := LoadRandomSnippet(SnippetsDir)
+	snippet, tests, err := LoadSnippetWithTests(SnippetsDir)
 	if err != nil {
 		LogErr("failed to load snippet: %v", err)
 		snippet = ""
 	}
 	return &Room{
-		ID:      roomID,
-		Hub:     hub,
-		Players: [2]*Player{p1, p2},
-		Colors:  [2]string{c1, c2},
-		Snippet: snippet,
-		Timer:   GameDurationSec,
-		done:    make(chan struct{}),
+		ID:           roomID,
+		Hub:          hub,
+		Players:      [2]*Player{p1, p2},
+		Colors:       [2]string{c1, c2},
+		Snippet:      snippet,
+		TestsContent: tests,
+		Timer:        GameDurationSec,
+		done:         make(chan struct{}),
 	}
 }
 
@@ -197,4 +198,36 @@ func (r *Room) PlayerIndex(p *Player) int {
 		}
 	}
 	return -1
+}
+
+func (r *Room) HandleRunCode(from *Player, code string) {
+	results := RunTests(code, r.TestsContent)
+
+	from.mu.Lock()
+	if len(from.PassedTests) < len(results) {
+		extended := make([]bool, len(results))
+		copy(extended, from.PassedTests)
+		from.PassedTests = extended
+	}
+	delta := 0
+	for i, passed := range results {
+		if passed && !from.PassedTests[i] {
+			delta += 400
+			from.PassedTests[i] = true
+		}
+	}
+	from.mu.Unlock()
+
+	if delta > 0 {
+		r.HandleScoreUpdate(from, delta)
+	}
+
+	msg := EnvelopeFromType(MsgRunResult, RunResultPayload{
+		Results: results,
+		Delta:   delta,
+	})
+	select {
+	case from.Send <- MustMarshal(msg):
+	default:
+	}
 }

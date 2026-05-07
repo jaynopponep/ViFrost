@@ -18,6 +18,8 @@ const (
 	MsgScoreUpdate = "score_update"
 	MsgPing        = "ping"
 	MsgPong        = "pong"
+	MsgRunCode     = "run_code"
+	MsgRunResult   = "run_result"
 )
 
 const (

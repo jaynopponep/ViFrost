@@ -88,6 +88,22 @@ func (p *Player) readPump(hub *Hub) {
 				continue
 			}
 			p.Room.HandleScoreUpdate(p, delta)
+		case MsgRunCode:
+			if p.Room == nil {
+				sendErr(p, "not in a game")
+				continue
+			}
+			m, ok := e.Payload.(map[string]interface{})
+			if !ok {
+				sendErr(p, "invalid run_code payload")
+				continue
+			}
+			code, ok := m["code"].(string)
+			if !ok {
+				sendErr(p, "invalid run_code payload")
+				continue
+			}
+			go p.Room.HandleRunCode(p, code)
 		case MsgPing:
 			select {
 			case p.Send <- MustMarshal(EnvelopeFromType(MsgPong, nil)):

@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var logger = log.New(os.Stdout, "[vifrost] ", log.LstdFlags)
@@ -38,24 +39,31 @@ func LogErr(format string, args ...interface{}) {
 	logger.Printf("[ERR] "+format, args...)
 }
 
-func LoadRandomSnippet(dir string) (string, error) {
+func LoadSnippetWithTests(dir string) (snippet, tests string, err error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	var files []string
+	var snippetFiles []string
 	for _, e := range entries {
-		if !e.IsDir() {
-			files = append(files, e.Name())
+		if !e.IsDir() && !strings.HasSuffix(e.Name(), ".tests.py") {
+			snippetFiles = append(snippetFiles, e.Name())
 		}
 	}
-	if len(files) == 0 {
-		return "", nil
+	if len(snippetFiles) == 0 {
+		return "", "", nil
 	}
-	chosen := files[rand.Intn(len(files))]
+	chosen := snippetFiles[rand.Intn(len(snippetFiles))]
 	data, err := os.ReadFile(filepath.Join(dir, chosen))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return string(data), nil
+	snippet = string(data)
+
+	baseName := strings.TrimSuffix(chosen, filepath.Ext(chosen))
+	testData, testErr := os.ReadFile(filepath.Join(dir, baseName+".tests.py"))
+	if testErr == nil {
+		tests = string(testData)
+	}
+	return snippet, tests, nil
 }
