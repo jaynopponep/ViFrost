@@ -15,8 +15,11 @@ const (
 	MsgGameEnd     = "game_end"
 	MsgLeave       = "leave"
 	MsgError       = "error"
+	MsgScoreUpdate = "score_update"
 	MsgPing        = "ping"
 	MsgPong        = "pong"
+	MsgRunCode     = "run_code"
+	MsgRunResult   = "run_result"
 )
 
 const (
@@ -24,4 +27,4 @@ const (
 	TickIntervalSec = 1
 )
 
-const DefaultSnippet = "func main() {\n\tfmt.Println(\"hello\")\n}"
+const SnippetsDir = "code_snippets"

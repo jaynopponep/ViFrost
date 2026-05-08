@@ -1,5 +1,6 @@
 import type { Extension } from '@codemirror/state'
-import { javascript } from '@codemirror/lang-javascript'
+import type { EditorView } from '@codemirror/view'
+import { python } from '@codemirror/lang-python'
 import { vim } from '@replit/codemirror-vim'
 import CodeMirror from '@uiw/react-codemirror'
 import { useMemo } from 'react'
@@ -7,6 +8,7 @@ import { useMemo } from 'react'
 export interface GameScreenProps {
   value?: string
   onChange?: (value: string) => void
+  onCreateEditor?: (view: EditorView) => void
   vimMode?: boolean
   readOnly?: boolean
   placeholder?: string
@@ -19,6 +21,7 @@ export interface GameScreenProps {
 export function GameScreen({
   value = '',
   onChange,
+  onCreateEditor,
   vimMode = true,
   readOnly = false,
   placeholder = '',
@@ -29,7 +32,7 @@ export function GameScreen({
 }: GameScreenProps) {
   const extensions = useMemo(() => {
     const exts: Extension[] = [
-      javascript(),
+      python(),
       ...extraExtensions,
     ]
     if (vimMode) {
@@ -42,6 +45,7 @@ export function GameScreen({
     <CodeMirror
       value={value}
       onChange={onChange}
+      onCreateEditor={onCreateEditor}
       height={height}
       width={width}
       theme={theme}
