@@ -12,6 +12,10 @@ import type {
 import type { AppOutletContext } from "../App";
 import "./GamePage.css";
 
+type VimModeChangeEvent = { mode: string };
+type VimCm = { on(event: "vim-mode-change", h: (e: VimModeChangeEvent) => void): void };
+type EditorViewWithVim = EditorView & { cm?: VimCm };
+
 export function GamePage() {
   const location = useLocation();
   const { username, sendScoreUpdate, sendRunCode, lastMessage } =
@@ -26,6 +30,13 @@ export function GamePage() {
 
   const sendScoreUpdateRef = useRef(sendScoreUpdate);
   sendScoreUpdateRef.current = sendScoreUpdate;
+  const vimModeRef = useRef<string>("normal");
+
+  const attachVimModeListener = useCallback((view: EditorViewWithVim) => {
+    view.cm?.on("vim-mode-change", (e) => {
+      vimModeRef.current = e.mode;
+    });
+  }, []);
 
   useEffect(() => {
     if (lastMessage?.type === "score_update") {
@@ -42,8 +53,9 @@ export function GamePage() {
   const scoreExtension = useMemo(
     () => [
       EditorView.updateListener.of((update) => {
+        if (vimModeRef.current === "insert") return;
         if (update.selectionSet || update.docChanged) {
-          sendScoreUpdateRef.current(-10);
+          sendScoreUpdateRef.current(-5);
         }
       }),
     ],
@@ -92,6 +104,7 @@ export function GamePage() {
             <GameScreen
               value={editorValue}
               onChange={setEditorValue}
+              onCreateEditor={attachVimModeListener}
               vimMode
               height="400px"
               width="600px"
