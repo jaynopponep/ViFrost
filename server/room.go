@@ -103,64 +103,6 @@ func (r *Room) Broadcast(data []byte) {
 	}
 }
 
-func (r *Room) HandleKeybind(from *Player, payload KeybindPayload) {
-	from.mu.Lock()
-	from.Keybinds = append(from.Keybinds, payload)
-	if payload.Penalty {
-		from.Score -= 1
-	} else if payload.Complex {
-		from.Score += 2
-	} else {
-		from.Score += 1
-	}
-	from.mu.Unlock()
-
-	// notify opponent about keybind used
-	msg := EnvelopeFromType(MsgKeybind, payload)
-	data := MustMarshal(msg)
-	for _, p := range r.Players {
-		if p != nil && p != from {
-			select {
-			case p.Send <- data:
-			default:
-			}
-		}
-	}
-}
-
-func (r *Room) HandleScoreUpdate(from *Player, delta int) {
-	from.mu.Lock()
-	from.Score += delta
-	from.mu.Unlock()
-
-	for i, p := range r.Players {
-		if p == nil {
-			continue
-		}
-		opponent := r.Players[1-i]
-
-		p.mu.Lock()
-		myScore := p.Score
-		p.mu.Unlock()
-
-		var opScore int
-		if opponent != nil {
-			opponent.mu.Lock()
-			opScore = opponent.Score
-			opponent.mu.Unlock()
-		}
-
-		msg := EnvelopeFromType(MsgScoreUpdate, ScoreUpdateServerPayload{
-			MyScore:       myScore,
-			OpponentScore: opScore,
-		})
-		select {
-		case p.Send <- MustMarshal(msg):
-		default:
-		}
-	}
-}
-
 func (r *Room) EndGame() {
 	r.mu.Lock()
 	if r.ended {
@@ -198,36 +140,4 @@ func (r *Room) PlayerIndex(p *Player) int {
 		}
 	}
 	return -1
-}
-
-func (r *Room) HandleRunCode(from *Player, code string) {
-	results := RunTests(code, r.TestsContent)
-
-	from.mu.Lock()
-	if len(from.PassedTests) < len(results) {
-		extended := make([]bool, len(results))
-		copy(extended, from.PassedTests)
-		from.PassedTests = extended
-	}
-	delta := 0
-	for i, passed := range results {
-		if passed && !from.PassedTests[i] {
-			delta += 400
-			from.PassedTests[i] = true
-		}
-	}
-	from.mu.Unlock()
-
-	if delta > 0 {
-		r.HandleScoreUpdate(from, delta)
-	}
-
-	msg := EnvelopeFromType(MsgRunResult, RunResultPayload{
-		Results: results,
-		Delta:   delta,
-	})
-	select {
-	case from.Send <- MustMarshal(msg):
-	default:
-	}
 }
