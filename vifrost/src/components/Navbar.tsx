@@ -1,14 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
-export interface NavbarProps {
-  username: string | null;
-  onUsernameSet: (name: string) => void;
-}
-
-export function Navbar({ username }: NavbarProps) {
+export function Navbar() {
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
   return (
     <nav className="navbar">
       {/* Left: Logo */}
@@ -33,16 +30,24 @@ export function Navbar({ username }: NavbarProps) {
         <AnimatedThemeToggler className="navbar__theme-btn" />
 
         <div className="navbar__login">
-          {username ? (
-            <span className="navbar__name">{username}</span>
-          ) : (
+          {isLoading ? null : user ? (
             <button
               type="button"
-              className="navbar__log-in-btn"
+              className="navbar__profile-btn"
+              title="Profile"
               onClick={() => navigate("/profile")}
             >
-              <img src="/AvatarIcon.svg" alt="Avatar" />
+              <img src="/AvatarIcon.svg" alt="Profile" />
             </button>
+          ) : (
+            <div className="navbar__auth-actions">
+              <Link to="/login" className="navbar__auth-btn">
+                Log in
+              </Link>
+              <Link to="/signup" className="navbar__auth-btn navbar__auth-btn--primary">
+                Sign up
+              </Link>
+            </div>
           )}
         </div>
       </div>

@@ -72,28 +72,55 @@
     align-items: center;
 }
 
-.navbar__name {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    color: #ede8f5;
-    letter-spacing: 0.04em;
+.navbar__auth-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.navbar__log-in-btn {
+.navbar__auth-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: #ede8f5;
+    text-decoration: none;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(237, 232, 245, 0.35);
+    background: rgba(0, 0, 0, 0.12);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.navbar__auth-btn:hover {
+    border-color: var(--colorCyan);
+    box-shadow: 0 0 10px var(--colorCyanGlow);
+}
+
+.navbar__auth-btn--primary {
+    border-color: var(--colorCyan);
+    background: color-mix(in srgb, var(--colorCyan) 35%, transparent);
+}
+
+.navbar__auth-btn--primary:hover {
+    background: color-mix(in srgb, var(--colorCyan) 50%, transparent);
+}
+
+.navbar__profile-btn {
     background: none;
     border: none;
     padding: 0;
     cursor: pointer;
 }
 
-.navbar__log-in-btn img {
+.navbar__profile-btn img {
     height: 32px;
     width: 32px;
     border-radius: 50%;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.navbar__log-in-btn img:hover {
+.navbar__profile-btn img:hover {
     transform: scale(1.15);
     box-shadow: 0 0 12px var(--colorCyanGlow);
 }

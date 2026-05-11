@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { Navbar } from './components/Navbar'
+import { useState } from "react"
+import { Outlet } from "react-router-dom"
+import { Navbar } from "./components/Navbar"
+import { useAuth } from "./contexts/AuthContext"
+import { displayNameFromUser } from "./lib/displayNameFromUser"
 
-const USERNAME_KEY = 'vifrost_username'
+const USERNAME_KEY = "vifrost_username"
 
 export interface AppOutletContext {
   username: string | null
@@ -10,18 +12,21 @@ export interface AppOutletContext {
 }
 
 function App() {
-  const [username, setUsernameState] = useState<string | null>(() =>
-    typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(USERNAME_KEY) : null
+  const { user } = useAuth()
+  const [guestUsername, setGuestUsernameState] = useState<string | null>(() =>
+    typeof sessionStorage !== "undefined" ? sessionStorage.getItem(USERNAME_KEY) : null,
   )
 
   const setUsername = (name: string) => {
-    setUsernameState(name)
+    setGuestUsernameState(name)
     sessionStorage.setItem(USERNAME_KEY, name)
   }
 
+  const username = user ? displayNameFromUser(user) : guestUsername
+
   return (
     <>
-      <Navbar username={username} onUsernameSet={setUsername} />
+      <Navbar />
       <Outlet context={{ username, setUsername } satisfies AppOutletContext} />
     </>
   )
