@@ -26,7 +26,7 @@ export function ProfilePage() {
           </button>
         </div>
       ) : null}
-      <PlayerProfileTile username={safeName} />
+      <PlayerProfileTile username={safeName} user={user} />
     </PageShell>
   )
 }
