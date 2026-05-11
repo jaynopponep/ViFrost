@@ -270,7 +270,7 @@
 }
 
 .hint-text {
-    color: #ffffff;
+    color: var(--colorText);
     font-size: 18px;
     animation: 10s ease-in 0.5s infinite normal fade-in;
 }
@@ -291,4 +291,23 @@
     100% {
         opacity: 0;
     }
+}
+
+/* ── Light theme overrides ── */
+[data-theme="light"] .lobby-panel--left {
+    background: rgba(255, 255, 255, 0.88);
+}
+
+[data-theme="light"] .lobby-finding-text {
+    color: var(--colorText);
+}
+
+[data-theme="light"] .modal .match-modal-text {
+    color: #111827;
+}
+
+[data-theme="light"] .modal {
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }

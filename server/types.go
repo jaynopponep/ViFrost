@@ -15,6 +15,7 @@ type Envelope struct {
 type GameStartPayload struct {
 	RoomID        string `json:"roomId"`
 	Snippet       string `json:"snippet"`
+	Description   string `json:"description"`
 	Duration      int    `json:"duration"`
 	OpponentName  string `json:"opponentName"`
 	PlayerColor   string `json:"playerColor"`
@@ -32,8 +33,11 @@ type TimerTickPayload struct {
 }
 
 type GameEndPayload struct {
-	KeybindsUsed []KeybindPayload `json:"keybindsUsed,omitempty"`
-	Score        int              `json:"score,omitempty"`
+	KeybindsUsed  []KeybindPayload `json:"keybindsUsed,omitempty"`
+	Score         int              `json:"score"`
+	OpponentScore int              `json:"opponentScore"`
+	IsWinner      bool             `json:"isWinner"`
+	Reason        string           `json:"reason"` // "timeout" | "completion" | "opponent_left"
 }
 
 type ErrorPayload struct {
@@ -44,9 +48,20 @@ type RunCodePayload struct {
 	Code string `json:"code"`
 }
 
+type TestResult struct {
+	Passed   bool   `json:"passed"`
+	Actual   string `json:"actual"`
+	Expected string `json:"expected"`
+}
+
 type RunResultPayload struct {
-	Results []bool `json:"results"`
-	Delta   int    `json:"delta"`
+	Tests []TestResult `json:"tests"`
+	Delta int          `json:"delta"`
+}
+
+type QueueStatsPayload struct {
+	PlayersOnline int `json:"playersOnline"`
+	InQueue       int `json:"inQueue"`
 }
 
 type ScoreUpdateClientPayload struct {
@@ -59,13 +74,14 @@ type ScoreUpdateServerPayload struct {
 }
 
 type Player struct {
-	ID       string
-	Username string
-	Conn     *websocket.Conn // <- TCP connection for each player's browser window open
-	Send     chan []byte
-	Room     *Room
-	Keybinds    []KeybindPayload
-	Score       int
+	ID         string
+	Username   string
+	Difficulty string
+	Conn       *websocket.Conn
+	Send       chan []byte
+	Room       *Room
+	Keybinds   []KeybindPayload
+	Score      int
 	PassedTests []bool
 	active      bool
 	mu          sync.Mutex
@@ -77,9 +93,13 @@ type Room struct {
 	Players      [2]*Player
 	Colors       [2]string
 	Snippet      string
+	Description  string
 	TestsContent string
 	Timer        int
 	done         chan struct{}
+	readyCh      chan struct{}
 	ended        bool
+	winner       *Player
+	endReason    string
 	mu           sync.Mutex
 }

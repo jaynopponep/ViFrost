@@ -1,0 +1,1 @@
+Rotate a list to the right by k positions so the last k elements wrap around to the front. The current slicing shifts left instead of right. Fix the slice indices so the tail of the list becomes the head.

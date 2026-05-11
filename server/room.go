@@ -25,7 +25,11 @@ func generateColors() (string, string) {
 func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
-	snippet, tests, err := LoadSnippetWithTests(SnippetsDir)
+	difficulty := p1.Difficulty
+	if difficulty == "" {
+		difficulty = "medium"
+	}
+	snippet, tests, description, err := LoadSnippetWithTests(SnippetsDir, difficulty)
 	if err != nil {
 		LogErr("failed to load snippet: %v", err)
 		snippet = ""
@@ -36,16 +40,39 @@ func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 		Players:      [2]*Player{p1, p2},
 		Colors:       [2]string{c1, c2},
 		Snippet:      snippet,
+		Description:  description,
 		TestsContent: tests,
 		Timer:        GameDurationSec,
 		done:         make(chan struct{}),
+		readyCh:      make(chan struct{}, 2),
 	}
 }
 
 func (r *Room) Start() {
-	// match found -> Game begins
+	// Phase 1: notify both players that a match was found
 	match := EnvelopeFromType(MsgMatchFound, nil)
 	r.Broadcast(MustMarshal(match))
+
+	// Phase 2: wait for both players to confirm ready (double-verify)
+	readyTimeout := time.After(30 * time.Second)
+	readyCount := 0
+	for readyCount < 2 {
+		select {
+		case <-r.readyCh:
+			readyCount++
+		case <-readyTimeout:
+			LogErr("room %s: ready timeout, ending game", r.ID)
+			r.mu.Lock()
+			r.endReason = "timeout"
+			r.mu.Unlock()
+			r.EndGame()
+			return
+		case <-r.done:
+			return
+		}
+	}
+
+	// Phase 3: send individual game_start payloads
 	for i, p := range r.Players {
 		if p == nil {
 			continue
@@ -58,6 +85,7 @@ func (r *Room) Start() {
 		start := EnvelopeFromType(MsgGameStart, GameStartPayload{
 			RoomID:        r.ID,
 			Snippet:       r.Snippet,
+			Description:   r.Description,
 			Duration:      GameDurationSec,
 			OpponentName:  opponentName,
 			PlayerColor:   r.Colors[i],
@@ -69,6 +97,7 @@ func (r *Room) Start() {
 		}
 	}
 
+	// Phase 4: start the countdown ticker
 	ticker := time.NewTicker(TickIntervalSec * time.Second)
 	defer ticker.Stop()
 
@@ -82,12 +111,39 @@ func (r *Room) Start() {
 			remaining := r.Timer
 			r.mu.Unlock()
 			if remaining <= 0 {
+				// determine winner by score before ending
+				r.mu.Lock()
+				r.endReason = "timeout"
+				p0, p1 := r.Players[0], r.Players[1]
+				r.mu.Unlock()
+				if p0 != nil && p1 != nil {
+					p0.mu.Lock()
+					s0 := p0.Score
+					p0.mu.Unlock()
+					p1.mu.Lock()
+					s1 := p1.Score
+					p1.mu.Unlock()
+					r.mu.Lock()
+					if s0 > s1 {
+						r.winner = p0
+					} else if s1 > s0 {
+						r.winner = p1
+					}
+					r.mu.Unlock()
+				}
 				r.EndGame()
 				return
 			}
 			tick := EnvelopeFromType(MsgTimerTick, TimerTickPayload{Remaining: remaining})
 			r.Broadcast(MustMarshal(tick))
 		}
+	}
+}
+
+func (r *Room) HandlePlayerReady() {
+	select {
+	case r.readyCh <- struct{}{}:
+	default:
 	}
 }
 
@@ -106,16 +162,13 @@ func (r *Room) Broadcast(data []byte) {
 func (r *Room) HandleKeybind(from *Player, payload KeybindPayload) {
 	from.mu.Lock()
 	from.Keybinds = append(from.Keybinds, payload)
+	// Vim movements and complex commands are neutral (0 pts).
+	// Only explicit penalty signals (e.g. mouse click from frontend) cost points.
 	if payload.Penalty {
-		from.Score -= 1
-	} else if payload.Complex {
-		from.Score += 2
-	} else {
-		from.Score += 1
+		from.Score -= 20
 	}
 	from.mu.Unlock()
 
-	// notify opponent about keybind used
 	msg := EnvelopeFromType(MsgKeybind, payload)
 	data := MustMarshal(msg)
 	for _, p := range r.Players {
@@ -170,21 +223,40 @@ func (r *Room) EndGame() {
 	r.ended = true
 	close(r.done)
 	players := r.Players
+	reason := r.endReason
+	winner := r.winner
 	r.mu.Unlock()
 
-	for _, p := range players {
-		if p != nil {
-			p.mu.Lock()
-			end := EnvelopeFromType(MsgGameEnd, GameEndPayload{
-				KeybindsUsed: p.Keybinds,
-				Score:        p.Score,
-			})
-			payload := MustMarshal(end)
-			p.mu.Unlock()
-			select {
-			case p.Send <- payload:
-			default:
-			}
+	for i, p := range players {
+		if p == nil {
+			continue
+		}
+		opponent := players[1-i]
+
+		p.mu.Lock()
+		myScore := p.Score
+		myKeybinds := p.Keybinds
+		p.mu.Unlock()
+
+		opScore := 0
+		if opponent != nil {
+			opponent.mu.Lock()
+			opScore = opponent.Score
+			opponent.mu.Unlock()
+		}
+
+		isWinner := winner != nil && winner == p
+
+		end := EnvelopeFromType(MsgGameEnd, GameEndPayload{
+			KeybindsUsed:  myKeybinds,
+			Score:         myScore,
+			OpponentScore: opScore,
+			IsWinner:      isWinner,
+			Reason:        reason,
+		})
+		select {
+		case p.Send <- MustMarshal(end):
+		default:
 		}
 	}
 
@@ -210,10 +282,14 @@ func (r *Room) HandleRunCode(from *Player, code string) {
 		from.PassedTests = extended
 	}
 	delta := 0
-	for i, passed := range results {
-		if passed && !from.PassedTests[i] {
+	allPassed := len(results) > 0
+	for i, tr := range results {
+		if tr.Passed && !from.PassedTests[i] {
 			delta += 400
 			from.PassedTests[i] = true
+		}
+		if !from.PassedTests[i] {
+			allPassed = false
 		}
 	}
 	from.mu.Unlock()
@@ -223,11 +299,24 @@ func (r *Room) HandleRunCode(from *Player, code string) {
 	}
 
 	msg := EnvelopeFromType(MsgRunResult, RunResultPayload{
-		Results: results,
-		Delta:   delta,
+		Tests: results,
+		Delta: delta,
 	})
 	select {
 	case from.Send <- MustMarshal(msg):
 	default:
+	}
+
+	if allPassed {
+		// Add time bonus: finishing quickly rewards more points
+		r.mu.Lock()
+		timeBonus := r.Timer * 10
+		r.endReason = "completion"
+		r.winner = from
+		r.mu.Unlock()
+		if timeBonus > 0 {
+			r.HandleScoreUpdate(from, timeBonus)
+		}
+		r.EndGame()
 	}
 }

@@ -1,5 +1,4 @@
 import globalLeaderboardData from "../data/globalLeaderboard.json";
-import { palette } from "../theme/theme";
 
 export interface GlobalLeaderboardTileProps {
   currentUser: string;
@@ -20,24 +19,22 @@ function formatMmr(v: number) {
   return v.toLocaleString("en-US");
 }
 
-export function GlobalLeaderboardTile({
-  currentUser,
-}: GlobalLeaderboardTileProps) {
+export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProps) {
   return (
     <section
       className="w-full rounded-2xl border p-6 lg:max-w-[800px]"
-      style={{ borderColor: palette.colorBorder, backgroundColor: palette.colorSurfaceAlt }}
+      style={{ borderColor: "var(--colorBorder)", backgroundColor: "var(--colorSurfaceAlt)" }}
     >
       <div className="flex items-start justify-between gap-4">
         <h2
           className="text-lg font-semibold tracking-wide"
-          style={{ color: palette.colorText }}
+          style={{ color: "var(--colorText)" }}
         >
           Global Leaderboard
         </h2>
         <div
           className="rounded-md px-3 py-1 text-xs font-medium"
-          style={{ color: palette.colorTextMuted, backgroundColor: palette.colorSubtleBg }}
+          style={{ color: "var(--colorTextMuted)", backgroundColor: "var(--colorSubtleBg)" }}
         >
           Ranked - Season 4
         </div>
@@ -45,14 +42,11 @@ export function GlobalLeaderboardTile({
 
       <div
         className="mt-5 overflow-hidden rounded-xl border"
-        style={{
-          borderColor: palette.colorSoftBorder,
-          backgroundColor: palette.colorPanel,
-        }}
+        style={{ borderColor: "var(--colorSoftBorder)", backgroundColor: "var(--colorPanel)" }}
       >
         <div
           className="grid grid-cols-[48px_1fr_52px_60px_108px_72px] gap-x-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-          style={{ color: palette.colorTextMuted }}
+          style={{ color: "var(--colorTextMuted)" }}
         >
           <div>#</div>
           <div>Player</div>
@@ -66,35 +60,24 @@ export function GlobalLeaderboardTile({
           {rows.map((r, idx) => {
             const isYou = r.player === currentUser;
             const changeText = `${r.change >= 0 ? "+" : ""}${r.change}`;
-            const changeColor =
-              r.change >= 0 ? palette.colorAccent : palette.colorDanger;
+            const changeColor = r.change >= 0 ? "var(--colorAccent)" : "var(--colorDanger)";
 
             return (
               <div
                 key={r.id}
                 className="grid grid-cols-[48px_1fr_52px_60px_108px_72px] items-center gap-x-3 px-4 py-3 text-sm"
                 style={{
-                  ...(idx > 0
-                    ? { borderTop: `1px solid ${palette.colorSoftBorder}` }
-                    : {}),
-                  ...(isYou ? { backgroundColor: palette.colorSubtleBg } : {}),
+                  ...(idx > 0 ? { borderTop: "1px solid var(--colorSoftBorder)" } : {}),
+                  ...(isYou ? { backgroundColor: "var(--colorSubtleBg)" } : {}),
                 }}
               >
-                <div style={{ color: palette.colorTextMuted }}>{r.id}</div>
-                <div className="font-medium" style={{ color: palette.colorText }}>
-                  {r.player}
-                  {isYou ? " (You)" : ""}
+                <div style={{ color: "var(--colorTextMuted)" }}>{r.id}</div>
+                <div className="font-medium" style={{ color: "var(--colorText)" }}>
+                  {r.player}{isYou ? " (You)" : ""}
                 </div>
-                <div className="text-center" style={{ color: palette.colorTextMuted }}>
-                  {r.wins}
-                </div>
-                <div className="text-center" style={{ color: palette.colorTextMuted }}>
-                  {r.losses}
-                </div>
-                <div
-                  className="text-center font-medium"
-                  style={{ color: palette.colorTextMuted }}
-                >
+                <div className="text-center" style={{ color: "var(--colorTextMuted)" }}>{r.wins}</div>
+                <div className="text-center" style={{ color: "var(--colorTextMuted)" }}>{r.losses}</div>
+                <div className="text-center font-medium" style={{ color: "var(--colorTextMuted)" }}>
                   {formatMmr(r.mmr)}
                 </div>
                 <div className="text-right font-semibold" style={{ color: changeColor }}>

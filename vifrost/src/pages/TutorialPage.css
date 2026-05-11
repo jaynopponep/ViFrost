@@ -1,0 +1,567 @@
+.tutorial {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ── Sidebar ── */
+.tutorial-sidebar {
+    width: 230px;
+    flex-shrink: 0;
+    background: rgba(10, 14, 20, 0.92);
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 1rem;
+}
+
+/* Tabs */
+.tutorial-sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.tutorial-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0.65rem 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    transition: color 0.15s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.tutorial-tab:hover { color: rgba(255, 255, 255, 0.65); }
+
+.tutorial-tab--active {
+    color: var(--colorCyan);
+    border-bottom-color: var(--colorCyan);
+}
+
+/* Level list */
+.tutorial-level-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.4rem 0;
+    overflow-y: auto;
+}
+
+.tutorial-level-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s;
+    width: 100%;
+    border-radius: 0;
+}
+
+.tutorial-level-item:hover { background: rgba(255,255,255,0.04); }
+
+.tutorial-level-item--active {
+    background: rgba(157, 227, 247, 0.08);
+    border-left: 2px solid var(--colorCyan);
+}
+
+.tutorial-level-num {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--colorCyan);
+    min-width: 1.1rem;
+    opacity: 0.7;
+}
+
+.tutorial-level-item--active .tutorial-level-num { opacity: 1; }
+
+.tutorial-level-name {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+}
+
+.tutorial-level-item--active .tutorial-level-name { color: rgba(255,255,255,0.9); }
+
+/* Cheatsheet button */
+.tutorial-cheatsheet-btn {
+    margin: 0.5rem 0.75rem;
+    background: rgba(157, 227, 247, 0.08);
+    border: 1px solid rgba(157, 227, 247, 0.2);
+    border-radius: 5px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--colorCyan);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    letter-spacing: 0.04em;
+    text-align: left;
+}
+
+.tutorial-cheatsheet-btn:hover {
+    background: rgba(157, 227, 247, 0.14);
+    border-color: var(--colorCyan);
+}
+
+/* Scoring panel */
+.tutorial-scoring-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.tutorial-scoring-intro {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.tutorial-scoring-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.tutorial-scoring-heading {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin: 0 0 0.2rem;
+}
+
+.tutorial-scoring-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+}
+
+.tutorial-scoring-pts {
+    font-family: monospace;
+    font-weight: 700;
+    min-width: 4.5rem;
+    flex-shrink: 0;
+}
+
+.tutorial-scoring-row--pos .tutorial-scoring-pts { color: #4ade80; }
+.tutorial-scoring-row--neg .tutorial-scoring-pts { color: #f87171; }
+
+.tutorial-scoring-list {
+    padding-left: 1.1rem;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.tutorial-scoring-list li {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+}
+
+.tutorial-scoring-list strong { color: rgba(255,255,255,0.85); }
+
+.tutorial-scoring-tip {
+    font-size: 0.76rem;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.65;
+    margin: 0;
+    font-style: italic;
+}
+
+/* Back home */
+.tutorial-back-home {
+    margin: 0.5rem 0.75rem 0;
+    background: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.35);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    text-align: left;
+}
+
+.tutorial-back-home:hover {
+    border-color: var(--colorCyan);
+    color: var(--colorCyan);
+}
+
+/* ── Main content ── */
+.tutorial-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.tutorial-level-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.tutorial-level-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.tutorial-level-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--colorCyan);
+    opacity: 0.7;
+}
+
+.tutorial-level-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.tutorial-nav-buttons {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.tutorial-nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 4px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    letter-spacing: 0.04em;
+}
+
+.tutorial-nav-btn:hover:not(:disabled) {
+    border-color: var(--colorCyan);
+    color: var(--colorCyan);
+}
+
+.tutorial-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+.tutorial-description {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.75;
+    margin: 0;
+    max-width: 700px;
+}
+
+/* Vim commands row */
+.tutorial-vim-commands {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.tutorial-vim-commands-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-right: 0.2rem;
+}
+
+.tutorial-vim-cmd {
+    background: rgba(157, 227, 247, 0.1);
+    border: 1px solid rgba(157, 227, 247, 0.2);
+    border-radius: 3px;
+    padding: 0.15rem 0.5rem;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--colorCyan);
+}
+
+/* Hint */
+.tutorial-hint-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.tutorial-hint-toggle {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 0.22rem 0.65rem;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.35);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.tutorial-hint-toggle:hover {
+    border-color: var(--colorCyan);
+    color: var(--colorCyan);
+}
+
+.tutorial-hint-text {
+    font-size: 0.85rem;
+    color: var(--colorCyan);
+    font-style: italic;
+    opacity: 0.85;
+}
+
+/* Editor */
+.tutorial-editor-wrap {
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    max-width: 700px;
+}
+
+.tutorial-editor-wrap .cm-editor { text-align: left; }
+
+/* Footer */
+.tutorial-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 700px;
+}
+
+.tutorial-results {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.tutorial-results-summary {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+    margin-right: 0.2rem;
+}
+
+.tutorial-result {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.12rem 0.4rem;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.tutorial-result--pass { background: #16a34a; color: #fff; }
+.tutorial-result--fail { background: #dc2626; color: #fff; }
+
+.tutorial-run-error {
+    font-size: 0.78rem;
+    color: #f87171;
+    line-height: 1.5;
+}
+
+.tutorial-run-btn {
+    background: #22c55e;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+    box-shadow: 0 0 16px rgba(34,197,94,0.2);
+}
+
+.tutorial-run-btn:hover:not(:disabled) {
+    background: #16a34a;
+    box-shadow: 0 0 20px rgba(34,197,94,0.35);
+}
+
+.tutorial-run-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Level complete */
+.tutorial-complete-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    padding: 0.85rem 1.25rem;
+    max-width: 700px;
+    animation: tutorial-complete-in 0.3s ease;
+}
+
+@keyframes tutorial-complete-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.tutorial-complete-text {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #4ade80;
+}
+
+.tutorial-complete-btn {
+    background: #22c55e;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.42rem 1.1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.tutorial-complete-btn:hover { background: #16a34a; }
+
+/* ── Vim Cheatsheet Overlay ── */
+.cheatsheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: 1.5rem;
+}
+
+.cheatsheet-modal {
+    background: #0f1318;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 1.75rem 2rem;
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    animation: cheatsheet-in 0.2s ease;
+}
+
+@keyframes cheatsheet-in {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.cheatsheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.cheatsheet-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--colorCyan);
+    margin: 0;
+    letter-spacing: 0.04em;
+}
+
+.cheatsheet-close {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 4px;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.9rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.cheatsheet-close:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+
+.cheatsheet-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 560px) {
+    .cheatsheet-grid { grid-template-columns: 1fr; }
+}
+
+.cheatsheet-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin: 0 0 0.6rem;
+}
+
+.cheatsheet-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 0.35rem;
+}
+
+.cheatsheet-keys {
+    font-family: monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--colorCyan);
+    background: rgba(157, 227, 247, 0.1);
+    border: 1px solid rgba(157, 227, 247, 0.18);
+    border-radius: 3px;
+    padding: 0.1rem 0.4rem;
+    min-width: 6.5rem;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.cheatsheet-desc {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+}

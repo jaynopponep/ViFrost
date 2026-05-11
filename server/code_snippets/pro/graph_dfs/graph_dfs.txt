@@ -1,0 +1,14 @@
+def all_paths(graph, start, end):
+    paths = []
+    path = [start]
+
+    def dfs(node):
+        if node == end:
+            paths.append(path[:])
+            return
+        for neighbor in graph.get(node, []):
+            path.append(neighbor)
+            dfs(neighbor)
+
+    dfs(start)
+    return paths

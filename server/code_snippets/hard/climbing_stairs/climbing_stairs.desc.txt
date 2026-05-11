@@ -1,0 +1,1 @@
+Count how many distinct ways you can climb n stairs, taking 1 or 2 steps at a time. The dynamic programming table is built correctly, but the return reads dp[n-1] instead of dp[n] — an off-by-one that shifts every answer down by one step.

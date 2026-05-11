@@ -8,6 +8,7 @@ export type Envelope<T = unknown> = {
 export type GameStartPayload = {
   roomId: string
   snippet: string
+  description?: string
   duration: number
   opponentName: string
   playerColor: string
@@ -22,7 +23,10 @@ export type KeybindPayload = {
 
 export type GameEndPayload = {
   keybindsUsed?: KeybindPayload[]
-  score?: number
+  score: number
+  opponentScore: number
+  isWinner: boolean
+  reason: string // "timeout" | "completion" | "opponent_left"
 }
 
 export type ScoreUpdateServerPayload = {
@@ -32,9 +36,20 @@ export type ScoreUpdateServerPayload = {
 
 export type ErrorPayload = { message: string }
 
+export type TestResult = {
+  passed: boolean
+  actual: string
+  expected: string
+}
+
 export type RunResultPayload = {
-  results: boolean[]
+  tests: TestResult[]
   delta: number
+}
+
+export type QueueStatsPayload = {
+  playersOnline: number
+  inQueue: number
 }
 
 export type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error'
@@ -101,7 +116,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     ws.send(JSON.stringify({ type, payload: payload ?? null }))
   }, [])
 
-  const sendJoinQueue = useCallback((username: string) => send('join_queue', { username }), [send])
+  const sendJoinQueue = useCallback(
+    (username: string, difficulty?: string) =>
+      send('join_queue', { username, difficulty: difficulty ?? 'medium' }),
+    [send],
+  )
+  const sendPlayerReady = useCallback(() => send('player_ready', null), [send])
   const sendKeybind = useCallback((payload: KeybindPayload) => send('keybind', payload), [send])
   const sendScoreUpdate = useCallback((delta: number) => send('score_update', { delta }), [send])
   const sendRunCode = useCallback((code: string) => send('run_code', { code }), [send])
@@ -123,6 +143,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     disconnect,
     send,
     sendJoinQueue,
+    sendPlayerReady,
     sendKeybind,
     sendScoreUpdate,
     sendRunCode,

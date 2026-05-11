@@ -1,14 +1,329 @@
 .landing {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex: 1;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 5rem 1.5rem 4rem;
+  gap: 3.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
   position: relative;
 }
 
-.match_button {
-  display: flex;
-  gap: 3rem;
-  align-items: center;
+/* Radial glow behind the hero */
+.landing::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  height: 400px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(157, 227, 247, 0.07) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
+
+/* ── Hero ── */
+.landing-hero {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.landing-title {
+  font-size: clamp(3.5rem, 9vw, 6rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  margin: 0;
+  background: linear-gradient(135deg, #9de3f7 0%, #a78bfa 50%, #9de3f7 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: landing-title-shimmer 5s linear infinite;
+  filter: drop-shadow(0 0 32px rgba(157, 227, 247, 0.3));
+}
+
+@keyframes landing-title-shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.landing-tagline {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.landing-desc {
+  font-size: 0.97rem;
+  color: rgba(255, 255, 255, 0.45);
+  max-width: 520px;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.landing-desc strong {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Feature highlights ── */
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .landing-features { grid-template-columns: 1fr; }
+}
+
+.landing-feature {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.25s, background 0.25s, transform 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-feature::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at top left,
+    rgba(157, 227, 247, 0.05) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.landing-feature:hover {
+  border-color: rgba(157, 227, 247, 0.25);
+  background: rgba(157, 227, 247, 0.04);
+  transform: translateY(-3px);
+}
+
+.landing-feature-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.landing-feature-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.landing-feature-desc {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── How to play ── */
+.landing-how {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.landing-how-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0;
+}
+
+.landing-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .landing-steps { flex-direction: column; }
+}
+
+.landing-step {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.6;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.landing-step-num {
+  min-width: 1.4rem;
+  height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(157, 227, 247, 0.12);
+  border: 1px solid rgba(157, 227, 247, 0.3);
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--colorCyan);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* ── Difficulty selector ── */
+.landing-difficulty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.landing-difficulty-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0;
+}
+
+.landing-diff-buttons {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.landing-diff-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 0.38rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
+  letter-spacing: 0.04em;
+}
+
+.landing-diff-btn:hover {
+  border-color: var(--colorCyan);
+  color: var(--colorCyan);
+}
+
+.landing-diff-btn--active {
+  border-color: var(--colorCyan);
+  color: var(--colorCyan);
+  background: rgba(157, 227, 247, 0.1);
+  box-shadow: 0 0 12px rgba(157, 227, 247, 0.15);
+}
+
+/* ── Play buttons ── */
+.landing-play-buttons {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.landing-play-btn {
+  width: 170px;
+  height: 58px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.15s;
+  border: none;
+  text-transform: uppercase;
+}
+
+.landing-play-btn:hover {
+  transform: translateY(-3px);
+}
+
+.landing-play-btn--casual {
+  background: var(--colorCyan);
+  color: #0a0e14;
+  box-shadow: 0 0 24px rgba(157, 227, 247, 0.3);
+}
+
+.landing-play-btn--casual:hover {
+  box-shadow: 0 0 36px rgba(157, 227, 247, 0.5);
+}
+
+.landing-play-btn--ranked {
+  background: transparent;
+  border: 2px solid var(--colorCyan);
+  color: var(--colorCyan);
+  box-shadow: inset 0 0 16px rgba(157, 227, 247, 0.05);
+}
+
+.landing-play-btn--ranked:hover {
+  background: rgba(157, 227, 247, 0.08);
+  box-shadow: 0 0 24px rgba(157, 227, 247, 0.2);
+}
+
+/* ── Tutorial nudge ── */
+.landing-tutorial-link {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.landing-tutorial-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--colorCyan);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+
+.landing-tutorial-btn:hover { opacity: 1; }

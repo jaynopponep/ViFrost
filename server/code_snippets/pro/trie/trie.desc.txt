@@ -1,0 +1,1 @@
+Implement a Trie supporting insert, search (exact word), and starts_with (prefix check). The search method returns True whenever the prefix exists in the tree — it should only return True if the node was marked as the end of an inserted word.

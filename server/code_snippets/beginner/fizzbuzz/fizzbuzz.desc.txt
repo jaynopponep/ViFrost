@@ -1,0 +1,1 @@
+Print "Fizz" for multiples of 3, "Buzz" for multiples of 5, and "FizzBuzz" for multiples of both. The current code checks 15 last — but 15 is divisible by both 3 and 5, so it gets caught by the first condition and never reaches the FizzBuzz branch. Reorder the checks.

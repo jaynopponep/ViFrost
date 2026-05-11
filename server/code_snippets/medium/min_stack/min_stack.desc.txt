@@ -1,0 +1,1 @@
+Implement a stack that supports push, pop, top, and retrieving the minimum in O(1) time. The current get_min() scans the entire stack every call — that's O(n). Redesign the data structure so the minimum is always immediately available.

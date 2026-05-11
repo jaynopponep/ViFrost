@@ -1,0 +1,1 @@
+Check that every opening bracket has a matching closing bracket in the right order. The function correctly detects mismatched pairs, but always returns True at the end — an unclosed opening bracket should cause it to return False.

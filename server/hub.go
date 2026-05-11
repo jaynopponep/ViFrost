@@ -4,50 +4,149 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
-// this file (Hub) handles matchmaking, handles active sessions and also waiting rooms
+// Hub handles matchmaking, active rooms, and connected-player tracking.
 type Hub struct {
-	waiting chan *Player
-	rooms   map[string]*Room
-	roomMu  sync.RWMutex
-	nextID  atomic.Uint64
+	mu        sync.Mutex
+	queue     []*Player
+	rooms     map[string]*Room
+	roomMu    sync.RWMutex
+	nextID    atomic.Uint64
+	connected atomic.Int64
+	signal    chan struct{}
 }
 
 func NewHub() *Hub {
 	h := &Hub{
-		waiting: make(chan *Player, 2),  // waiting queue, threshold of 2 must be in here to initiate a game by running h.matchmaking() loop
-		rooms:   make(map[string]*Room), // active rooms
+		rooms:  make(map[string]*Room),
+		signal: make(chan struct{}, 1),
 	}
 	go h.matchmaking()
+	go h.statsBroadcaster()
 	return h
 }
 
 func (h *Hub) matchmaking() {
-	var queue []*Player
-	for p := range h.waiting {
-		p.mu.Lock()
-		alive := p.active
-		p.mu.Unlock()
-		if !alive {
-			continue
+	for range h.signal {
+		h.mu.Lock()
+
+		// Remove players that disconnected while waiting.
+		live := h.queue[:0]
+		for _, p := range h.queue {
+			p.mu.Lock()
+			alive := p.active
+			p.mu.Unlock()
+			if alive {
+				live = append(live, p)
+			}
 		}
-		queue = append(queue, p)
-		if len(queue) >= 2 {
-			room := NewRoom(h, queue[0], queue[1])
-			queue[0].Room = room
-			queue[1].Room = room
+		h.queue = live
+
+		// Pair up as many players as possible, preferring same-difficulty matches.
+		for len(h.queue) >= 2 {
+			p1, p2 := h.matchBestPair()
+			if p1 == nil {
+				break
+			}
+
+			room := NewRoom(h, p1, p2)
+			p1.Room = room
+			p2.Room = room
+
 			h.roomMu.Lock()
 			h.rooms[room.ID] = room
 			h.roomMu.Unlock()
-			queue = queue[:0]
-			room.Start()
+
+			// Run Start in a goroutine so the matchmaking loop is never blocked.
+			go room.Start()
+		}
+
+		queueCopy := make([]*Player, len(h.queue))
+		copy(queueCopy, h.queue)
+		qLen := len(h.queue)
+		h.mu.Unlock()
+
+		h.sendStatsTo(queueCopy, qLen)
+	}
+}
+
+// Enqueue adds a player to the waiting queue and triggers the matchmaker.
+// Duplicate entries are silently ignored.
+func (h *Hub) Enqueue(p *Player) {
+	h.mu.Lock()
+	for _, existing := range h.queue {
+		if existing == p {
+			h.mu.Unlock()
+			h.triggerMatch()
+			return
+		}
+	}
+	h.queue = append(h.queue, p)
+	h.mu.Unlock()
+	h.triggerMatch()
+}
+
+func (h *Hub) triggerMatch() {
+	select {
+	case h.signal <- struct{}{}:
+	default:
+	}
+}
+
+// sendStatsTo pushes a queue_stats message to every player still in queue.
+func (h *Hub) sendStatsTo(players []*Player, qLen int) {
+	stats := EnvelopeFromType(MsgQueueStats, QueueStatsPayload{
+		PlayersOnline: int(h.connected.Load()),
+		InQueue:       qLen,
+	})
+	data := MustMarshal(stats)
+	for _, p := range players {
+		select {
+		case p.Send <- data:
+		default:
 		}
 	}
 }
 
-func (h *Hub) Enqueue(p *Player) {
-	h.waiting <- p
+// statsBroadcaster ticks every 3 s to keep queued players' counters fresh.
+func (h *Hub) statsBroadcaster() {
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		h.mu.Lock()
+		queueCopy := make([]*Player, len(h.queue))
+		copy(queueCopy, h.queue)
+		qLen := len(h.queue)
+		h.mu.Unlock()
+		h.sendStatsTo(queueCopy, qLen)
+	}
+}
+
+// matchBestPair removes and returns the best pair from the queue.
+// Same-difficulty players are preferred; falls back to the first two players.
+// Must be called with h.mu held. Returns nil, nil if fewer than 2 players.
+func (h *Hub) matchBestPair() (*Player, *Player) {
+	if len(h.queue) < 2 {
+		return nil, nil
+	}
+	i1, i2 := 0, 1 // default: first two
+	for i := 0; i < len(h.queue)-1; i++ {
+		for j := i + 1; j < len(h.queue); j++ {
+			if h.queue[i].Difficulty == h.queue[j].Difficulty {
+				i1, i2 = i, j
+				goto found
+			}
+		}
+	}
+found:
+	p1 := h.queue[i1]
+	p2 := h.queue[i2]
+	// Remove higher index first to keep lower index valid.
+	h.queue = append(h.queue[:i2], h.queue[i2+1:]...)
+	h.queue = append(h.queue[:i1], h.queue[i1+1:]...)
+	return p1, p2
 }
 
 func (h *Hub) NextRoomID() string {

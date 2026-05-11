@@ -1,0 +1,1 @@
+Implement a Least Recently Used cache with O(1) get and put. The current eviction calls popitem(last=True), which removes the most recently used item — the exact opposite of LRU. Fix the eviction direction.

@@ -30,9 +30,13 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		active: true,
 	}
 	LogInfo("client connected: %s", player.ID)
+	hub.connected.Add(1)
 
 	go player.writePump()
 	player.readPump(hub)
+
+	hub.connected.Add(-1)
+	hub.triggerMatch() // refresh stats for remaining queued players
 }
 
 func (p *Player) readPump(hub *Hub) {
@@ -41,6 +45,18 @@ func (p *Player) readPump(hub *Hub) {
 		p.active = false
 		p.mu.Unlock()
 		if p.Room != nil {
+			// mark reason as opponent_left only if game hasn't already ended naturally
+			p.Room.mu.Lock()
+			if !p.Room.ended {
+				p.Room.endReason = "opponent_left"
+				for _, rp := range p.Room.Players {
+					if rp != nil && rp != p {
+						p.Room.winner = rp
+						break
+					}
+				}
+			}
+			p.Room.mu.Unlock()
 			p.Room.EndGame()
 		}
 		p.Conn.Close()
@@ -64,8 +80,19 @@ func (p *Player) readPump(hub *Hub) {
 				if name, ok := m["username"].(string); ok {
 					p.Username = name
 				}
+				if diff, ok := m["difficulty"].(string); ok {
+					p.Difficulty = diff
+				}
 			}
+			// Clear any stale room reference from a completed game.
+			p.mu.Lock()
+			p.Room = nil
+			p.mu.Unlock()
 			hub.Enqueue(p)
+		case MsgPlayerReady:
+			if p.Room != nil {
+				p.Room.HandlePlayerReady()
+			}
 		case MsgKeybind:
 			if p.Room == nil {
 				sendErr(p, "not in a game")
