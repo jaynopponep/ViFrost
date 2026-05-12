@@ -5,7 +5,7 @@ import { Vim } from "@replit/codemirror-vim";
 
 const SCORE_NORMAL_MODE_EDIT = -5;
 const SCORE_NAV_SHORTCUT = 20;
-const SCORE_MACRO_USAGE = 30;
+const SCORE_MACRO_USAGE = 50;
 
 type VimModeChangeEvent = { mode: string };
 type VimCm = {
@@ -32,6 +32,8 @@ export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
   const macroUseCountRef = useRef<Map<string, number>>(new Map());
 
   const attachVimModeListener = useCallback((view: EditorViewWithVim) => {
+    view.focus();
+
     view.cm?.on("vim-mode-change", (e) => {
       vimModeRef.current = e.mode;
       keyBufferRef.current = "";
@@ -47,9 +49,8 @@ export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
         const buf = keyBufferRef.current;
 
         if (buf === "f") {
-          if (key.length === 1) {
-            fNavPendingRef.current = view.state.selection.main.head;
-          }
+          if (["Shift", "Control", "Alt", "Meta"].includes(key)) return;
+          fNavPendingRef.current = view.state.selection.main.head;
           keyBufferRef.current = "";
           return;
         }
@@ -82,7 +83,9 @@ export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
               for (let i = 0; i < count; i++) {
                 const n = prev + i + 1;
                 if (n >= 2) {
-                  totalDelta += Math.round(SCORE_MACRO_USAGE * Math.pow(1.05, n - 2));
+                  totalDelta += Math.round(
+                    SCORE_MACRO_USAGE * Math.pow(1.05, n - 2),
+                  );
                 }
               }
               macroUseCountRef.current.set(regName, prev + count);
@@ -110,8 +113,8 @@ export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
           return;
         }
 
-        // {n}j — only awards when a numeric count is present
-        if (key === "j" && /^\d+$/.test(buf)) {
+        // {n}hjkl — only awards when a numeric count is present
+        if ("hjkl".includes(key) && key.length === 1 && /^\d+$/.test(buf)) {
           navSentRef.current = true;
           sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT);
           keyBufferRef.current = "";
