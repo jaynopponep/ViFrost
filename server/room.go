@@ -25,14 +25,20 @@ func generateColors() (string, string) {
 func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
+	snippet, tests, err := LoadSnippetWithTests(SnippetsDir)
+	if err != nil {
+		LogErr("failed to load snippet: %v", err)
+		snippet = ""
+	}
 	return &Room{
-		ID:      roomID,
-		Hub:     hub,
-		Players: [2]*Player{p1, p2},
-		Colors:  [2]string{c1, c2},
-		Snippet: DefaultSnippet,
-		Timer:   GameDurationSec,
-		done:    make(chan struct{}),
+		ID:           roomID,
+		Hub:          hub,
+		Players:      [2]*Player{p1, p2},
+		Colors:       [2]string{c1, c2},
+		Snippet:      snippet,
+		TestsContent: tests,
+		Timer:        GameDurationSec,
+		done:         make(chan struct{}),
 	}
 }
 
@@ -92,31 +98,6 @@ func (r *Room) Broadcast(data []byte) {
 			case p.Send <- data:
 			default:
 				LogErr("room %s: player send buffer full", r.ID)
-			}
-		}
-	}
-}
-
-func (r *Room) HandleKeybind(from *Player, payload KeybindPayload) {
-	from.mu.Lock()
-	from.Keybinds = append(from.Keybinds, payload)
-	if payload.Penalty {
-		from.Score -= 1
-	} else if payload.Complex {
-		from.Score += 2
-	} else {
-		from.Score += 1
-	}
-	from.mu.Unlock()
-
-	// notify opponent about keybind used
-	msg := EnvelopeFromType(MsgKeybind, payload)
-	data := MustMarshal(msg)
-	for _, p := range r.Players {
-		if p != nil && p != from {
-			select {
-			case p.Send <- data:
-			default:
 			}
 		}
 	}

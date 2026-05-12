@@ -9,11 +9,11 @@ export function Navbar() {
   return (
     <nav className="navbar">
       {/* Left: Logo */}
-      <Link to="/" className="navbar__logo">
-        <div className="navbar__logo-icon">
+      <Link to="/" className="navbar-logo">
+        <div className="navbar-logo-icon">
           <img src="/Icon.svg" alt="ViFrost" />
         </div>
-        <span className="navbar__title">ViFrost</span>
+        <span className="navbar-title">ViFrost</span>
       </Link>
 
       {/* Right: Icons + Login */}
@@ -44,7 +44,10 @@ export function Navbar() {
               <Link to="/login" className="navbar__auth-btn">
                 Log in
               </Link>
-              <Link to="/signup" className="navbar__auth-btn navbar__auth-btn--primary">
+              <Link
+                to="/signup"
+                className="navbar__auth-btn navbar__auth-btn--primary"
+              >
                 Sign up
               </Link>
             </div>
