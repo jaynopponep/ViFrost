@@ -12,7 +12,6 @@ export function Navbar({ username }: NavbarProps) {
   const navigate = useNavigate();
   return (
     <nav className="navbar">
-      {/* Left: Logo */}
       <Link to="/" className="navbar-logo">
         <div className="navbar-logo-icon">
           <img src="/Icon.svg" alt="ViFrost" />
