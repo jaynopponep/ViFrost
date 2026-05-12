@@ -25,7 +25,17 @@ export type GameEndPayload = {
   score?: number
 }
 
+export type ScoreUpdateServerPayload = {
+  myScore: number
+  opponentScore: number
+}
+
 export type ErrorPayload = { message: string }
+
+export type RunResultPayload = {
+  results: boolean[]
+  delta: number
+}
 
 export type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error'
 
@@ -92,10 +102,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   }, [])
 
   const sendJoinQueue = useCallback((username: string) => send('join_queue', { username }), [send])
-  const sendKeybind = useCallback(
-    (payload: KeybindPayload) => send('keybind', payload),
-    [send]
-  )
+  const sendKeybind = useCallback((payload: KeybindPayload) => send('keybind', payload), [send])
+  const sendScoreUpdate = useCallback((delta: number) => send('score_update', { delta }), [send])
+  const sendRunCode = useCallback((code: string) => send('run_code', { code }), [send])
   const sendPing = useCallback(() => send('ping'), [send])
   const sendLeave = useCallback(() => send('leave'), [send])
 
@@ -115,6 +124,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     send,
     sendJoinQueue,
     sendKeybind,
+    sendScoreUpdate,
+    sendRunCode,
     sendPing,
     sendLeave,
     isOpen: status === 'open',

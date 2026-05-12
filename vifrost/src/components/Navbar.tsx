@@ -5,6 +5,7 @@ import "./Navbar.css";
 export interface NavbarProps {
   username: string | null;
   onUsernameSet: (name: string) => void;
+  onLogout: () => void;
 }
 
 export function Navbar({ username }: NavbarProps) {
@@ -12,11 +13,11 @@ export function Navbar({ username }: NavbarProps) {
   return (
     <nav className="navbar">
       {/* Left: Logo */}
-      <Link to="/" className="navbar__logo">
-        <div className="navbar__logo-icon">
+      <Link to="/" className="navbar-logo">
+        <div className="navbar-logo-icon">
           <img src="/Icon.svg" alt="ViFrost" />
         </div>
-        <span className="navbar__title">ViFrost</span>
+        <span className="navbar-title">ViFrost</span>
       </Link>
 
       {/* Right: Icons + Login */}

@@ -1,12 +1,21 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
+import { useWebSocket } from './hooks/useWebSocket'
+import type { Envelope, WebSocketStatus } from './hooks/useWebSocket'
 
 const USERNAME_KEY = 'vifrost_username'
 
 export interface AppOutletContext {
   username: string | null
   setUsername: (name: string) => void
+  wsStatus: WebSocketStatus
+  connectWs: () => void
+  isWsOpen: boolean
+  sendJoinQueue: (username: string) => void
+  sendScoreUpdate: (delta: number) => void
+  sendRunCode: (code: string) => void
+  lastMessage: Envelope | null
 }
 
 function App() {
@@ -19,10 +28,33 @@ function App() {
     sessionStorage.setItem(USERNAME_KEY, name)
   }
 
+  const clearUsername = () => {
+    setUsernameState(null)
+    sessionStorage.removeItem(USERNAME_KEY)
+  }
+
+  const { status, lastMessage, connect, sendJoinQueue, sendScoreUpdate, sendRunCode } = useWebSocket({
+    connectImmediately: false,
+  })
+
   return (
     <>
-      <Navbar username={username} onUsernameSet={setUsername} />
-      <Outlet context={{ username, setUsername } satisfies AppOutletContext} />
+      <Navbar username={username} onUsernameSet={setUsername} onLogout={clearUsername} />
+      <Outlet
+        context={
+          {
+            username,
+            setUsername,
+            wsStatus: status,
+            connectWs: connect,
+            isWsOpen: status === 'open',
+            sendJoinQueue,
+            sendScoreUpdate,
+            sendRunCode,
+            lastMessage,
+          } satisfies AppOutletContext
+        }
+      />
     </>
   )
 }

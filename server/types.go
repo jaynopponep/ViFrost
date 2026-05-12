@@ -40,26 +40,46 @@ type ErrorPayload struct {
 	Message string `json:"message"`
 }
 
+type RunCodePayload struct {
+	Code string `json:"code"`
+}
+
+type RunResultPayload struct {
+	Results []bool `json:"results"`
+	Delta   int    `json:"delta"`
+}
+
+type ScoreUpdateClientPayload struct {
+	Delta int `json:"delta"`
+}
+
+type ScoreUpdateServerPayload struct {
+	MyScore       int `json:"myScore"`
+	OpponentScore int `json:"opponentScore"`
+}
+
 type Player struct {
 	ID       string
 	Username string
 	Conn     *websocket.Conn // <- TCP connection for each player's browser window open
 	Send     chan []byte
 	Room     *Room
-	Keybinds []KeybindPayload
-	Score    int
-	active   bool
-	mu       sync.Mutex
+	Keybinds    []KeybindPayload
+	Score       int
+	PassedTests []bool
+	active      bool
+	mu          sync.Mutex
 }
 
 type Room struct {
-	ID      string
-	Hub     *Hub
-	Players [2]*Player
-	Colors  [2]string
-	Snippet string
-	Timer   int
-	done    chan struct{}
-	ended   bool
-	mu      sync.Mutex
+	ID           string
+	Hub          *Hub
+	Players      [2]*Player
+	Colors       [2]string
+	Snippet      string
+	TestsContent string
+	Timer        int
+	done         chan struct{}
+	ended        bool
+	mu           sync.Mutex
 }

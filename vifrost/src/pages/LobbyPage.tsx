@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { useWebSocket } from "../hooks/useWebSocket";
 import type { Envelope, GameStartPayload } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
 import "./LobbyPage.css";
@@ -16,7 +15,8 @@ const MATCH_MODAL_DELAY_MS = 3000;
 
 export function LobbyPage() {
   const navigate = useNavigate();
-  const { username } = useOutletContext<AppOutletContext>();
+  const { username, wsStatus, connectWs, sendJoinQueue, isWsOpen, lastMessage } =
+    useOutletContext<AppOutletContext>();
 
   // hint rotation
   const [hint, setHint] = useState<Hint | null>(null);
@@ -56,36 +56,31 @@ export function LobbyPage() {
     }
   }, [navigate]);
 
-  const { status, connect, sendJoinQueue, isOpen } = useWebSocket({
-    connectImmediately: false,
-    onMessage: useCallback(
-      (envelope: Envelope) => {
-        if (envelope.type === "match_found") {
-          setMatchFound(true);
-          if (matchModalTimerRef.current)
-            clearTimeout(matchModalTimerRef.current);
-          matchModalTimerRef.current = setTimeout(() => {
-            matchModalTimerRef.current = null;
-            readyToEnterGameRef.current = true;
-            tryEnterGame();
-          }, MATCH_MODAL_DELAY_MS);
-        }
-        if (envelope.type === "game_start" && envelope.payload) {
-          const payload = envelope.payload as GameStartPayload;
-          gameDataRef.current = payload;
-          tryEnterGame();
-        }
-      },
-      [tryEnterGame],
-    ),
-  });
+  useEffect(() => {
+    if (!lastMessage) return;
+    const envelope = lastMessage as Envelope;
+    if (envelope.type === "match_found") {
+      setMatchFound(true);
+      if (matchModalTimerRef.current) clearTimeout(matchModalTimerRef.current);
+      matchModalTimerRef.current = setTimeout(() => {
+        matchModalTimerRef.current = null;
+        readyToEnterGameRef.current = true;
+        tryEnterGame();
+      }, MATCH_MODAL_DELAY_MS);
+    }
+    if (envelope.type === "game_start" && envelope.payload) {
+      const payload = envelope.payload as GameStartPayload;
+      gameDataRef.current = payload;
+      tryEnterGame();
+    }
+  }, [lastMessage, tryEnterGame]);
 
   useEffect(() => {
-    if (isOpen && joinWhenOpenRef.current) {
+    if (isWsOpen && joinWhenOpenRef.current) {
       sendJoinQueue(username!);
       joinWhenOpenRef.current = false;
     }
-  }, [isOpen, sendJoinQueue, username]);
+  }, [isWsOpen, sendJoinQueue, username]);
 
   useEffect(() => {
     return () => {
@@ -94,13 +89,13 @@ export function LobbyPage() {
   }, []);
 
   const handleJoinQueue = () => {
-    if (status === "closed" || status === "error") {
+    if (wsStatus === "closed" || wsStatus === "error") {
       joinWhenOpenRef.current = true;
-      connect();
+      connectWs();
     }
   };
 
-  const joinDisabled = status === "connecting" || !username;
+  const joinDisabled = wsStatus === "connecting" || !username;
 
   return (
     <>
@@ -131,7 +126,7 @@ export function LobbyPage() {
               </div>
             </div>
 
-            {isOpen ? (
+            {isWsOpen ? (
               <div className="lobby-finding-group">
                 <h1 className="lobby-finding-text">
                   Finding match
@@ -151,7 +146,7 @@ export function LobbyPage() {
                   onClick={handleJoinQueue}
                   disabled={joinDisabled}
                 >
-                  {status === "connecting" ? "Connecting..." : "Join Queue"}
+                  {wsStatus === "connecting" ? "Connecting..." : "Join Queue"}
                 </button>
                 {!username && (
                   <p className="lobby-login-hint">Login to play.</p>

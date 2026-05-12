@@ -25,14 +25,20 @@ func generateColors() (string, string) {
 func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
+	snippet, tests, err := LoadSnippetWithTests(SnippetsDir)
+	if err != nil {
+		LogErr("failed to load snippet: %v", err)
+		snippet = ""
+	}
 	return &Room{
-		ID:      roomID,
-		Hub:     hub,
-		Players: [2]*Player{p1, p2},
-		Colors:  [2]string{c1, c2},
-		Snippet: DefaultSnippet,
-		Timer:   GameDurationSec,
-		done:    make(chan struct{}),
+		ID:           roomID,
+		Hub:          hub,
+		Players:      [2]*Player{p1, p2},
+		Colors:       [2]string{c1, c2},
+		Snippet:      snippet,
+		TestsContent: tests,
+		Timer:        GameDurationSec,
+		done:         make(chan struct{}),
 	}
 }
 
@@ -122,6 +128,39 @@ func (r *Room) HandleKeybind(from *Player, payload KeybindPayload) {
 	}
 }
 
+func (r *Room) HandleScoreUpdate(from *Player, delta int) {
+	from.mu.Lock()
+	from.Score += delta
+	from.mu.Unlock()
+
+	for i, p := range r.Players {
+		if p == nil {
+			continue
+		}
+		opponent := r.Players[1-i]
+
+		p.mu.Lock()
+		myScore := p.Score
+		p.mu.Unlock()
+
+		var opScore int
+		if opponent != nil {
+			opponent.mu.Lock()
+			opScore = opponent.Score
+			opponent.mu.Unlock()
+		}
+
+		msg := EnvelopeFromType(MsgScoreUpdate, ScoreUpdateServerPayload{
+			MyScore:       myScore,
+			OpponentScore: opScore,
+		})
+		select {
+		case p.Send <- MustMarshal(msg):
+		default:
+		}
+	}
+}
+
 func (r *Room) EndGame() {
 	r.mu.Lock()
 	if r.ended {
@@ -159,4 +198,36 @@ func (r *Room) PlayerIndex(p *Player) int {
 		}
 	}
 	return -1
+}
+
+func (r *Room) HandleRunCode(from *Player, code string) {
+	results := RunTests(code, r.TestsContent)
+
+	from.mu.Lock()
+	if len(from.PassedTests) < len(results) {
+		extended := make([]bool, len(results))
+		copy(extended, from.PassedTests)
+		from.PassedTests = extended
+	}
+	delta := 0
+	for i, passed := range results {
+		if passed && !from.PassedTests[i] {
+			delta += 400
+			from.PassedTests[i] = true
+		}
+	}
+	from.mu.Unlock()
+
+	if delta > 0 {
+		r.HandleScoreUpdate(from, delta)
+	}
+
+	msg := EnvelopeFromType(MsgRunResult, RunResultPayload{
+		Results: results,
+		Delta:   delta,
+	})
+	select {
+	case from.Send <- MustMarshal(msg):
+	default:
+	}
 }
