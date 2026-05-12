@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, Navigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
-import { EditorView } from "@codemirror/view";
 import { GameScreen } from "../components/GameScreen";
 import { Avatar } from "../components/Avatar";
+import { useKeybindListener } from "../hooks/useKeybindListener";
 import type {
   GameStartPayload,
   ScoreUpdateServerPayload,
@@ -11,10 +11,6 @@ import type {
 } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
 import "./GamePage.css";
-
-type VimModeChangeEvent = { mode: string };
-type VimCm = { on(event: "vim-mode-change", h: (e: VimModeChangeEvent) => void): void };
-type EditorViewWithVim = EditorView & { cm?: VimCm };
 
 export function GamePage() {
   const location = useLocation();
@@ -28,15 +24,7 @@ export function GamePage() {
   const [runResults, setRunResults] = useState<boolean[] | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  const sendScoreUpdateRef = useRef(sendScoreUpdate);
-  sendScoreUpdateRef.current = sendScoreUpdate;
-  const vimModeRef = useRef<string>("normal");
-
-  const attachVimModeListener = useCallback((view: EditorViewWithVim) => {
-    view.cm?.on("vim-mode-change", (e) => {
-      vimModeRef.current = e.mode;
-    });
-  }, []);
+  const { attachVimModeListener, scoreExtension } = useKeybindListener(sendScoreUpdate);
 
   useEffect(() => {
     if (lastMessage?.type === "score_update") {
@@ -49,18 +37,6 @@ export function GamePage() {
       setIsRunning(false);
     }
   }, [lastMessage]);
-
-  const scoreExtension = useMemo(
-    () => [
-      EditorView.updateListener.of((update) => {
-        if (vimModeRef.current === "insert") return;
-        if (update.selectionSet || update.docChanged) {
-          sendScoreUpdateRef.current(-5);
-        }
-      }),
-    ],
-    [],
-  );
 
   const handleRun = useCallback(() => {
     setIsRunning(true);
