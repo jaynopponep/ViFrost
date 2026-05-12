@@ -1,5 +1,5 @@
 .navbar {
-    background: var(--navbarBg);
+    background: rgba(44, 81, 76, 0.85);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     display: flex;
@@ -11,7 +11,7 @@
     box-sizing: border-box;
     flex-shrink: 0;
     position: relative;
-    z-index: 1;
+    z-index: 10;
 }
 
 /* Left: Logo */
@@ -45,13 +45,13 @@
 }
 
 /* Right: Icons + Login */
-.navbar-right {
+.navbar__right {
     display: flex;
     align-items: center;
     gap: 20px;
 }
 
-.navbar-stats-btn {
+.navbar__stats-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -61,33 +61,33 @@
     cursor: pointer;
 }
 
-.navbar-stats-btn img {
+.navbar__stats-btn img {
     height: 28px;
     width: auto;
 }
 
 /* Login */
-.navbar-login {
+.navbar__login {
     display: flex;
     align-items: center;
     position: relative;
 }
 
-.navbar-name {
+.navbar__name {
     font-family: "JetBrains Mono", monospace;
     font-size: 14px;
     color: #ede8f5;
     letter-spacing: 0.04em;
 }
 
-.navbar-log-in-btn {
+.navbar__log-in-btn {
     background: none;
     border: none;
     padding: 0;
     cursor: pointer;
 }
 
-.navbar-log-in-btn img {
+.navbar__log-in-btn img {
     height: 32px;
     width: 32px;
     border-radius: 50%;
@@ -96,7 +96,7 @@
         box-shadow 0.2s ease;
 }
 
-.navbar-log-in-btn img:hover {
+.navbar__log-in-btn img:hover {
     transform: scale(1.15);
     box-shadow: 0 0 12px var(--colorCyanGlow);
 }
