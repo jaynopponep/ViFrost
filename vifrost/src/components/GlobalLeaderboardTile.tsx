@@ -1,110 +1,184 @@
-import globalLeaderboardData from "../data/globalLeaderboard.json";
-import { palette } from "../theme/theme";
+import { useEffect, useRef, useState } from "react"
+import { flushSync } from "react-dom"
+import globalLeaderboardData from "../data/globalLeaderboard.json"
+import {
+  LeaderboardRow,
+  type LeaderboardRowData,
+} from "./leaderboard/LeaderboardRow"
+import { PodiumCard } from "./leaderboard/PodiumCard"
+import { TierBadge } from "./ui/tier-badge"
+import { TileHeader } from "./ui/tile-header"
+import { ProgressiveBlur } from "./ui/progressive-blur"
 
 export interface GlobalLeaderboardTileProps {
-  currentUser: string;
+  currentUser: string
 }
 
-type LeaderboardRow = {
-  id: number;
-  player: string;
-  wins: number;
-  losses: number;
-  mmr: number;
-  change: number;
-};
+const ALL_ROWS: LeaderboardRowData[] =
+  globalLeaderboardData as LeaderboardRowData[]
 
-const rows: LeaderboardRow[] = globalLeaderboardData as LeaderboardRow[];
+const TOP_THREE = ALL_ROWS.slice(0, 3)
+const REST = ALL_ROWS.slice(3)
 
-function formatMmr(v: number) {
-  return v.toLocaleString("en-US");
+const PAGE_SIZE = 20
+
+const COLUMN_GRID =
+  "grid grid-cols-[60px_1fr_90px_110px_90px_70px] items-center gap-4 px-5 py-2"
+
+function formatRating(v: number) {
+  return v.toLocaleString("en-US")
 }
 
-export function GlobalLeaderboardTile({
-  currentUser,
-}: GlobalLeaderboardTileProps) {
+export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProps) {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [flashId, setFlashId] = useState<number | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const myRowRef = useRef<HTMLDivElement>(null)
+
+  const myIndex = REST.findIndex((r) => r.player === currentUser)
+  const myRowInRest = myIndex >= 0 ? REST[myIndex] : undefined
+  const myRowInPodium = TOP_THREE.find((r) => r.player === currentUser)
+  const myRow = myRowInRest ?? myRowInPodium
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    const root = scrollRef.current
+    if (!sentinel || !root) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((n) => Math.min(n + PAGE_SIZE, REST.length))
+        }
+      },
+      { root, rootMargin: "120px" },
+    )
+    io.observe(sentinel)
+    return () => io.disconnect()
+  }, [visibleCount])
+
+  const jumpToMe = () => {
+    if (!myRowInRest || myIndex < 0) return
+    if (visibleCount <= myIndex) {
+      flushSync(() => {
+        setVisibleCount(Math.min(myIndex + 6, REST.length))
+      })
+    }
+    myRowRef.current?.scrollIntoView({ block: "center", behavior: "smooth" })
+    setFlashId(myRowInRest.id)
+    window.setTimeout(() => setFlashId(null), 900)
+  }
+
+  const visibleRest = REST.slice(0, visibleCount)
+
   return (
-    <section
-      className="w-full rounded-2xl border p-6 lg:max-w-[800px]"
-      style={{ borderColor: palette.colorBorder, backgroundColor: palette.colorSurfaceAlt }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <h2
-          className="text-lg font-semibold tracking-wide"
-          style={{ color: palette.colorText }}
-        >
-          Global Leaderboard
-        </h2>
-        <div
-          className="rounded-md px-3 py-1 text-xs font-medium"
-          style={{ color: palette.colorTextMuted, backgroundColor: palette.colorSubtleBg }}
-        >
-          Ranked - Season 4
-        </div>
+    <div className="flex w-full flex-col gap-6">
+      <TileHeader
+        title="Leaderboard"
+        subtitle="Season 4 · 200 ranked players · ends in 23 days"
+      />
+
+      {/* Podium */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {TOP_THREE.map((r, i) => (
+          <PodiumCard key={r.id} row={r} position={(i + 1) as 1 | 2 | 3} />
+        ))}
       </div>
 
-      <div
-        className="mt-5 overflow-hidden rounded-xl border"
-        style={{
-          borderColor: palette.colorSoftBorder,
-          backgroundColor: palette.colorPanel,
-        }}
-      >
+      {/* You summary */}
+      {myRow ? (
         <div
-          className="grid grid-cols-[48px_1fr_52px_60px_108px_72px] gap-x-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-          style={{ color: palette.colorTextMuted }}
+          className="relative flex flex-col items-start justify-between gap-3 overflow-hidden rounded-xl border border-[color:var(--colorSoftBorder)] px-4 py-3 sm:flex-row sm:items-center"
+          style={{
+            backgroundImage:
+              "linear-gradient(110deg, var(--colorCyanDim) 0%, var(--colorSurfaceAlt) 45%, var(--colorSurfaceAlt) 65%, var(--colorPinkDim) 100%)",
+          }}
         >
-          <div>#</div>
-          <div>Player</div>
-          <div className="text-center">W</div>
-          <div className="text-center">L</div>
-          <div className="text-center">MMR</div>
-          <div className="text-right">Change</div>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <span className="font-mono text-xs uppercase tracking-[0.18em] text-[var(--colorTextMuted)]">
+              You
+            </span>
+            <span className="font-mono font-semibold text-[var(--colorText)]">
+              #{myRow.id}
+            </span>
+            <span className="font-medium text-[var(--colorText)]">
+              {myRow.player}
+            </span>
+            <TierBadge rating={myRow.rating} />
+            <span className="font-mono text-[var(--colorTextMuted)]">
+              {myRow.wins}W · {myRow.losses}L
+            </span>
+            <span className="font-mono font-medium text-[var(--colorCyan)]">
+              {formatRating(myRow.rating)} Rating
+            </span>
+          </div>
+          {myRowInRest ? (
+            <button
+              type="button"
+              onClick={jumpToMe}
+              className="rounded-md px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--colorCyan)] transition-[filter] hover:brightness-125"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, var(--colorCyanDim), var(--colorCyanGlow))",
+              }}
+            >
+              Jump to your rank ↓
+            </button>
+          ) : null}
         </div>
-
-        <div>
-          {rows.map((r, idx) => {
-            const isYou = r.player === currentUser;
-            const changeText = `${r.change >= 0 ? "+" : ""}${r.change}`;
-            const changeColor =
-              r.change >= 0 ? palette.colorAccent : palette.colorDanger;
-
-            return (
-              <div
-                key={r.id}
-                className="grid grid-cols-[48px_1fr_52px_60px_108px_72px] items-center gap-x-3 px-4 py-3 text-sm"
-                style={{
-                  ...(idx > 0
-                    ? { borderTop: `1px solid ${palette.colorSoftBorder}` }
-                    : {}),
-                  ...(isYou ? { backgroundColor: palette.colorSubtleBg } : {}),
-                }}
-              >
-                <div style={{ color: palette.colorTextMuted }}>{r.id}</div>
-                <div className="font-medium" style={{ color: palette.colorText }}>
-                  {r.player}
-                  {isYou ? " (You)" : ""}
-                </div>
-                <div className="text-center" style={{ color: palette.colorTextMuted }}>
-                  {r.wins}
-                </div>
-                <div className="text-center" style={{ color: palette.colorTextMuted }}>
-                  {r.losses}
-                </div>
-                <div
-                  className="text-center font-medium"
-                  style={{ color: palette.colorTextMuted }}
-                >
-                  {formatMmr(r.mmr)}
-                </div>
-                <div className="text-right font-semibold" style={{ color: changeColor }}>
-                  {changeText}
-                </div>
-              </div>
-            );
-          })}
+      ) : (
+        <div className="rounded-xl border border-[color:var(--colorSoftBorder)] bg-[var(--colorSurfaceAlt)] px-4 py-3 text-sm text-[var(--colorTextMuted)]">
+          <span className="mr-3 font-mono text-xs uppercase tracking-[0.18em]">
+            You
+          </span>
+          Not ranked yet — play ranked matches to join the leaderboard.
         </div>
+      )}
+
+      {/* "TOP OF SEASON" label */}
+      <div className="font-mono text-[10px] tracking-[0.08em] text-[var(--colorTextMuted)]">
+        TOP OF SEASON
       </div>
-    </section>
-  );
+
+      {/* Scroll list */}
+      <div className="relative overflow-hidden rounded-xl border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)]">
+        <div
+          ref={scrollRef}
+          className="relative max-h-[calc(100vh-480px)] min-h-[420px] overflow-y-auto"
+        >
+          <div
+            className={`${COLUMN_GRID} sticky top-0 z-20 bg-[var(--colorPanel)] font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--colorTextMuted)]`}
+          >
+            <div>Rank</div>
+            <div>Player</div>
+            <div className="text-right">Rating</div>
+            <div className="text-right">Record</div>
+            <div className="text-right">APM</div>
+            <div className="text-right">±</div>
+          </div>
+
+          <div className="px-1 pt-1">
+            {visibleRest.map((r) => {
+              const isYou = r.player === currentUser
+              const isFlashing = flashId === r.id
+              return (
+                <LeaderboardRow
+                  key={r.id}
+                  row={r}
+                  isYou={isYou}
+                  isFlashing={isFlashing}
+                  ref={isYou ? myRowRef : undefined}
+                />
+              )
+            })}
+            {visibleCount < REST.length ? (
+              <div ref={sentinelRef} className="h-px" aria-hidden="true" />
+            ) : null}
+          </div>
+        </div>
+
+        <ProgressiveBlur position="bottom" height="25%" />
+      </div>
+    </div>
+  )
 }

@@ -1,0 +1,27 @@
+{
+  "username": "ArifMan",
+  "handle": "@arif_man",
+  "joined": "Joined Oct 2025",
+  "bio": "learning vim",
+  "peak": 1549,
+  "streak": 3,
+  "apm": 228,
+  "avgMatch": "1m 42s",
+  "percentile": "Top 40%",
+  "commands": [
+    { "label": "ci{",   "count": 1284, "pct": 100 },
+    { "label": "dd",    "count": 1021, "pct": 80 },
+    { "label": "%",     "count": 873,  "pct": 68 },
+    { "label": "f<c>",  "count": 702,  "pct": 55 },
+    { "label": "ct<c>", "count": 598,  "pct": 47 },
+    { "label": ":%s/",  "count": 421,  "pct": 33 },
+    { "label": "gUiw",  "count": 312,  "pct": 24 }
+  ],
+  "achievements": [
+    { "glyph": "⚡", "title": "Lightning Fingers", "sub": "Win a match under 60s",       "earned": true },
+    { "glyph": "✓", "title": "Hundred Club",       "sub": "Win 100 ranked matches",     "earned": true },
+    { "glyph": "∞", "title": "Marathon",           "sub": "Play 50 matches in a day",   "earned": true },
+    { "glyph": "△", "title": "Flawless",           "sub": "Win without a single typo",  "earned": false },
+    { "glyph": "※", "title": "Macro Master",       "sub": "Use a named macro to win",   "earned": false }
+  ]
+}

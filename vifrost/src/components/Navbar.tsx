@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
 export interface NavbarProps {
@@ -8,39 +8,8 @@ export interface NavbarProps {
   onLogout: () => void;
 }
 
-export function Navbar({ username, onUsernameSet, onLogout }: NavbarProps) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
+export function Navbar({ username }: NavbarProps) {
   const navigate = useNavigate();
-
-  const handleLoginClick = () => {
-    const value = window.prompt("Enter username");
-    if (value == null) return;
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    onUsernameSet(trimmed);
-  };
-
-  const handleAvatarClick = () => {
-    setDropdownOpen((prev) => !prev);
-  };
-
-  const handleLoginOption = () => {
-    setDropdownOpen(false);
-    handleLoginClick();
-  };
-
-  const handleProfileOption = () => {
-    setDropdownOpen(false);
-    navigate("/profile");
-  };
-
-  const handleLogoutClick = () => {
-    setDropdownOpen(false);
-    onLogout();
-  };
-
   return (
     <nav className="navbar">
       {/* Left: Logo */}
@@ -51,46 +20,30 @@ export function Navbar({ username, onUsernameSet, onLogout }: NavbarProps) {
         <span className="navbar-title">ViFrost</span>
       </Link>
 
-      <div className="navbar-right">
-        <button className="navbar-stats-btn" title="Stats">
+      {/* Right: Icons + Login */}
+      <div className="navbar__right">
+        <button
+          type="button"
+          className="navbar__stats-btn"
+          title="Leaderboard"
+          onClick={() => navigate("/leaderboard")}
+        >
           <img src="LeaderboardIcon.svg" alt="Leaderboard" />
         </button>
 
-        <div className="navbar-login" ref={dropdownRef}>
-          <button
-            type="button"
-            className="navbar-log-in-btn"
-            onClick={handleAvatarClick}
-          >
-            <img src="/AvatarIcon.svg" alt="Avatar" />
-          </button>
-          {dropdownOpen && (
-            <div className="navbar-dropdown">
-              <button
-                type="button"
-                className="navbar-dropdown-item"
-                onClick={handleProfileOption}
-              >
-                Profile
-              </button>
-              {username ? (
-                <button
-                  type="button"
-                  className="navbar-dropdown-item"
-                  onClick={handleLogoutClick}
-                >
-                  Logout
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="navbar-dropdown-item"
-                  onClick={handleLoginOption}
-                >
-                  Login
-                </button>
-              )}
-            </div>
+        <AnimatedThemeToggler className="navbar__theme-btn" />
+
+        <div className="navbar__login">
+          {username ? (
+            <span className="navbar__name">{username}</span>
+          ) : (
+            <button
+              type="button"
+              className="navbar__log-in-btn"
+              onClick={() => navigate("/profile")}
+            >
+              <img src="/AvatarIcon.svg" alt="Avatar" />
+            </button>
           )}
         </div>
       </div>

@@ -5,6 +5,7 @@ import type { AppOutletContext } from "../App";
 import "./LobbyPage.css";
 import hintData from "../data/hints.json";
 import { animationFrames } from "../data/animationFrames";
+import { Loader } from "../components/ui/loader";
 
 interface Hint {
   id: number;
@@ -116,15 +117,7 @@ export function LobbyPage() {
         {/* left panel: spinner, status, queue stats */}
         <section className="lobby-panel lobby-panel--left">
           <div className="lobby-status-block">
-            <div className="lobby-spinner-wrap">
-              <div className="lobby-spinner">
-                <div className="lobby-spinner__track lobby-spinner__track--outer"></div>
-                <div className="lobby-spinner__arc lobby-spinner__arc--outer"></div>
-                <div className="lobby-spinner__track lobby-spinner__track--mid"></div>
-                <div className="lobby-spinner__arc lobby-spinner__arc--mid"></div>
-                <div className="lobby-spinner__core"></div>
-              </div>
-            </div>
+            <Loader />
 
             {isWsOpen ? (
               <div className="lobby-finding-group">
