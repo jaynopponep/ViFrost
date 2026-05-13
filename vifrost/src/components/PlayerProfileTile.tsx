@@ -28,6 +28,15 @@ function accountHandleFromEmail(email: string | undefined): string {
   return `@${slug || "player"}`
 }
 
+function handleFromDisplayName(displayName: string): string {
+  const trimmed = displayName.trim() || "guest"
+  const slug = trimmed
+    .replace(/[^a-zA-Z0-9_]/g, "_")
+    .replace(/_+/g, "_")
+    .toLowerCase()
+  return `@${slug || "guest"}`
+}
+
 function joinedFromUser(createdAt: string | undefined): string {
   if (!createdAt) return "Joined recently"
   const d = new Date(createdAt)
@@ -120,10 +129,10 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
   return (
     <div className="flex w-full flex-col gap-4">
       <ProfileHeader
-        username={profileData.username}
-        handle={profileData.handle}
-        joined={profileData.joined}
-        bio={profileData.bio}
+        username={username}
+        handle={handleFromDisplayName(username)}
+        joined="Not signed in"
+        bio="Sample stats from a demo profile. Sign up to track your own progress."
         rating={rating}
       />
 

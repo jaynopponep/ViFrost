@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { isSupabaseConfigured } from "@/lib/supabase"
@@ -15,6 +15,12 @@ export function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+
+  useEffect(() => {
+    if (!success) return
+    const id = window.setTimeout(() => navigate("/login"), 2800)
+    return () => window.clearTimeout(id)
+  }, [success, navigate])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -50,7 +56,6 @@ export function SignupPage() {
     setSuccess(
       "Check your email to confirm your account if required. You can sign in once your account is active.",
     )
-    window.setTimeout(() => navigate("/login"), 2800)
   }
 
   return (

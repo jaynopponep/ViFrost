@@ -1,10 +1,12 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 
-const url = import.meta.env.VITE_SUPABASE_URL ?? ""
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ""
+const url = (import.meta.env.VITE_SUPABASE_URL ?? "").trim()
+const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? "").trim()
 
-export const supabase = createClient(url, anonKey)
+/** `null` when env is missing — avoids `createClient("", "")` throwing at module load. */
+export const supabase: SupabaseClient | null =
+  url && anonKey ? createClient(url, anonKey) : null
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(url && anonKey)
+  return supabase !== null
 }

@@ -8,7 +8,7 @@ export function ProfilePage() {
   const navigate = useNavigate()
   const { username } = useOutletContext<AppOutletContext>()
   const { user, signOut } = useAuth()
-  const safeName = username ?? "ArifMan"
+  const safeName = username ?? "Guest"
 
   return (
     <PageShell>
