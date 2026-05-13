@@ -16,7 +16,6 @@ export function Navbar() {
         <span className="navbar-title">ViFrost</span>
       </Link>
 
-      {/* Right: Icons + Login */}
       <div className="navbar__right">
         <button
           type="button"
