@@ -1,10 +1,282 @@
 [
-  { "opponent": "SnowCrash", "matchLength": "18:23", "accuracy": 92, "result": "W" },
-  { "opponent": "ZeroKelvin", "matchLength": "22:47", "accuracy": 88, "result": "W" },
-  { "opponent": "Glacier", "matchLength": "15:05", "accuracy": 79, "result": "L" },
-  { "opponent": "Frost", "matchLength": "27:11", "accuracy": 84, "result": "L" },
-  { "opponent": "ArcticFox", "matchLength": "13:56", "accuracy": 90, "result": "W" },
-  { "opponent": "BlizzardKing", "matchLength": "19:34", "accuracy": 76, "result": "L" },
-  { "opponent": "IceShard", "matchLength": "11:42", "accuracy": 94, "result": "W" },
-  { "opponent": "ChillWind", "matchLength": "16:29", "accuracy": 81, "result": "L" }
+  {
+    "id": "#02841",
+    "outcome": "W",
+    "mode": "Casual",
+    "challenge": "Refactor: indent & rename",
+    "opponent": "Aurora",
+    "oppRating": 1407,
+    "ratingChange": 24,
+    "you": {
+      "keystrokes": 61,
+      "time": 80,
+      "wpm": 130
+    },
+    "opp": {
+      "keystrokes": 74,
+      "time": 93,
+      "wpm": 102
+    },
+    "when": "2 min ago"
+  },
+  {
+    "id": "#02840",
+    "outcome": "W",
+    "mode": "Ranked",
+    "challenge": "Delete 5 lines between braces",
+    "opponent": "Charon",
+    "oppRating": 1476,
+    "ratingChange": 17,
+    "you": {
+      "keystrokes": 61,
+      "time": 37,
+      "wpm": 139
+    },
+    "opp": {
+      "keystrokes": 72,
+      "time": 55,
+      "wpm": 112
+    },
+    "when": "18 min ago"
+  },
+  {
+    "id": "#02839",
+    "outcome": "W",
+    "mode": "Ranked",
+    "challenge": "Swap function arguments",
+    "opponent": "Nova",
+    "oppRating": 1469,
+    "ratingChange": 23,
+    "you": {
+      "keystrokes": 36,
+      "time": 79,
+      "wpm": 114
+    },
+    "opp": {
+      "keystrokes": 56,
+      "time": 102,
+      "wpm": 88
+    },
+    "when": "1h ago"
+  },
+  {
+    "id": "#02838",
+    "outcome": "L",
+    "mode": "Ranked",
+    "challenge": "Fix JSON formatting",
+    "opponent": "Stratus",
+    "oppRating": 1440,
+    "ratingChange": -14,
+    "you": {
+      "keystrokes": 61,
+      "time": 44,
+      "wpm": 115
+    },
+    "opp": {
+      "keystrokes": 49,
+      "time": 37,
+      "wpm": 136
+    },
+    "when": "3h ago"
+  },
+  {
+    "id": "#02837",
+    "outcome": "W",
+    "mode": "Casual",
+    "challenge": "Align assignment block",
+    "opponent": "Triton",
+    "oppRating": 1499,
+    "ratingChange": 22,
+    "you": {
+      "keystrokes": 61,
+      "time": 77,
+      "wpm": 139
+    },
+    "opp": {
+      "keystrokes": 70,
+      "time": 98,
+      "wpm": 116
+    },
+    "when": "4h ago"
+  },
+  {
+    "id": "#02836",
+    "outcome": "L",
+    "mode": "Ranked",
+    "challenge": "Extract variable (3×)",
+    "opponent": "Charon",
+    "oppRating": 1476,
+    "ratingChange": -10,
+    "you": {
+      "keystrokes": 36,
+      "time": 51,
+      "wpm": 130
+    },
+    "opp": {
+      "keystrokes": 20,
+      "time": 33,
+      "wpm": 148
+    },
+    "when": "5h ago"
+  },
+  {
+    "id": "#02835",
+    "outcome": "L",
+    "mode": "Ranked",
+    "challenge": "Sort import block",
+    "opponent": "Vega",
+    "oppRating": 1394,
+    "ratingChange": -19,
+    "you": {
+      "keystrokes": 60,
+      "time": 74,
+      "wpm": 96
+    },
+    "opp": {
+      "keystrokes": 47,
+      "time": 67,
+      "wpm": 112
+    },
+    "when": "Yesterday"
+  },
+  {
+    "id": "#02834",
+    "outcome": "W",
+    "mode": "Ranked",
+    "challenge": "Comment out conditional",
+    "opponent": "Phobos",
+    "oppRating": 1542,
+    "ratingChange": 23,
+    "you": {
+      "keystrokes": 62,
+      "time": 57,
+      "wpm": 131
+    },
+    "opp": {
+      "keystrokes": 69,
+      "time": 80,
+      "wpm": 115
+    },
+    "when": "Yesterday"
+  },
+  {
+    "id": "#02833",
+    "outcome": "W",
+    "mode": "Casual",
+    "challenge": "Rename across buffer",
+    "opponent": "Aurora",
+    "oppRating": 1407,
+    "ratingChange": 18,
+    "you": {
+      "keystrokes": 37,
+      "time": 70,
+      "wpm": 139
+    },
+    "opp": {
+      "keystrokes": 56,
+      "time": 88,
+      "wpm": 125
+    },
+    "when": "Yesterday"
+  },
+  {
+    "id": "#02832",
+    "outcome": "D",
+    "mode": "Ranked",
+    "challenge": "Convert tabs → 2-space",
+    "opponent": "Rhea",
+    "oppRating": 1567,
+    "ratingChange": 0,
+    "you": {
+      "keystrokes": 60,
+      "time": 63,
+      "wpm": 114
+    },
+    "opp": {
+      "keystrokes": 58,
+      "time": 60,
+      "wpm": 110
+    },
+    "when": "Yesterday"
+  },
+  {
+    "id": "#02831",
+    "outcome": "W",
+    "mode": "Ranked",
+    "challenge": "Delete trailing whitespace",
+    "opponent": "Orion",
+    "oppRating": 1402,
+    "ratingChange": 15,
+    "you": {
+      "keystrokes": 62,
+      "time": 66,
+      "wpm": 116
+    },
+    "opp": {
+      "keystrokes": 67,
+      "time": 90,
+      "wpm": 108
+    },
+    "when": "2d ago"
+  },
+  {
+    "id": "#02830",
+    "outcome": "L",
+    "mode": "Ranked",
+    "challenge": "Wrap lines at 80 cols",
+    "opponent": "Callisto",
+    "oppRating": 1514,
+    "ratingChange": -19,
+    "you": {
+      "keystrokes": 37,
+      "time": 68,
+      "wpm": 139
+    },
+    "opp": {
+      "keystrokes": 23,
+      "time": 57,
+      "wpm": 147
+    },
+    "when": "2d ago"
+  },
+  {
+    "id": "#02829",
+    "outcome": "W",
+    "mode": "Casual",
+    "challenge": "Refactor: indent & rename",
+    "opponent": "Triton",
+    "oppRating": 1499,
+    "ratingChange": 15,
+    "you": {
+      "keystrokes": 60,
+      "time": 60,
+      "wpm": 129
+    },
+    "opp": {
+      "keystrokes": 79,
+      "time": 78,
+      "wpm": 116
+    },
+    "when": "2d ago"
+  },
+  {
+    "id": "#02828",
+    "outcome": "L",
+    "mode": "Ranked",
+    "challenge": "Delete 5 lines between braces",
+    "opponent": "Chronos",
+    "oppRating": 1575,
+    "ratingChange": -17,
+    "you": {
+      "keystrokes": 62,
+      "time": 72,
+      "wpm": 97
+    },
+    "opp": {
+      "keystrokes": 56,
+      "time": 53,
+      "wpm": 110
+    },
+    "when": "2d ago"
+  }
 ]

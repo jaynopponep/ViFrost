@@ -10,13 +10,19 @@ export function Avatar({ name, side, color }: AvatarProps) {
   return (
     <div className={`avatar avatar-${side}`}>
       {side === "opponent" && (
-        <span className="avatar-name" style={{ color: "var(--colorAvatarName)" }}>
+        <span
+          className="avatar-name"
+          style={{ color: 'var(--colorAvatarName)' }}
+        >
           {name}
         </span>
       )}
       <div className="avatar-circle" style={{ backgroundColor: color }} />
       {side === "player" && (
-        <span className="avatar-name" style={{ color: "var(--colorAvatarName)" }}>
+        <span
+          className="avatar-name"
+          style={{ color: 'var(--colorAvatarName)' }}
+        >
           {name}
         </span>
       )}

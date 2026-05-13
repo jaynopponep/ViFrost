@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import type { AppTheme } from "../App";
+import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
 export interface NavbarProps {
@@ -11,19 +11,8 @@ export interface NavbarProps {
   onToggleTheme: () => void;
 }
 
-export function Navbar({ username, onUsernameSet, onLogout, theme, onToggleTheme }: NavbarProps) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+export function Navbar({ username }: NavbarProps) {
   const navigate = useNavigate();
-
-  const handleLoginClick = () => {
-    const value = window.prompt("Enter username");
-    if (value == null) return;
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    onUsernameSet(trimmed);
-  };
-
   return (
     <nav className="navbar">
       {/* Logo */}
@@ -34,83 +23,30 @@ export function Navbar({ username, onUsernameSet, onLogout, theme, onToggleTheme
         <span className="navbar-title">ViFrost</span>
       </Link>
 
-      {/* Center nav links */}
-      <div className="navbar-links">
-        <Link to="/" className="navbar-link">Home</Link>
-        <Link to="/profile" className="navbar-link">Profile</Link>
-        <Link to="/match-history" className="navbar-link">History</Link>
-      </div>
-
-      {/* Right: theme toggle + Play button + user */}
-      <div className="navbar-right">
+      {/* Right: Icons + Login */}
+      <div className="navbar__right">
         <button
           type="button"
-          className="navbar-theme-toggle"
-          onClick={onToggleTheme}
-          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          aria-label="Toggle theme"
+          className="navbar__stats-btn"
+          title="Leaderboard"
+          onClick={() => navigate("/leaderboard")}
         >
-          {theme === "dark" ? "☀" : "☾"}
+          <img src="LeaderboardIcon.svg" alt="Leaderboard" />
         </button>
 
-        <button
-          type="button"
-          className="navbar-play-btn"
-          onClick={() => navigate("/")}
-        >
-          Play
-        </button>
+        <AnimatedThemeToggler className="navbar__theme-btn" />
 
-        <div className="navbar-user" ref={dropdownRef}>
-          <button
-            type="button"
-            className="navbar-user-btn"
-            onClick={() => setDropdownOpen((p) => !p)}
-          >
-            <div className="navbar-avatar">
-              {username ? username[0].toUpperCase() : "?"}
-            </div>
-            {username && <span className="navbar-username">{username}</span>}
-          </button>
-
-          {dropdownOpen && (
-            <div className="navbar-dropdown">
-              {username ? (
-                <>
-                  <div className="navbar-dropdown-header">{username}</div>
-                  <button
-                    type="button"
-                    className="navbar-dropdown-item"
-                    onClick={() => { setDropdownOpen(false); navigate("/profile"); }}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    type="button"
-                    className="navbar-dropdown-item"
-                    onClick={() => { setDropdownOpen(false); navigate("/match-history"); }}
-                  >
-                    Match History
-                  </button>
-                  <div className="navbar-dropdown-divider" />
-                  <button
-                    type="button"
-                    className="navbar-dropdown-item navbar-dropdown-item--danger"
-                    onClick={() => { setDropdownOpen(false); onLogout(); }}
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className="navbar-dropdown-item"
-                  onClick={() => { setDropdownOpen(false); handleLoginClick(); }}
-                >
-                  Login
-                </button>
-              )}
-            </div>
+        <div className="navbar__login">
+          {username ? (
+            <span className="navbar__name">{username}</span>
+          ) : (
+            <button
+              type="button"
+              className="navbar__log-in-btn"
+              onClick={() => navigate("/profile")}
+            >
+              <img src="/AvatarIcon.svg" alt="Avatar" />
+            </button>
           )}
         </div>
       </div>

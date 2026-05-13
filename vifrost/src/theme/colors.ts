@@ -1,3 +1,6 @@
+// keeping as color references. css custom properties in index.css are the source of truth for theming.
+// could potentially pass into recharts later.
+
 export interface Palette {
   colorMain: string;
   colorSurface: string;

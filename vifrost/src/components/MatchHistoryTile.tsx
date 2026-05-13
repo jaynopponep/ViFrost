@@ -1,117 +1,171 @@
-import { useOutletContext } from "react-router-dom";
-import type { AppOutletContext } from "../App";
-import matchHistoryData from "../data/matchHistory.json";
+import { useMemo, useState } from "react"
+import { useOutletContext } from "react-router-dom"
+import type { AppOutletContext } from "../App"
+import matchHistoryData from "../data/matchHistory.json"
+import { MatchFilterBar, type MatchFilter } from "./match/MatchFilterBar"
+import { MatchRow, type MatchRowData } from "./match/MatchRow"
+import { StatBlock } from "./ui/stat-block"
+import { TileHeader } from "./ui/tile-header"
 
-type MatchRow = {
-  opponent: string;
-  matchLength: string;
-  accuracy: number;
-  result: "W" | "L";
-};
+const MATCHES: MatchRowData[] = matchHistoryData as MatchRowData[]
 
-function formatPercent(v: number) {
-  return `${Math.round(v)}%`;
+const COLUMN_GRID =
+  "grid grid-cols-[72px_260px_1fr_90px_80px_80px_24px] gap-5 px-5 pb-2 pt-0"
+
+function applyFilter(filter: MatchFilter, rows: MatchRowData[]): MatchRowData[] {
+  switch (filter) {
+    case "Wins":
+      return rows.filter((m) => m.outcome === "W")
+    case "Losses":
+      return rows.filter((m) => m.outcome === "L")
+    case "Ranked":
+      return rows.filter((m) => m.mode === "Ranked")
+    case "Casual":
+      return rows.filter((m) => m.mode === "Casual")
+    default:
+      return rows
+  }
 }
 
 export function MatchHistoryTile() {
-  const { username } = useOutletContext<AppOutletContext>();
-  const safeName = username ?? "ArifMan";
+  const { username } = useOutletContext<AppOutletContext>()
+  const safeName = username ?? "ArifMan"
 
-  const matches: MatchRow[] = matchHistoryData as MatchRow[];
+  const [filter, setFilter] = useState<MatchFilter>("All")
+  const [expandedId, setExpandedId] = useState<string | null>(MATCHES[0]?.id ?? null)
 
-  const gamesPlayed = matches.length;
-  const wins = matches.filter((m) => m.result === "W").length;
-  const losses = gamesPlayed - wins;
-  const winRate = gamesPlayed ? (wins / gamesPlayed) * 100 : 0;
+  const filtered = useMemo(() => applyFilter(filter, MATCHES), [filter])
 
-  const best = matches.reduce((acc, m) => (m.accuracy > acc.accuracy ? m : acc), matches[0]);
-  const bestAccuracy = best?.accuracy ?? 0;
-  const bestOpponent = best?.opponent ?? "—";
+  const summary = useMemo(() => {
+    const wins = MATCHES.filter((m) => m.outcome === "W").length
+    const losses = MATCHES.filter((m) => m.outcome === "L").length
+    const draws = MATCHES.filter((m) => m.outcome === "D").length
+    const total = MATCHES.length
+    const ratingDelta = MATCHES.reduce((sum, m) => sum + m.ratingChange, 0)
+    const avgTime = Math.round(
+      MATCHES.reduce((sum, m) => sum + m.you.time, 0) / Math.max(total, 1),
+    )
+    const best = MATCHES.reduce((b, m) =>
+      m.you.time < b.you.time ? m : b,
+    MATCHES[0])
+    const bestDiff = best ? best.opp.time - best.you.time : 0
+    const winRate = Math.round((wins / Math.max(total, 1)) * 100)
+    return {
+      wins,
+      losses,
+      draws,
+      total,
+      ratingDelta,
+      avgTime,
+      best,
+      bestDiff,
+      winRate,
+    }
+  }, [])
+
+  const streak = useMemo(() => {
+    // Leading streak: consecutive Ws from index 0.
+    let n = 0
+    for (const m of MATCHES) {
+      if (m.outcome === "W") n++
+      else break
+    }
+    return n
+  }, [])
 
   return (
-    <section
-      className="w-full rounded-2xl border p-6 lg:mx-auto lg:w-[80%]"
-      style={{ borderColor: "var(--colorBorder)", backgroundColor: "var(--colorSurfaceAlt)" }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <h2
-          className="text-lg font-semibold tracking-wide"
-          style={{ color: "var(--colorText)" }}
-        >
-          Match History
-        </h2>
+    <div className="flex w-full flex-col gap-7">
+      <TileHeader
+        title="Match History"
+        subtitle={
+          <>
+            Last {MATCHES.length} matches · current streak{" "}
+            <span className="font-mono text-[var(--colorCyan)]">{streak}W</span>
+          </>
+        }
+        trailing={
+          <div className="rounded-md bg-[var(--colorCyanDim)] px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--colorCyan)]">
+            Latest · {safeName}
+          </div>
+        }
+      />
 
+      {/* Summary strip */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatBlock
+          label="Record"
+          value={`${summary.wins}–${summary.losses}–${summary.draws}`}
+          sub={`${summary.winRate}% win rate`}
+        />
+        <StatBlock
+          label="Rating Δ"
+          value={`${summary.ratingDelta > 0 ? "+" : ""}${summary.ratingDelta}`}
+          sub="net change"
+          accent={summary.ratingDelta > 0}
+        />
+        <StatBlock
+          label="Avg. Time"
+          value={`${summary.avgTime}s`}
+          sub="faster than opponents"
+        />
+        <StatBlock
+          label="Best Match"
+          value={summary.best?.id ?? "—"}
+          sub={
+            summary.best
+              ? `vs ${summary.best.opponent} · −${summary.bestDiff}s`
+              : ""
+          }
+        />
+      </div>
+
+      {/* Filter bar */}
+      <MatchFilterBar
+        filter={filter}
+        onFilterChange={setFilter}
+        count={filtered.length}
+      />
+
+      <div className="flex flex-col gap-2">
+        {/* Column headers */}
         <div
-          className="rounded-md px-3 py-1 text-xs font-medium"
-          style={{ color: "var(--colorTextMuted)", backgroundColor: "var(--colorSubtleBg)" }}
+          className={`${COLUMN_GRID} font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--colorTextMuted)]`}
         >
-          Latest games for {safeName}
+          <div>Result</div>
+          <div>Challenge</div>
+          <div>Opponent</div>
+          <div className="text-right">Δ Rating</div>
+          <div className="text-right">Keys</div>
+          <div className="text-right">When</div>
+          <div />
+        </div>
+
+        {/* Rows */}
+        <div>
+          {filtered.map((m) => (
+            <MatchRow
+              key={m.id}
+              match={m}
+              expanded={expandedId === m.id}
+              onToggle={() =>
+                setExpandedId(expandedId === m.id ? null : m.id)
+              }
+              currentUser={safeName}
+            />
+          ))}
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {[
-          { label: "GAMES PLAYED", value: gamesPlayed, sub: `Last ${gamesPlayed} ranked matches` },
-          { label: "WIN RATE", value: formatPercent(winRate), sub: `${wins} wins · ${losses} losses` },
-          { label: "BEST ACCURACY", value: formatPercent(bestAccuracy), sub: `vs ${bestOpponent}` },
-        ].map(({ label, value, sub }) => (
-          <div
-            key={label}
-            className="rounded-xl border p-4"
-            style={{ borderColor: "var(--colorSoftBorder)", backgroundColor: "var(--colorStatCard)" }}
-          >
-            <div className="text-xs font-semibold tracking-widest" style={{ color: "var(--colorTextMuted)" }}>
-              {label}
-            </div>
-            <div className="mt-2 text-3xl font-bold" style={{ color: "var(--colorText)" }}>
-              {value}
-            </div>
-            <div className="mt-1 text-xs" style={{ color: "var(--colorTextMuted)" }}>{sub}</div>
-          </div>
-        ))}
+      {/* Load older (decorative) */}
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={() => {}}
+          className="cursor-pointer rounded-md border border-[color:var(--colorBorder)] bg-transparent px-5 py-2.5 font-mono text-xs text-[var(--colorTextMuted)] hover:bg-[var(--colorSubtleBg)]"
+        >
+          Load older matches
+        </button>
       </div>
-
-      <div
-        className="mt-5 overflow-hidden rounded-xl border"
-        style={{ borderColor: "var(--colorSoftBorder)", backgroundColor: "var(--colorPanel)" }}
-      >
-        <div className="min-w-[760px]">
-          <div
-            className="grid grid-cols-[32px_1fr_160px_120px_88px] gap-x-3 px-4 py-3 text-xs font-semibold uppercase tracking-wider"
-            style={{ color: "var(--colorTextMuted)" }}
-          >
-            <div>#</div>
-            <div>Opponent</div>
-            <div className="text-center">Match Length</div>
-            <div className="text-center">Accuracy</div>
-            <div className="text-right">Result</div>
-          </div>
-
-          <div>
-            {matches.map((m, idx) => {
-              const resultColor = m.result === "W" ? "var(--colorAccent)" : "var(--colorDanger)";
-              return (
-                <div
-                  key={`${m.opponent}-${idx}`}
-                  className="grid grid-cols-[32px_1fr_160px_120px_88px] items-center gap-x-3 px-4 py-3 text-sm"
-                  style={{
-                    ...(idx > 0 ? { borderTop: "1px solid var(--colorSoftBorder)" } : {}),
-                    ...(idx % 2 === 0 ? { backgroundColor: "var(--colorZebra)" } : {}),
-                  }}
-                >
-                  <div style={{ color: "var(--colorTextMuted)" }}>{idx + 1}</div>
-                  <div className="font-medium" style={{ color: "var(--colorText)" }}>{m.opponent}</div>
-                  <div className="text-center" style={{ color: "var(--colorTextMuted)" }}>{m.matchLength}</div>
-                  <div className="text-center font-medium" style={{ color: "var(--colorTextMuted)" }}>
-                    {formatPercent(m.accuracy)}
-                  </div>
-                  <div className="text-right font-semibold" style={{ color: resultColor }}>{m.result}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+    </div>
+  )
 }
