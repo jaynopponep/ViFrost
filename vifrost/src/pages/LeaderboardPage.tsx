@@ -5,7 +5,7 @@ import { PageShell } from "../components/ui/page-shell"
 
 export function LeaderboardPage() {
   const { username } = useOutletContext<AppOutletContext>()
-  const safeName = username ?? "ArifMan"
+  const safeName = username ?? "Guest"
 
   return (
     <PageShell>

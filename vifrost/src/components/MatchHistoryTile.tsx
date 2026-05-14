@@ -29,7 +29,7 @@ function applyFilter(filter: MatchFilter, rows: MatchRowData[]): MatchRowData[] 
 
 export function MatchHistoryTile() {
   const { username } = useOutletContext<AppOutletContext>()
-  const safeName = username ?? "ArifMan"
+  const safeName = username ?? "Guest"
 
   const [filter, setFilter] = useState<MatchFilter>("All")
   const [expandedId, setExpandedId] = useState<string | null>(MATCHES[0]?.id ?? null)

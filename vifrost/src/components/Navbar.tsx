@@ -1,46 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
-export interface NavbarProps {
-  username: string | null;
-  onUsernameSet: (name: string) => void;
-  onLogout: () => void;
-}
-
-export function Navbar({ username, onUsernameSet, onLogout }: NavbarProps) {
+export function Navbar() {
   const navigate = useNavigate();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const handleLoginClick = () => {
-    const value = window.prompt("Enter username");
-    if (value == null) return;
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    onUsernameSet(trimmed);
-  };
-
-  const handleAvatarClick = () => {
-    setDropdownOpen((prev) => !prev);
-  };
-
-  const handleLoginOption = () => {
-    setDropdownOpen(false);
-    handleLoginClick();
-  };
-
-  const handleProfileOption = () => {
-    setDropdownOpen(false);
-    navigate("/profile");
-  };
-
-  const handleLogoutClick = () => {
-    setDropdownOpen(false);
-    onLogout();
-  };
-
+  const { user, isLoading } = useAuth();
   return (
     <nav className="navbar">
       {/* Left: Logo */}
@@ -64,39 +29,26 @@ export function Navbar({ username, onUsernameSet, onLogout }: NavbarProps) {
         <AnimatedThemeToggler className="navbar__theme-btn" />
 
         <div className="navbar__login">
-          <button
-            type="button"
-            className="navbar-log-in-btn"
-            onClick={handleAvatarClick}
-          >
-            <img src="/AvatarIcon.svg" alt="Avatar" />
-          </button>
-          {dropdownOpen && (
-            <div className="navbar-dropdown">
-              <button
-                type="button"
-                className="navbar-dropdown-item"
-                onClick={handleProfileOption}
+          {isLoading ? null : user ? (
+            <button
+              type="button"
+              className="navbar__profile-btn"
+              title="Profile"
+              onClick={() => navigate("/profile")}
+            >
+              <img src="/AvatarIcon.svg" alt="Profile" />
+            </button>
+          ) : (
+            <div className="navbar__auth-actions">
+              <Link to="/login" className="navbar__auth-btn">
+                Log in
+              </Link>
+              <Link
+                to="/signup"
+                className="navbar__auth-btn navbar__auth-btn--primary"
               >
-                Profile
-              </button>
-              {username ? (
-                <button
-                  type="button"
-                  className="navbar-dropdown-item"
-                  onClick={handleLogoutClick}
-                >
-                  Logout
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="navbar-dropdown-item"
-                  onClick={handleLoginOption}
-                >
-                  Login
-                </button>
-              )}
+                Sign up
+              </Link>
             </div>
           )}
         </div>
