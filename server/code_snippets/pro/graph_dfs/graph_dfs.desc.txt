@@ -1,1 +1,0 @@
-Find all paths from start to end in a directed graph using DFS. After exploring each neighbor, the path list is never cleaned up — the missing path.pop() causes later paths to be built on stale state, producing garbage results.

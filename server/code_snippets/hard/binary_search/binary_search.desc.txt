@@ -1,1 +1,0 @@
-Search a sorted array for a target value and return its index, or -1 if not found. The current code has an infinite loop: when nums[mid] < target, left is set to mid instead of mid+1, so the search window never shrinks. Fix the pointer update.

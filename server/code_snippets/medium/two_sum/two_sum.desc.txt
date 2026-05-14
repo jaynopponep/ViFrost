@@ -1,1 +1,0 @@
-Find two indices in nums whose values sum to target and return them as [i, j]. The hashmap stores index→value instead of value→index, so lookups never find the complement. Swap the key and value when inserting into seen.

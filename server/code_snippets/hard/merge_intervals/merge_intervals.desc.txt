@@ -1,1 +1,0 @@
-Given a list of intervals, merge all overlapping ones. The algorithm only works if the intervals are sorted by start time first — that step is missing. Add a sort before the merge loop so out-of-order inputs are handled correctly.
