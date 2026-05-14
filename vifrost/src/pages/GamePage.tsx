@@ -45,6 +45,8 @@ export function GamePage() {
       setTimeLeft(payload.remaining);
     } else if (lastMessage?.type === "game_end") {
       const payload = lastMessage.payload as GameEndPayload;
+      setPlayerScore(payload.score);
+      if (payload.opponentScore !== undefined) setOpponentScore(payload.opponentScore);
       setGameResult(payload.tied ? "tie" : payload.won ? "win" : "lose");
     }
   }, [lastMessage]);

@@ -46,6 +46,7 @@ export function LobbyPage() {
 
   // match found state for modal
   const [matchFound, setMatchFound] = useState(false);
+  const [inQueue, setInQueue] = useState(false);
   const joinWhenOpenRef = useRef(false);
   const gameDataRef = useRef<GameStartPayload | null>(null);
   const readyToEnterGameRef = useRef(false);
@@ -80,6 +81,7 @@ export function LobbyPage() {
     if (isWsOpen && joinWhenOpenRef.current) {
       sendJoinQueue(username!);
       joinWhenOpenRef.current = false;
+      setInQueue(true);
     }
   }, [isWsOpen, sendJoinQueue, username]);
 
@@ -90,7 +92,10 @@ export function LobbyPage() {
   }, []);
 
   const handleJoinQueue = () => {
-    if (wsStatus === "closed" || wsStatus === "error") {
+    if (isWsOpen) {
+      sendJoinQueue(username!);
+      setInQueue(true);
+    } else if (wsStatus === "closed" || wsStatus === "error") {
       joinWhenOpenRef.current = true;
       connectWs();
     }
@@ -119,7 +124,7 @@ export function LobbyPage() {
           <div className="lobby-status-block">
             <Loader />
 
-            {isWsOpen ? (
+            {inQueue ? (
               <div className="lobby-finding-group">
                 <h1 className="lobby-finding-text">
                   Finding match

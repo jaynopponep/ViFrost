@@ -13,7 +13,7 @@ export interface AppOutletContext {
   connectWs: () => void
   isWsOpen: boolean
   sendJoinQueue: (username: string) => void
-  sendScoreUpdate: (delta: number) => void
+  sendScoreUpdate: (delta: number, keybindDelta?: number) => void
   sendRunCode: (code: string) => void
   sendSubmit: () => void
   lastMessage: Envelope | null

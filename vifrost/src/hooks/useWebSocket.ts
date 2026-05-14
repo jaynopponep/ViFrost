@@ -26,9 +26,11 @@ export type TimerTickPayload = {
 
 export type GameEndPayload = {
   keybindsUsed?: KeybindPayload[];
-  score?: number;
+  score: number;
+  opponentScore: number;
   won: boolean;
   tied: boolean;
+  keybindBonus: number;
 };
 
 export type ScoreUpdateServerPayload = {
@@ -118,7 +120,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     [send],
   );
   const sendScoreUpdate = useCallback(
-    (delta: number) => send("score_update", { delta }),
+    (delta: number, keybindDelta = 0) => send("score_update", { delta, keybindDelta }),
     [send],
   );
   const sendRunCode = useCallback(

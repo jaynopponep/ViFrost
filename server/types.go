@@ -32,10 +32,12 @@ type TimerTickPayload struct {
 }
 
 type GameEndPayload struct {
-	KeybindsUsed []KeybindPayload `json:"keybindsUsed,omitempty"`
-	Score        int              `json:"score,omitempty"`
-	Won          bool             `json:"won"`
-	Tied         bool             `json:"tied"`
+	KeybindsUsed  []KeybindPayload `json:"keybindsUsed,omitempty"`
+	Score         int              `json:"score,omitempty"`
+	OpponentScore int              `json:"opponentScore"`
+	Won           bool             `json:"won"`
+	Tied          bool             `json:"tied"`
+	KeybindBonus  int              `json:"keybindBonus"`
 }
 
 type ErrorPayload struct {
@@ -52,7 +54,8 @@ type RunResultPayload struct {
 }
 
 type ScoreUpdateClientPayload struct {
-	Delta int `json:"delta"`
+	Delta        int `json:"delta"`
+	KeybindDelta int `json:"keybindDelta"`
 }
 
 type ScoreUpdateServerPayload struct {
@@ -66,10 +69,11 @@ type Player struct {
 	Conn     *websocket.Conn // <- TCP connection for each player's browser window open
 	Send     chan []byte
 	Room     *Room
-	Keybinds    []KeybindPayload
-	Score       int
-	PassedTests []bool
-	Submitted   bool
+	Keybinds     []KeybindPayload
+	Score        int
+	PassedTests  []bool
+	Submitted    bool
+	KeybindCount int
 	active      bool
 	mu          sync.Mutex
 }

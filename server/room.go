@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -115,11 +116,26 @@ func (r *Room) EndGame() {
 	r.mu.Unlock()
 
 	scores := [2]int{}
+	keybinds := [2]float64{}
 	for i, p := range players {
 		if p != nil {
 			p.mu.Lock()
 			scores[i] = p.Score
+			keybinds[i] = float64(p.KeybindCount)
 			p.mu.Unlock()
+		}
+	}
+
+	// Apply keybind efficiency bonus: fewer keybinds = 20 × diff bonus points
+	keybindBonus := [2]int{}
+	if keybinds[0] != keybinds[1] {
+		bonus := int(20 * math.Abs(keybinds[0]-keybinds[1]))
+		if keybinds[0] < keybinds[1] {
+			scores[0] += bonus
+			keybindBonus[0] = bonus
+		} else {
+			scores[1] += bonus
+			keybindBonus[1] = bonus
 		}
 	}
 
@@ -128,10 +144,12 @@ func (r *Room) EndGame() {
 		if p != nil {
 			p.mu.Lock()
 			end := EnvelopeFromType(MsgGameEnd, GameEndPayload{
-				KeybindsUsed: p.Keybinds,
-				Score:        p.Score,
-				Won:          !tied && scores[i] > scores[1-i],
-				Tied:         tied,
+				KeybindsUsed:  p.Keybinds,
+				Score:         scores[i],
+				OpponentScore: scores[1-i],
+				Won:           !tied && scores[i] > scores[1-i],
+				Tied:          tied,
+				KeybindBonus:  keybindBonus[i],
 			})
 			payload := MustMarshal(end)
 			p.mu.Unlock()
@@ -158,9 +176,10 @@ func (r *Room) HandleSubmit(from *Player) {
 	if r.Timer > SubmitTimerSec {
 		r.Timer = SubmitTimerSec
 	}
+	remaining := r.Timer
 	r.mu.Unlock()
 
-	tick := EnvelopeFromType(MsgTimerTick, TimerTickPayload{Remaining: SubmitTimerSec})
+	tick := EnvelopeFromType(MsgTimerTick, TimerTickPayload{Remaining: remaining})
 	r.Broadcast(MustMarshal(tick))
 }
 

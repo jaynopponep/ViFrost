@@ -82,12 +82,12 @@ func (p *Player) readPump(hub *Hub) {
 				sendErr(p, "not in a game")
 				continue
 			}
-			delta, ok := parseScoreUpdatePayload(e.Payload)
+			delta, keybindDelta, ok := parseScoreUpdatePayload(e.Payload)
 			if !ok {
 				sendErr(p, "invalid score_update payload")
 				continue
 			}
-			p.Room.HandleScoreUpdate(p, delta)
+			p.Room.HandleScoreUpdate(p, delta, keybindDelta)
 		case MsgRunCode:
 			if p.Room == nil {
 				sendErr(p, "not in a game")
@@ -120,16 +120,17 @@ func (p *Player) readPump(hub *Hub) {
 	}
 }
 
-func parseScoreUpdatePayload(p interface{}) (int, bool) {
-	m, ok := p.(map[string]interface{})
-	if !ok {
-		return 0, false
+func parseScoreUpdatePayload(p interface{}) (delta int, keybindDelta int, ok bool) {
+	m, mOk := p.(map[string]interface{})
+	if !mOk {
+		return 0, 0, false
 	}
-	delta, ok := m["delta"].(float64)
-	if !ok {
-		return 0, false
+	d, dOk := m["delta"].(float64)
+	if !dOk {
+		return 0, 0, false
 	}
-	return int(delta), true
+	kd, _ := m["keybindDelta"].(float64)
+	return int(d), int(kd), true
 }
 
 func parseKeybindPayload(p interface{}) (KeybindPayload, bool) {

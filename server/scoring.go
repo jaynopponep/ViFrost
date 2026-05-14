@@ -31,9 +31,10 @@ func (r *Room) HandleKeybind(from *Player, payload KeybindPayload) {
 	}
 }
 
-func (r *Room) HandleScoreUpdate(from *Player, delta int) {
+func (r *Room) HandleScoreUpdate(from *Player, delta int, keybindDelta int) {
 	from.mu.Lock()
 	from.Score += delta
+	from.KeybindCount += keybindDelta
 	from.mu.Unlock()
 
 	for i, p := range r.Players {
@@ -83,7 +84,7 @@ func (r *Room) HandleRunCode(from *Player, code string) {
 	from.mu.Unlock()
 
 	if delta > 0 {
-		r.HandleScoreUpdate(from, delta)
+		r.HandleScoreUpdate(from, delta, 0)
 	}
 
 	msg := EnvelopeFromType(MsgRunResult, RunResultPayload{

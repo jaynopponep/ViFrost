@@ -19,7 +19,7 @@ type VimGlobalState = {
 };
 type VimWithGlobalState = typeof Vim & { getVimGlobalState_(): VimGlobalState };
 
-export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
+export function useKeybindListener(sendScoreUpdate: (delta: number, keybindDelta?: number) => void) {
   const sendScoreUpdateRef = useRef(sendScoreUpdate);
   sendScoreUpdateRef.current = sendScoreUpdate;
 
@@ -89,7 +89,7 @@ export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
                 }
               }
               macroUseCountRef.current.set(regName, prev + count);
-              if (totalDelta > 0) sendScoreUpdateRef.current(totalDelta);
+              if (totalDelta > 0) sendScoreUpdateRef.current(totalDelta, count);
             }
           }
           return;
@@ -103,7 +103,7 @@ export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
 
         if (key === "w" || key === "b") {
           navSentRef.current = true;
-          sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT);
+          sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT, 1);
           keyBufferRef.current = "";
           return;
         }
@@ -116,7 +116,7 @@ export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
         // {n}hjkl — only awards when a numeric count is present
         if ("hjkl".includes(key) && key.length === 1 && /^\d+$/.test(buf)) {
           navSentRef.current = true;
-          sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT);
+          sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT, 1);
           keyBufferRef.current = "";
           return;
         }
@@ -135,7 +135,7 @@ export function useKeybindListener(sendScoreUpdate: (delta: number) => void) {
       const prevPos = fNavPendingRef.current;
       fNavPendingRef.current = null;
       if (update.state.selection.main.head !== prevPos) {
-        sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT);
+        sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT, 1);
       }
       return;
     }

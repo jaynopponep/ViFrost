@@ -11,7 +11,7 @@ interface AvatarProps {
 // opponent side: [result] name [circle]
 export function Avatar({ name, side, color, result }: AvatarProps) {
   const indicator = result === "win" ? "✓" : result === "lose" ? "✗" : result === "tie" ? "🏳️" : null;
-  const indicatorClass = result === "win" ? "avatar-result-win" : result === "lose" ? "avatar-result-lose" : "avatar-result-tie";
+  const indicatorClass = result === "win" ? "avatar-result-win" : result === "lose" ? "avatar-result-lose" : result === "tie" ? "avatar-result-tie" : "";
 
   return (
     <div className={`avatar avatar-${side}`}>
