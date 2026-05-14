@@ -20,9 +20,15 @@ export type KeybindPayload = {
   penalty: boolean;
 };
 
+export type TimerTickPayload = {
+  remaining: number;
+};
+
 export type GameEndPayload = {
   keybindsUsed?: KeybindPayload[];
   score?: number;
+  won: boolean;
+  tied: boolean;
 };
 
 export type ScoreUpdateServerPayload = {
@@ -40,6 +46,7 @@ export type RunResultPayload = {
 export type WebSocketStatus = "connecting" | "open" | "closed" | "error";
 
 const DEFAULT_WS_URL = `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8080/ws`;
+// const DEFAULT_WS_URL = `wss://vifrost.onrender.com/ws`;
 
 export interface UseWebSocketOptions {
   url?: string;
@@ -118,6 +125,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     (code: string) => send("run_code", { code }),
     [send],
   );
+  const sendSubmit = useCallback(() => send("submit"), [send]);
   const sendPing = useCallback(() => send("ping"), [send]);
   const sendLeave = useCallback(() => send("leave"), [send]);
 
@@ -139,6 +147,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     sendKeybind,
     sendScoreUpdate,
     sendRunCode,
+    sendSubmit,
     sendPing,
     sendLeave,
     isOpen: status === "open",

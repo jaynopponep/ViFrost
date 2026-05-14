@@ -20,11 +20,13 @@ const (
 	MsgPong        = "pong"
 	MsgRunCode     = "run_code"
 	MsgRunResult   = "run_result"
+	MsgSubmit      = "submit"
 )
 
 const (
 	GameDurationSec = 120
 	TickIntervalSec = 1
+	SubmitTimerSec  = 12
 )
 
 const SnippetsDir = "code_snippets"

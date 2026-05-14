@@ -34,6 +34,8 @@ type TimerTickPayload struct {
 type GameEndPayload struct {
 	KeybindsUsed []KeybindPayload `json:"keybindsUsed,omitempty"`
 	Score        int              `json:"score,omitempty"`
+	Won          bool             `json:"won"`
+	Tied         bool             `json:"tied"`
 }
 
 type ErrorPayload struct {
@@ -67,6 +69,7 @@ type Player struct {
 	Keybinds    []KeybindPayload
 	Score       int
 	PassedTests []bool
+	Submitted   bool
 	active      bool
 	mu          sync.Mutex
 }

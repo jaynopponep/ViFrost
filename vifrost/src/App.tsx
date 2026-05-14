@@ -15,6 +15,7 @@ export interface AppOutletContext {
   sendJoinQueue: (username: string) => void
   sendScoreUpdate: (delta: number) => void
   sendRunCode: (code: string) => void
+  sendSubmit: () => void
   lastMessage: Envelope | null
 }
 
@@ -33,7 +34,7 @@ function App() {
     sessionStorage.removeItem(USERNAME_KEY)
   }
 
-  const { status, lastMessage, connect, sendJoinQueue, sendScoreUpdate, sendRunCode } = useWebSocket({
+  const { status, lastMessage, connect, sendJoinQueue, sendScoreUpdate, sendRunCode, sendSubmit } = useWebSocket({
     connectImmediately: false,
   })
 
@@ -51,6 +52,7 @@ function App() {
             sendJoinQueue,
             sendScoreUpdate,
             sendRunCode,
+            sendSubmit,
             lastMessage,
           } satisfies AppOutletContext
         }

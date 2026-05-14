@@ -81,12 +81,12 @@ func (r *Room) Start() {
 			r.Timer--
 			remaining := r.Timer
 			r.mu.Unlock()
+			tick := EnvelopeFromType(MsgTimerTick, TimerTickPayload{Remaining: remaining})
+			r.Broadcast(MustMarshal(tick))
 			if remaining <= 0 {
 				r.EndGame()
 				return
 			}
-			tick := EnvelopeFromType(MsgTimerTick, TimerTickPayload{Remaining: remaining})
-			r.Broadcast(MustMarshal(tick))
 		}
 	}
 }
@@ -114,12 +114,24 @@ func (r *Room) EndGame() {
 	players := r.Players
 	r.mu.Unlock()
 
-	for _, p := range players {
+	scores := [2]int{}
+	for i, p := range players {
+		if p != nil {
+			p.mu.Lock()
+			scores[i] = p.Score
+			p.mu.Unlock()
+		}
+	}
+
+	tied := scores[0] == scores[1]
+	for i, p := range players {
 		if p != nil {
 			p.mu.Lock()
 			end := EnvelopeFromType(MsgGameEnd, GameEndPayload{
 				KeybindsUsed: p.Keybinds,
 				Score:        p.Score,
+				Won:          !tied && scores[i] > scores[1-i],
+				Tied:         tied,
 			})
 			payload := MustMarshal(end)
 			p.mu.Unlock()
@@ -131,6 +143,25 @@ func (r *Room) EndGame() {
 	}
 
 	r.Hub.RemoveRoom(r.ID)
+}
+
+func (r *Room) HandleSubmit(from *Player) {
+	from.mu.Lock()
+	if from.Submitted {
+		from.mu.Unlock()
+		return
+	}
+	from.Submitted = true
+	from.mu.Unlock()
+
+	r.mu.Lock()
+	if r.Timer > SubmitTimerSec {
+		r.Timer = SubmitTimerSec
+	}
+	r.mu.Unlock()
+
+	tick := EnvelopeFromType(MsgTimerTick, TimerTickPayload{Remaining: SubmitTimerSec})
+	r.Broadcast(MustMarshal(tick))
 }
 
 func (r *Room) PlayerIndex(p *Player) int {
