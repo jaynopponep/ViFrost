@@ -1,4 +1,7 @@
-import type { Palette } from "./colors";
+// keeping as color references. css custom properties in index.css are the source of truth for theming.
+// could potentially pass into recharts later.
+
+import type { Palette } from './colors';
 
 export const palette: Palette = {
   colorMain: "#080c12",

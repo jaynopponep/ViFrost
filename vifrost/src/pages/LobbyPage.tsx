@@ -5,6 +5,7 @@ import type { AppOutletContext } from "../App";
 import "./LobbyPage.css";
 import hintData from "../data/hints.json";
 import { animationFrames } from "../data/animationFrames";
+import { Loader } from "../components/ui/loader";
 
 interface Hint {
   id: number;
@@ -16,7 +17,7 @@ const MATCH_MODAL_DELAY_MS = 3000;
 export function LobbyPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { mode, difficulty } = (location.state as { mode?: string; difficulty?: string }) || {};
+  const { mode } = (location.state as { mode?: string }) || {};
 
   const {
     username,
@@ -50,6 +51,8 @@ export function LobbyPage() {
   const readyToEnterGameRef = useRef(false);
   const matchModalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const joinWhenOpenRef = useRef(false);
+  // Snapshot the message present when we mount so we don't process it as a new match.
+  const mountMessageRef = useRef(lastMessage);
 
   const tryEnterGame = useCallback(() => {
     if (readyToEnterGameRef.current && gameDataRef.current) {
@@ -58,13 +61,11 @@ export function LobbyPage() {
   }, [navigate]);
 
   // ── auto-join on mount ────────────────────────────────────────────────────
-  // Whether the WS is already open (returning from a game) or needs to connect
-  // first, we always want to enter the queue immediately.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!username) return;
     if (isWsOpen) {
-      sendJoinQueue(username, difficulty || "medium");
+      sendJoinQueue(username);
       setInQueue(true);
     } else {
       joinWhenOpenRef.current = true;
@@ -76,14 +77,14 @@ export function LobbyPage() {
   useEffect(() => {
     if (isWsOpen && joinWhenOpenRef.current && username) {
       joinWhenOpenRef.current = false;
-      sendJoinQueue(username, difficulty || "medium");
+      sendJoinQueue(username);
       setInQueue(true);
     }
-  }, [isWsOpen, sendJoinQueue, username, difficulty]);
+  }, [isWsOpen, sendJoinQueue, username]);
 
   // ── incoming WS messages ──────────────────────────────────────────────────
   useEffect(() => {
-    if (!lastMessage) return;
+    if (!lastMessage || lastMessage === mountMessageRef.current) return;
     const envelope = lastMessage as Envelope;
 
     if (envelope.type === "match_found") {
@@ -111,11 +112,11 @@ export function LobbyPage() {
     if (matchModalTimerRef.current) clearTimeout(matchModalTimerRef.current);
   }, []);
 
-  // ── manual join (fallback if auto-join didn't fire, e.g. no username yet) ──
+  // ── manual join (fallback) ────────────────────────────────────────────────
   const handleJoinQueue = () => {
     if (!username) return;
     if (isWsOpen) {
-      sendJoinQueue(username, difficulty || "medium");
+      sendJoinQueue(username);
       setInQueue(true);
     } else {
       joinWhenOpenRef.current = true;
@@ -123,10 +124,7 @@ export function LobbyPage() {
     }
   };
 
-  const diffLabel =
-    (difficulty || "medium").charAt(0).toUpperCase() + (difficulty || "medium").slice(1);
   const modeLabel = mode === "ranked" ? "Ranked" : "Casual";
-
   const showFinding = inQueue || isWsOpen;
 
   return (
@@ -143,15 +141,7 @@ export function LobbyPage() {
         {/* left panel: spinner, status, queue stats */}
         <section className="lobby-panel lobby-panel--left">
           <div className="lobby-status-block">
-            <div className="lobby-spinner-wrap">
-              <div className="lobby-spinner">
-                <div className="lobby-spinner__track lobby-spinner__track--outer" />
-                <div className="lobby-spinner__arc  lobby-spinner__arc--outer" />
-                <div className="lobby-spinner__track lobby-spinner__track--mid" />
-                <div className="lobby-spinner__arc  lobby-spinner__arc--mid" />
-                <div className="lobby-spinner__core" />
-              </div>
-            </div>
+            <Loader />
 
             {showFinding ? (
               <div className="lobby-finding-group">
@@ -163,9 +153,7 @@ export function LobbyPage() {
                     <span className="lobby-dot">.</span>
                   </span>
                 </h1>
-                <p className="lobby-status-sub">
-                  {modeLabel} &middot; {diffLabel}
-                </p>
+                <p className="lobby-status-sub">{modeLabel}</p>
               </div>
             ) : (
               <>

@@ -84,9 +84,30 @@ func (p *Player) readPump(hub *Hub) {
 					p.Difficulty = diff
 				}
 			}
-			// Clear any stale room reference from a completed game.
+			// If the player is mid-game, end that room as opponent_left for the other player.
 			p.mu.Lock()
+			oldRoom := p.Room
 			p.Room = nil
+			p.mu.Unlock()
+			if oldRoom != nil {
+				oldRoom.mu.Lock()
+				if !oldRoom.ended {
+					oldRoom.endReason = "opponent_left"
+					for _, rp := range oldRoom.Players {
+						if rp != nil && rp != p {
+							oldRoom.winner = rp
+							break
+						}
+					}
+				}
+				oldRoom.mu.Unlock()
+				oldRoom.EndGame()
+			}
+			// Reset score/state for the new game.
+			p.mu.Lock()
+			p.Score = 0
+			p.PassedTests = nil
+			p.Keybinds = nil
 			p.mu.Unlock()
 			hub.Enqueue(p)
 		case MsgPlayerReady:

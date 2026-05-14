@@ -156,21 +156,21 @@ export function TutorialPage() {
                 <span>per test passed (first time only)</span>
               </div>
               <div className="tutorial-scoring-row tutorial-scoring-row--pos">
-                <span className="tutorial-scoring-pts">+time×10</span>
-                <span>speed bonus — finish first with time left</span>
+                <span className="tutorial-scoring-pts">+20</span>
+                <span>navigation shortcuts — w, b, f{"{char}"}, {"{n}"}j</span>
               </div>
               <div className="tutorial-scoring-row tutorial-scoring-row--neg">
-                <span className="tutorial-scoring-pts">−20</span>
-                <span>mouse click inside the editor</span>
+                <span className="tutorial-scoring-pts">−5</span>
+                <span>cursor move in Normal mode (without a shortcut)</span>
               </div>
             </div>
 
             <div className="tutorial-scoring-section">
               <h4 className="tutorial-scoring-heading">Key Rules</h4>
               <ul className="tutorial-scoring-list">
-                <li>Normal Vim movements (hjkl, w, b, …) cost <strong>zero</strong> points.</li>
-                <li>Using the mouse instead of Vim costs <strong>−20 pts</strong> per click.</li>
-                <li>First player to pass all tests wins and gets the speed bonus.</li>
+                <li>Navigation shortcuts like <strong>w</strong>, <strong>b</strong>, <strong>f</strong>, and counted jumps earn <strong>+20</strong> each.</li>
+                <li>Any other cursor movement in Normal mode costs <strong>−5 pts</strong>.</li>
+                <li>First player to pass all tests wins.</li>
                 <li>If time runs out, the player with the higher score wins.</li>
               </ul>
             </div>
@@ -178,8 +178,8 @@ export function TutorialPage() {
             <div className="tutorial-scoring-section">
               <h4 className="tutorial-scoring-heading">Tip</h4>
               <p className="tutorial-scoring-tip">
-                Practice navigating with w/b/e and searching with / instead of clicking.
-                Keep your hands on the keyboard and your score will climb.
+                Use w/b to jump by word, f{"{char}"} to jump to a character, and {"{n}"}j/{"{n}"}k for counted
+                line jumps — every navigation shortcut adds +20 to your score.
               </p>
             </div>
           </div>

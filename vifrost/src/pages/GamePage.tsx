@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, Navigate, useNavigate } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
-import { EditorView } from "@codemirror/view";
 import { GameScreen } from "../components/GameScreen";
 import { Avatar } from "../components/Avatar";
+import { useKeybindListener } from "../hooks/useKeybindListener";
 import type {
   GameStartPayload,
   GameEndPayload,
@@ -14,14 +14,10 @@ import type {
 import type { AppOutletContext } from "../App";
 import "./GamePage.css";
 
-type VimModeChangeEvent = { mode: string };
-type VimCm = { on(event: "vim-mode-change", h: (e: VimModeChangeEvent) => void): void };
-type EditorViewWithVim = EditorView & { cm?: VimCm };
-
 const SCORE_RULES = [
   { label: "+400", desc: "per test passed (first time)" },
-  { label: "+time×10", desc: "speed bonus when you finish first" },
-  { label: "-20", desc: "mouse click inside editor (use Vim!)" },
+  { label: "+20", desc: "navigation shortcuts (w, b, f{char}, {n}j)" },
+  { label: "−5", desc: "cursor move in Normal mode" },
 ];
 
 function formatTime(seconds: number): string {
@@ -47,43 +43,7 @@ export function GamePage() {
   const [showRules, setShowRules] = useState(false);
   const [showDesc, setShowDesc] = useState(true);
 
-  const sendScoreUpdateRef = useRef(sendScoreUpdate);
-  sendScoreUpdateRef.current = sendScoreUpdate;
-
-  // Track vim mode for the mouse-penalty logic
-  const vimModeRef = useRef<string>("normal");
-  // True from mousedown until the next editor update that follows it
-  const pendingMousePenaltyRef = useRef(false);
-  const playerScreenRef = useRef<HTMLDivElement>(null);
-
-  const attachVimModeListener = useCallback((view: EditorViewWithVim) => {
-    view.cm?.on("vim-mode-change", (e) => {
-      vimModeRef.current = e.mode;
-    });
-  }, []);
-
-  // Mouse click in the editor while in Normal/Visual mode = penalty
-  useEffect(() => {
-    const el = playerScreenRef.current;
-    if (!el) return;
-    const onMouseDown = () => {
-      if (vimModeRef.current !== "insert") {
-        pendingMousePenaltyRef.current = true;
-      }
-    };
-    el.addEventListener("mousedown", onMouseDown);
-    return () => el.removeEventListener("mousedown", onMouseDown);
-  }, []);
-
-  // CodeMirror extension: fires on any editor update; handles mouse penalty
-  const scoreExtension = useRef([
-    EditorView.updateListener.of(() => {
-      if (pendingMousePenaltyRef.current) {
-        pendingMousePenaltyRef.current = false;
-        sendScoreUpdateRef.current(-20);
-      }
-    }),
-  ]).current;
+  const { attachVimModeListener, scoreExtension } = useKeybindListener(sendScoreUpdate);
 
   useEffect(() => {
     if (!lastMessage) return;
@@ -199,7 +159,7 @@ export function GamePage() {
         </div>
 
         <div className="game-arena-screens">
-          <div className="game-player-screen" ref={playerScreenRef}>
+          <div className="game-player-screen">
             {gameData.description && (
               <div className="game-desc">
                 <button

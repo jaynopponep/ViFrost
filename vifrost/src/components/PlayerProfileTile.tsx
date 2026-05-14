@@ -1,114 +1,127 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"
+import leaderboardData from "../data/globalLeaderboard.json"
+import profileData from "../data/profile.json"
+import { Achievement } from "./profile/Achievement"
+import { ActivityHeatmap } from "./profile/ActivityHeatmap"
+import { CommandBar } from "./profile/CommandBar"
+import { ProfileHeader } from "./profile/ProfileHeader"
+import { RatingChart } from "./profile/RatingChart"
+import { Panel } from "./ui/panel"
+import { SectionLabel } from "./ui/section-label"
+import { StatBlock } from "./ui/stat-block"
 
 export interface PlayerProfileTileProps {
-  username: string;
+  username: string
 }
 
+type LeaderboardRowLite = { player: string; rating: number }
+
+const LIFETIME_WINS = 72
+const LIFETIME_LOSSES = 41
+const LIFETIME_GAMES = LIFETIME_WINS + LIFETIME_LOSSES
+const LIFETIME_WIN_RATE = Math.round((LIFETIME_WINS / LIFETIME_GAMES) * 100)
+
+const ACHIEVEMENTS_EARNED = profileData.achievements.filter((a) => a.earned).length
+const ACHIEVEMENTS_TOTAL = 32
+
 export function PlayerProfileTile({ username }: PlayerProfileTileProps) {
-  const initial = (username[0] ?? "A").toUpperCase();
-  const navigate = useNavigate();
+  const rows = leaderboardData as LeaderboardRowLite[]
+  const myRow = rows.find((r) => r.player === username)
+  const rating = myRow?.rating ?? 1482
+  const navigate = useNavigate()
 
   return (
-    <section
-      className="w-full rounded-2xl border p-6 lg:max-w-[390px]"
-      style={{ borderColor: "var(--colorBorder)", backgroundColor: "var(--colorSurfaceAlt)" }}
-    >
-      <h2
-        className="text-lg font-semibold tracking-wide"
-        style={{ color: "var(--colorText)" }}
-      >
-        Player Profile
-      </h2>
+    <div className="flex w-full flex-col gap-4">
+      <ProfileHeader
+        username={profileData.username}
+        handle={profileData.handle}
+        joined={profileData.joined}
+        bio={profileData.bio}
+        rating={rating}
+      />
 
-      <div className="mt-5 flex items-center gap-4">
-        <div
-          className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-semibold"
-          style={{
-            color: "var(--colorSurfaceAlt)",
-            backgroundImage: "linear-gradient(135deg, var(--colorAccent), var(--colorAccentHover))",
-          }}
-        >
-          {initial}
-        </div>
-
-        <div className="flex flex-col">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-semibold" style={{ color: "var(--colorText)" }}>
-              {username}
-            </span>
-            <span
-              className="rounded-full px-3 py-1 text-xs font-medium"
-              style={{ color: "var(--colorTextMuted)", backgroundColor: "var(--colorSubtleBg)" }}
-            >
-              Ranked - 1,482 MMR
-            </span>
-          </div>
-          <span className="mt-1 text-xs" style={{ color: "var(--colorTextMuted)" }}>
-            Current user
-          </span>
-        </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <StatBlock
+          label="Rating"
+          value={rating.toLocaleString("en-US")}
+          sub={`Peak ${profileData.peak.toLocaleString("en-US")}`}
+          accent
+        />
+        <StatBlock
+          label="Percentile"
+          value={profileData.percentile}
+          sub="of ranked players"
+        />
+        <StatBlock
+          label="Win Rate"
+          value={`${LIFETIME_WIN_RATE}%`}
+          sub={`${LIFETIME_WINS}W · ${LIFETIME_LOSSES}L`}
+        />
+        <StatBlock
+          label="Streak"
+          value={`${profileData.streak}W`}
+          sub="current · peak 8W"
+          accent
+        />
+        <StatBlock
+          label="APM"
+          value={profileData.apm}
+          sub="avg actions/min"
+        />
+        <StatBlock
+          label="Avg. Match"
+          value={profileData.avgMatch}
+          sub="median duration"
+        />
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        {[
-          { label: "WINS", value: 72, sub: "Last 10: 7-3" },
-          { label: "LOSSES", value: 41, sub: "Streak: 3 W" },
-        ].map(({ label, value, sub }) => (
-          <div
-            key={label}
-            className="rounded-xl border p-4"
-            style={{ borderColor: "var(--colorSoftBorder)", backgroundColor: "var(--colorStatCard)" }}
-          >
-            <div className="text-xs font-semibold tracking-widest" style={{ color: "var(--colorTextMuted)" }}>
-              {label}
+      <RatingChart />
+
+      <ActivityHeatmap />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
+        <Panel>
+          <SectionLabel className="mb-3.5">Most used commands</SectionLabel>
+          {profileData.commands.map((c) => (
+            <CommandBar
+              key={c.label}
+              label={c.label}
+              count={c.count}
+              pct={c.pct}
+            />
+          ))}
+        </Panel>
+
+        <Panel>
+          <div className="mb-3.5 flex items-baseline justify-between">
+            <SectionLabel>Achievements</SectionLabel>
+            <div className="font-mono text-[11px] text-[var(--colorTextMuted)]">
+              {ACHIEVEMENTS_EARNED} / {ACHIEVEMENTS_TOTAL}
             </div>
-            <div className="mt-2 text-3xl font-bold" style={{ color: "var(--colorText)" }}>
-              {value}
-            </div>
-            <div className="mt-1 text-xs" style={{ color: "var(--colorTextMuted)" }}>{sub}</div>
           </div>
-        ))}
+          <div className="flex flex-col gap-2">
+            {profileData.achievements.map((a) => (
+              <Achievement
+                key={a.title}
+                glyph={a.glyph}
+                title={a.title}
+                sub={a.sub}
+                earned={a.earned}
+              />
+            ))}
+          </div>
+        </Panel>
       </div>
 
-      <div
-        className="mt-5 rounded-xl border p-4"
-        style={{ borderColor: "var(--colorSoftBorder)", backgroundColor: "var(--colorPanel)" }}
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-xs font-semibold tracking-widest" style={{ color: "var(--colorTextMuted)" }}>
-            NEXT RANK: DIAMOND
-          </div>
-          <div className="text-xs font-semibold" style={{ color: "var(--colorTextMuted)" }}>68%</div>
-        </div>
-
-        <div
-          className="mt-3 h-2 overflow-hidden rounded-full"
-          style={{ backgroundColor: "var(--colorSoftBorder)" }}
+      <div className="mt-2 text-right">
+        <button
+          type="button"
+          onClick={() => navigate("/match-history")}
+          className="cursor-pointer font-mono text-[12px] text-[var(--colorTextMuted)] underline underline-offset-4 hover:text-[var(--colorCyan)]"
         >
-          <div
-            className="h-full w-[68%]"
-            style={{ backgroundImage: "linear-gradient(90deg, var(--colorAccent), var(--colorAccentHover))" }}
-          />
-        </div>
-
-        <div className="mt-3 text-xs" style={{ color: "var(--colorTextMuted)" }}>
-          Win 3 more ranked games to promote.
-        </div>
+          View full match history →
+        </button>
       </div>
-
-      <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--colorTextMuted)" }}>
-        Casual games are not counted toward your ranked MMR, but they still
-        appear in your match history.
-      </p>
-
-      <button
-        type="button"
-        className="mt-3 text-left text-xs font-medium underline underline-offset-4"
-        style={{ color: "var(--colorTextMuted)" }}
-        onClick={() => navigate("/match-history")}
-      >
-        View full match history &rarr;
-      </button>
-    </section>
-  );
+    </div>
+  )
 }

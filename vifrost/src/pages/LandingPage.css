@@ -10,74 +10,95 @@
   margin: 0 auto;
   width: 100%;
   position: relative;
+  overflow: hidden;
+  background: var(--colorMain);
 }
 
-/* Radial glow behind the hero */
-.landing::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 700px;
-  height: 400px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(157, 227, 247, 0.07) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-  z-index: 0;
+/* ── Logo & wordmark ── */
+.landing__logo-wrap {
+  margin-bottom: 1.5rem;
+  animation: logo-float 4s ease-in-out infinite;
 }
 
-/* ── Hero ── */
-.landing-hero {
+.landing__logo {
+  width: 68px;
+  height: auto;
+  display: block;
+  color: var(--colorCyan);
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-7px); }
+}
+
+.landing__wordmark {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--colorText);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  margin-bottom: 0.6rem;
   text-align: center;
+}
+
+.landing__tagline {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--colorCyan) 70%, transparent);
+  letter-spacing: 0.02em;
+  margin-bottom: 3.25rem;
+  text-align: center;
+}
+
+/* ── Play cards ── */
+.landing__cards {
+  display: flex;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.landing__card-inner {
+  width: 210px;
+  min-height: 175px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
+  justify-content: center;
+  gap: 0.875rem;
+  padding: 1.5rem;
 }
 
-.landing-title {
-  font-size: clamp(3.5rem, 9vw, 6rem);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  margin: 0;
-  background: linear-gradient(135deg, #9de3f7 0%, #a78bfa 50%, #9de3f7 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: landing-title-shimmer 5s linear infinite;
-  filter: drop-shadow(0 0 32px rgba(157, 227, 247, 0.3));
+.landing__card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--colorCyanDim);
+  border: 1px solid var(--colorCyanGlow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
-@keyframes landing-title-shimmer {
-  0%   { background-position: 0% center; }
-  100% { background-position: 200% center; }
+.landing__card-inner:hover .landing__card-icon {
+  background: var(--colorCyanGlow);
+  border-color: var(--colorCyan);
 }
 
-.landing-tagline {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  letter-spacing: 0.04em;
-  margin: 0;
+.landing__card-icon svg {
+  width: 26px;
+  height: 26px;
+  color: var(--colorCyan);
 }
 
-.landing-desc {
-  font-size: 0.97rem;
-  color: rgba(255, 255, 255, 0.45);
-  max-width: 520px;
-  line-height: 1.75;
-  margin: 0;
-}
-
-.landing-desc strong {
-  color: rgba(255, 255, 255, 0.75);
+.landing__card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--colorText);
+  letter-spacing: 0.06em;
 }
 
 /* ── Feature highlights ── */
@@ -133,14 +154,14 @@
 .landing-feature-title {
   font-size: 0.92rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--colorText);
   margin: 0;
   letter-spacing: 0.02em;
 }
 
 .landing-feature-desc {
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--colorTextMuted);
   line-height: 1.65;
   margin: 0;
 }
@@ -160,7 +181,7 @@
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--colorTextMuted);
   margin: 0;
 }
 
@@ -182,10 +203,10 @@
   align-items: flex-start;
   gap: 0.65rem;
   font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--colorTextMuted);
   line-height: 1.6;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--colorSubtleBg);
+  border: 1px solid var(--colorSoftBorder);
   border-radius: 8px;
   padding: 0.85rem 1rem;
 }
@@ -206,108 +227,10 @@
   margin-top: 0.1rem;
 }
 
-/* ── Difficulty selector ── */
-.landing-difficulty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  position: relative;
-  z-index: 1;
-}
-
-.landing-difficulty-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.3);
-  margin: 0;
-}
-
-.landing-diff-buttons {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.landing-diff-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 0.38rem 1rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
-  letter-spacing: 0.04em;
-}
-
-.landing-diff-btn:hover {
-  border-color: var(--colorCyan);
-  color: var(--colorCyan);
-}
-
-.landing-diff-btn--active {
-  border-color: var(--colorCyan);
-  color: var(--colorCyan);
-  background: rgba(157, 227, 247, 0.1);
-  box-shadow: 0 0 12px rgba(157, 227, 247, 0.15);
-}
-
-/* ── Play buttons ── */
-.landing-play-buttons {
-  display: flex;
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.landing-play-btn {
-  width: 170px;
-  height: 58px;
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.15s;
-  border: none;
-  text-transform: uppercase;
-}
-
-.landing-play-btn:hover {
-  transform: translateY(-3px);
-}
-
-.landing-play-btn--casual {
-  background: var(--colorCyan);
-  color: #0a0e14;
-  box-shadow: 0 0 24px rgba(157, 227, 247, 0.3);
-}
-
-.landing-play-btn--casual:hover {
-  box-shadow: 0 0 36px rgba(157, 227, 247, 0.5);
-}
-
-.landing-play-btn--ranked {
-  background: transparent;
-  border: 2px solid var(--colorCyan);
-  color: var(--colorCyan);
-  box-shadow: inset 0 0 16px rgba(157, 227, 247, 0.05);
-}
-
-.landing-play-btn--ranked:hover {
-  background: rgba(157, 227, 247, 0.08);
-  box-shadow: 0 0 24px rgba(157, 227, 247, 0.2);
-}
-
 /* ── Tutorial nudge ── */
 .landing-tutorial-link {
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--colorTextMuted);
   margin: 0;
   position: relative;
   z-index: 1;

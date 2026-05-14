@@ -1,20 +1,18 @@
-import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import type { AppTheme } from "../App";
+import { useRef, useState } from "react";
+import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
 export interface NavbarProps {
   username: string | null;
   onUsernameSet: (name: string) => void;
   onLogout: () => void;
-  theme: AppTheme;
-  onToggleTheme: () => void;
 }
 
-export function Navbar({ username, onUsernameSet, onLogout, theme, onToggleTheme }: NavbarProps) {
+export function Navbar({ username, onUsernameSet, onLogout }: NavbarProps) {
+  const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   const handleLoginClick = () => {
     const value = window.prompt("Enter username");
@@ -34,34 +32,19 @@ export function Navbar({ username, onUsernameSet, onLogout, theme, onToggleTheme
         <span className="navbar-title">ViFrost</span>
       </Link>
 
-      {/* Center nav links */}
-      <div className="navbar-links">
-        <Link to="/" className="navbar-link">Home</Link>
-        <Link to="/profile" className="navbar-link">Profile</Link>
-        <Link to="/match-history" className="navbar-link">History</Link>
-      </div>
-
-      {/* Right: theme toggle + Play button + user */}
-      <div className="navbar-right">
+      <div className="navbar__right">
         <button
           type="button"
-          className="navbar-theme-toggle"
-          onClick={onToggleTheme}
-          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          aria-label="Toggle theme"
+          className="navbar__stats-btn"
+          title="Leaderboard"
+          onClick={() => navigate("/leaderboard")}
         >
-          {theme === "dark" ? "☀" : "☾"}
+          <img src="LeaderboardIcon.svg" alt="Leaderboard" />
         </button>
 
-        <button
-          type="button"
-          className="navbar-play-btn"
-          onClick={() => navigate("/")}
-        >
-          Play
-        </button>
+        <AnimatedThemeToggler className="navbar__theme-btn" />
 
-        <div className="navbar-user" ref={dropdownRef}>
+        <div className="navbar__login" ref={dropdownRef}>
           <button
             type="button"
             className="navbar-user-btn"

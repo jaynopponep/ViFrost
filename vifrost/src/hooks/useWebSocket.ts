@@ -1,65 +1,65 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type Envelope<T = unknown> = {
-  type: string
-  payload?: T
-}
+  type: string;
+  payload?: T;
+};
 
 export type GameStartPayload = {
-  roomId: string
-  snippet: string
-  description?: string
-  duration: number
-  opponentName: string
-  playerColor: string
-  opponentColor: string
-}
+  roomId: string;
+  snippet: string;
+  description?: string;
+  duration: number;
+  opponentName: string;
+  playerColor: string;
+  opponentColor: string;
+};
 
 export type KeybindPayload = {
-  keys: string
-  complex: boolean
-  penalty: boolean
-}
+  keys: string;
+  complex: boolean;
+  penalty: boolean;
+};
 
 export type GameEndPayload = {
-  keybindsUsed?: KeybindPayload[]
-  score: number
-  opponentScore: number
-  isWinner: boolean
-  reason: string // "timeout" | "completion" | "opponent_left"
-}
+  keybindsUsed?: KeybindPayload[];
+  score: number;
+  opponentScore: number;
+  isWinner: boolean;
+  reason: string; // "timeout" | "completion" | "opponent_left"
+};
 
 export type ScoreUpdateServerPayload = {
-  myScore: number
-  opponentScore: number
-}
+  myScore: number;
+  opponentScore: number;
+};
 
-export type ErrorPayload = { message: string }
+export type ErrorPayload = { message: string };
 
 export type TestResult = {
-  passed: boolean
-  actual: string
-  expected: string
-}
+  passed: boolean;
+  actual: string;
+  expected: string;
+};
 
 export type RunResultPayload = {
-  tests: TestResult[]
-  delta: number
-}
+  tests: TestResult[];
+  delta: number;
+};
 
 export type QueueStatsPayload = {
-  playersOnline: number
-  inQueue: number
-}
+  playersOnline: number;
+  inQueue: number;
+};
 
-export type WebSocketStatus = 'connecting' | 'open' | 'closed' | 'error'
+export type WebSocketStatus = "connecting" | "open" | "closed" | "error";
 
-const DEFAULT_WS_URL = `ws://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8080/ws`
+const DEFAULT_WS_URL = `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8080/ws`;
 
 export interface UseWebSocketOptions {
-  url?: string
-  onMessage?: (envelope: Envelope) => void
-  connectImmediately?: boolean
+  url?: string;
+  onMessage?: (envelope: Envelope) => void;
+  connectImmediately?: boolean;
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
@@ -67,74 +67,82 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     url = DEFAULT_WS_URL,
     onMessage,
     connectImmediately = true,
-  } = options
+  } = options;
 
-  const [status, setStatus] = useState<WebSocketStatus>('closed')
-  const [lastMessage, setLastMessage] = useState<Envelope | null>(null)
-  const wsRef = useRef<WebSocket | null>(null)
-  const onMessageRef = useRef(onMessage)
-  onMessageRef.current = onMessage
+  const [status, setStatus] = useState<WebSocketStatus>("closed");
+  const [lastMessage, setLastMessage] = useState<Envelope | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const onMessageRef = useRef(onMessage);
+  onMessageRef.current = onMessage;
 
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return
-    setStatus('connecting')
-    const ws = new WebSocket(url)
-    wsRef.current = ws
+    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    setStatus("connecting");
+    const ws = new WebSocket(url);
+    wsRef.current = ws;
 
-    ws.onopen = () => setStatus('open')
+    ws.onopen = () => setStatus("open");
     ws.onclose = () => {
-      setStatus('closed')
-      wsRef.current = null
-    }
-    ws.onerror = () => setStatus('error')
+      setStatus("closed");
+      wsRef.current = null;
+    };
+    ws.onerror = () => setStatus("error");
 
     ws.onmessage = (event) => {
       try {
-        const envelope = JSON.parse(event.data as string) as Envelope
-        setLastMessage(envelope)
-        onMessageRef.current?.(envelope)
+        const envelope = JSON.parse(event.data as string) as Envelope;
+        setLastMessage(envelope);
+        onMessageRef.current?.(envelope);
       } catch {
-        setLastMessage({ type: 'error', payload: { message: 'Invalid JSON' } })
+        setLastMessage({ type: "error", payload: { message: "Invalid JSON" } });
       }
-    }
+    };
 
     return () => {
-      ws.close()
-    }
-  }, [url])
+      ws.close();
+    };
+  }, [url]);
 
   const disconnect = useCallback(() => {
-    wsRef.current?.close()
-    wsRef.current = null
-    setStatus('closed')
-    setLastMessage(null)
-  }, [])
+    wsRef.current?.close();
+    wsRef.current = null;
+    setStatus("closed");
+    setLastMessage(null);
+  }, []);
 
   const send = useCallback((type: string, payload?: unknown) => {
-    const ws = wsRef.current
-    if (ws?.readyState !== WebSocket.OPEN) return
-    ws.send(JSON.stringify({ type, payload: payload ?? null }))
-  }, [])
+    const ws = wsRef.current;
+    if (ws?.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({ type, payload: payload ?? null }));
+  }, []);
 
   const sendJoinQueue = useCallback(
-    (username: string, difficulty?: string) =>
-      send('join_queue', { username, difficulty: difficulty ?? 'medium' }),
+    (username: string) => send("join_queue", { username }),
     [send],
-  )
-  const sendPlayerReady = useCallback(() => send('player_ready', null), [send])
-  const sendKeybind = useCallback((payload: KeybindPayload) => send('keybind', payload), [send])
-  const sendScoreUpdate = useCallback((delta: number) => send('score_update', { delta }), [send])
-  const sendRunCode = useCallback((code: string) => send('run_code', { code }), [send])
-  const sendPing = useCallback(() => send('ping'), [send])
-  const sendLeave = useCallback(() => send('leave'), [send])
+  );
+  const sendPlayerReady = useCallback(() => send("player_ready", null), [send]);
+  const sendKeybind = useCallback(
+    (payload: KeybindPayload) => send("keybind", payload),
+    [send],
+  );
+  const sendScoreUpdate = useCallback(
+    (delta: number) => send("score_update", { delta }),
+    [send],
+  );
+  const sendRunCode = useCallback(
+    (code: string) => send("run_code", { code }),
+    [send],
+  );
+  const sendPing = useCallback(() => send("ping"), [send]);
+  const sendLeave = useCallback(() => send("leave"), [send]);
 
   useEffect(() => {
-    if (connectImmediately) connect()
+    if (connectImmediately) connect();
     return () => {
-      wsRef.current?.close()
-      wsRef.current = null
-    }
-  }, [connectImmediately, connect])
+      wsRef.current?.close();
+      wsRef.current = null;
+    };
+  }, [connectImmediately, connect]);
 
   return {
     status,
@@ -149,6 +157,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     sendRunCode,
     sendPing,
     sendLeave,
-    isOpen: status === 'open',
-  }
+    isOpen: status === "open",
+  };
 }

@@ -46,47 +46,15 @@
     text-shadow: 0 0 16px var(--colorCyanGlow);
 }
 
-/* ── Center nav links ── */
-.navbar-links {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.navbar-link {
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.5);
-    text-decoration: none;
-    letter-spacing: 0.05em;
-    padding: 0.3rem 0.75rem;
-    border-radius: 4px;
-    transition: color 0.15s, background 0.15s;
-}
-
-.navbar-link:hover {
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(255, 255, 255, 0.06);
-}
-
-/* ── Right side ── */
-.navbar-right {
+/* Right: Icons + Login */
+.navbar__right {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     flex-shrink: 0;
 }
 
-/* Theme toggle */
-.navbar-theme-toggle {
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-    width: 2rem;
-    height: 2rem;
+.navbar__stats-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -96,39 +64,49 @@
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
     flex-shrink: 0;
-}
-
-.navbar-theme-toggle:hover {
-    border-color: var(--colorCyan);
-    color: var(--colorCyan);
-    background: var(--colorCyanDim);
-}
-
-/* Play button */
-.navbar-play-btn {
-    background: var(--colorCyan);
-    color: #0a0e14;
+    background: none;
     border: none;
-    border-radius: 5px;
-    padding: 0.35rem 1rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: opacity 0.15s, box-shadow 0.15s;
-    box-shadow: 0 0 12px var(--colorCyanGlow);
 }
 
-.navbar-play-btn:hover {
-    opacity: 0.85;
-    box-shadow: 0 0 20px var(--colorCyanGlow);
+.navbar__stats-btn img {
+    height: 28px;
+    width: auto;
 }
 
-/* User area */
-.navbar-user {
+/* Login */
+.navbar__login {
+    display: flex;
+    align-items: center;
     position: relative;
 }
 
+.navbar__name {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+    color: #ede8f5;
+    letter-spacing: 0.04em;
+}
+
+.navbar__theme-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #ede8f5;
+    display: flex;
+    align-items: center;
+}
+
+.navbar__theme-btn svg {
+    height: 24px;
+    width: 24px;
+}
+
+.navbar__theme-btn:hover {
+    color: var(--colorCyan);
+}
+
+/* User area */
 .navbar-user-btn {
     display: flex;
     align-items: center;
@@ -228,63 +206,4 @@
     height: 1px;
     background: rgba(255, 255, 255, 0.07);
     margin: 0.2rem 0;
-}
-
-/* ── Light theme overrides ── */
-[data-theme="light"] .navbar {
-    background: var(--navbarBg);
-    border-bottom-color: rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-}
-
-[data-theme="light"] .navbar-link {
-    color: rgba(0, 0, 0, 0.55);
-}
-
-[data-theme="light"] .navbar-link:hover {
-    color: rgba(0, 0, 0, 0.9);
-    background: rgba(0, 0, 0, 0.05);
-}
-
-[data-theme="light"] .navbar-theme-toggle {
-    border-color: rgba(0, 0, 0, 0.15);
-    color: rgba(0, 0, 0, 0.5);
-}
-
-[data-theme="light"] .navbar-user-btn {
-    background: rgba(0, 0, 0, 0.05);
-    border-color: rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="light"] .navbar-user-btn:hover {
-    background: rgba(0, 0, 0, 0.09);
-    border-color: rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="light"] .navbar-username {
-    color: rgba(0, 0, 0, 0.75);
-}
-
-[data-theme="light"] .navbar-dropdown {
-    background: #ffffff;
-    border-color: rgba(0, 0, 0, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="light"] .navbar-dropdown-item {
-    color: rgba(0, 0, 0, 0.7);
-}
-
-[data-theme="light"] .navbar-dropdown-item:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: #111827;
-}
-
-[data-theme="light"] .navbar-dropdown-divider {
-    background: rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="light"] .navbar-dropdown-header {
-    border-bottom-color: rgba(0, 0, 0, 0.08);
 }

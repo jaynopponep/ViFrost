@@ -3,6 +3,7 @@ import type { EditorView } from '@codemirror/view'
 import { python } from '@codemirror/lang-python'
 import { vim } from '@replit/codemirror-vim'
 import CodeMirror from '@uiw/react-codemirror'
+import { lineNumbersRelative } from '@uiw/codemirror-extensions-line-numbers-relative'
 import { useMemo } from 'react'
 
 export interface GameScreenProps {
@@ -49,11 +50,11 @@ export function GameScreen({
       height={height}
       width={width}
       theme={theme}
-      basicSetup={true}
+      basicSetup={{ lineNumbers: false }}
       editable={!readOnly}
       readOnly={readOnly}
       placeholder={placeholder}
-      extensions={extensions}
+      extensions={[lineNumbersRelative, ...extensions]}
     />
   )
 }
