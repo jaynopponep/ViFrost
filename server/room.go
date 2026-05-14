@@ -117,11 +117,23 @@ func (r *Room) EndGame() {
 
 	scores := [2]int{}
 	keybinds := [2]float64{}
+	passed := [2]int{}
+	submitTimes := [2]time.Time{}
+	totalTests := 0
 	for i, p := range players {
 		if p != nil {
 			p.mu.Lock()
 			scores[i] = p.Score
 			keybinds[i] = float64(p.KeybindCount)
+			submitTimes[i] = p.SubmitTime
+			for _, ok := range p.PassedTests {
+				if ok {
+					passed[i]++
+				}
+			}
+			if n := len(p.PassedTests); n > totalTests {
+				totalTests = n
+			}
 			p.mu.Unlock()
 		}
 	}
@@ -136,6 +148,48 @@ func (r *Room) EndGame() {
 		} else {
 			scores[1] += bonus
 			keybindBonus[1] = bonus
+		}
+	}
+
+	// Apply completion bonus: more progress = 200 * (1 + gap) bonus points
+	if totalTests > 0 && passed[0] != passed[1] {
+		gap := math.Abs(float64(passed[0])-float64(passed[1])) / float64(totalTests)
+		bonus := int(200.0 * (1.0 + gap))
+		if passed[0] > passed[1] {
+			scores[0] += bonus
+		} else {
+			scores[1] += bonus
+		}
+	}
+
+	// Apply finish-time bonus: first to submit earns points based on time gap
+	t0, t1 := submitTimes[0], submitTimes[1]
+	if !t0.IsZero() || !t1.IsZero() {
+		var first, second int
+		var diffSec float64
+		switch {
+		case !t0.IsZero() && !t1.IsZero():
+			diff := t0.Sub(t1).Seconds()
+			if diff < 0 {
+				first, second, diffSec = 0, 1, -diff
+			} else {
+				first, second, diffSec = 1, 0, diff
+			}
+		case !t0.IsZero():
+			first, second, diffSec = 0, 1, 21
+		default:
+			first, second, diffSec = 1, 0, 21
+		}
+		_ = second
+		var bonus int
+		switch {
+		case diffSec > 8:
+			bonus = 200
+		case diffSec >= 3:
+			bonus = int(20 * diffSec)
+		}
+		if bonus > 0 {
+			scores[first] += bonus
 		}
 	}
 
@@ -170,6 +224,7 @@ func (r *Room) HandleSubmit(from *Player) {
 		return
 	}
 	from.Submitted = true
+	from.SubmitTime = time.Now()
 	from.mu.Unlock()
 
 	r.mu.Lock()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -33,7 +34,7 @@ type TimerTickPayload struct {
 
 type GameEndPayload struct {
 	KeybindsUsed  []KeybindPayload `json:"keybindsUsed,omitempty"`
-	Score         int              `json:"score,omitempty"`
+	Score         int              `json:"score"`
 	OpponentScore int              `json:"opponentScore"`
 	Won           bool             `json:"won"`
 	Tied          bool             `json:"tied"`
@@ -73,6 +74,7 @@ type Player struct {
 	Score        int
 	PassedTests  []bool
 	Submitted    bool
+	SubmitTime   time.Time
 	KeybindCount int
 	active      bool
 	mu          sync.Mutex

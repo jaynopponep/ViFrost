@@ -41,7 +41,7 @@ func (h *Hub) matchmaking() {
 			h.rooms[room.ID] = room
 			h.roomMu.Unlock()
 			queue = queue[:0]
-			room.Start()
+			go room.Start()
 		}
 	}
 }
