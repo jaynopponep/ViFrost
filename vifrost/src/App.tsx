@@ -1,45 +1,54 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { Navbar } from './components/Navbar'
-import { useWebSocket } from './hooks/useWebSocket'
-import type { Envelope, WebSocketStatus } from './hooks/useWebSocket'
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
+import { Navbar } from "./components/Navbar";
+import { useAuth } from "./contexts/AuthContext";
+import { displayNameFromUser } from "./lib/displayNameFromUser";
+import { useWebSocket } from "./hooks/useWebSocket";
+import type { Envelope, WebSocketStatus } from "./hooks/useWebSocket";
 
-const USERNAME_KEY = 'vifrost_username'
+const USERNAME_KEY = "vifrost_username";
 
 export interface AppOutletContext {
-  username: string | null
-  setUsername: (name: string) => void
-  wsStatus: WebSocketStatus
-  connectWs: () => void
-  isWsOpen: boolean
-  sendJoinQueue: (username: string) => void
-  sendScoreUpdate: (delta: number) => void
-  sendRunCode: (code: string) => void
-  lastMessage: Envelope | null
+  username: string | null;
+  setUsername: (name: string) => void;
+  wsStatus: WebSocketStatus;
+  connectWs: () => void;
+  isWsOpen: boolean;
+  sendJoinQueue: (username: string) => void;
+  sendScoreUpdate: (delta: number) => void;
+  sendRunCode: (code: string) => void;
+  lastMessage: Envelope | null;
 }
 
 function App() {
-  const [username, setUsernameState] = useState<string | null>(() =>
-    typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(USERNAME_KEY) : null
-  )
+  const { user } = useAuth();
+  const [guestUsername, setGuestUsernameState] = useState<string | null>(() =>
+    typeof sessionStorage !== "undefined"
+      ? sessionStorage.getItem(USERNAME_KEY)
+      : null,
+  );
 
   const setUsername = (name: string) => {
-    setUsernameState(name)
-    sessionStorage.setItem(USERNAME_KEY, name)
-  }
+    setGuestUsernameState(name);
+    sessionStorage.setItem(USERNAME_KEY, name);
+  };
 
-  const clearUsername = () => {
-    setUsernameState(null)
-    sessionStorage.removeItem(USERNAME_KEY)
-  }
+  const username = user ? displayNameFromUser(user) : guestUsername;
 
-  const { status, lastMessage, connect, sendJoinQueue, sendScoreUpdate, sendRunCode } = useWebSocket({
+  const {
+    status,
+    lastMessage,
+    connect,
+    sendJoinQueue,
+    sendScoreUpdate,
+    sendRunCode,
+  } = useWebSocket({
     connectImmediately: false,
-  })
+  });
 
   return (
     <>
-      <Navbar username={username} onUsernameSet={setUsername} onLogout={clearUsername} />
+      <Navbar />
       <Outlet
         context={
           {
@@ -47,7 +56,7 @@ function App() {
             setUsername,
             wsStatus: status,
             connectWs: connect,
-            isWsOpen: status === 'open',
+            isWsOpen: status === "open",
             sendJoinQueue,
             sendScoreUpdate,
             sendRunCode,
@@ -56,7 +65,7 @@ function App() {
         }
       />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
