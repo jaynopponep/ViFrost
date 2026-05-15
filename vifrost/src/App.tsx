@@ -9,15 +9,16 @@ import type { Envelope, WebSocketStatus } from "./hooks/useWebSocket";
 const USERNAME_KEY = "vifrost_username";
 
 export interface AppOutletContext {
-  username: string | null;
-  setUsername: (name: string) => void;
-  wsStatus: WebSocketStatus;
-  connectWs: () => void;
-  isWsOpen: boolean;
-  sendJoinQueue: (username: string) => void;
-  sendScoreUpdate: (delta: number) => void;
-  sendRunCode: (code: string) => void;
-  lastMessage: Envelope | null;
+  username: string | null
+  setUsername: (name: string) => void
+  wsStatus: WebSocketStatus
+  connectWs: () => void
+  isWsOpen: boolean
+  sendJoinQueue: (username: string) => void
+  sendScoreUpdate: (delta: number, keybindDelta?: number) => void
+  sendRunCode: (code: string) => void
+  sendSubmit: () => void
+  lastMessage: Envelope | null
 }
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
     sendJoinQueue,
     sendScoreUpdate,
     sendRunCode,
+    sendSubmit,
   } = useWebSocket({
     connectImmediately: false,
   });
@@ -60,6 +62,7 @@ function App() {
             sendJoinQueue,
             sendScoreUpdate,
             sendRunCode,
+            sendSubmit,
             lastMessage,
           } satisfies AppOutletContext
         }

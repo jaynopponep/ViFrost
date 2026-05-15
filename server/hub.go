@@ -28,6 +28,7 @@ func (h *Hub) matchmaking() {
 	for p := range h.waiting {
 		p.mu.Lock()
 		alive := p.active
+		p.inQueue = false
 		p.mu.Unlock()
 		if !alive {
 			continue
@@ -41,12 +42,19 @@ func (h *Hub) matchmaking() {
 			h.rooms[room.ID] = room
 			h.roomMu.Unlock()
 			queue = queue[:0]
-			room.Start()
+			go room.Start()
 		}
 	}
 }
 
 func (h *Hub) Enqueue(p *Player) {
+	p.mu.Lock()
+	if p.inQueue {
+		p.mu.Unlock()
+		return
+	}
+	p.inQueue = true
+	p.mu.Unlock()
 	h.waiting <- p
 }
 

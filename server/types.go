@@ -2,6 +2,7 @@ package main
 
 import (
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -32,8 +33,17 @@ type TimerTickPayload struct {
 }
 
 type GameEndPayload struct {
-	KeybindsUsed []KeybindPayload `json:"keybindsUsed,omitempty"`
-	Score        int              `json:"score,omitempty"`
+	KeybindsUsed       []KeybindPayload `json:"keybindsUsed,omitempty"`
+	Score              int              `json:"score"`
+	OpponentScore      int              `json:"opponentScore"`
+	Won                bool             `json:"won"`
+	Tied               bool             `json:"tied"`
+	KeybindBonus       int              `json:"keybindBonus"`
+	CompletionBonus    int              `json:"completionBonus"`
+	FinishBonus        int              `json:"finishBonus"`
+	OppKeybindBonus    int              `json:"oppKeybindBonus"`
+	OppCompletionBonus int              `json:"oppCompletionBonus"`
+	OppFinishBonus     int              `json:"oppFinishBonus"`
 }
 
 type ErrorPayload struct {
@@ -50,7 +60,8 @@ type RunResultPayload struct {
 }
 
 type ScoreUpdateClientPayload struct {
-	Delta int `json:"delta"`
+	Delta        int `json:"delta"`
+	KeybindDelta int `json:"keybindDelta"`
 }
 
 type ScoreUpdateServerPayload struct {
@@ -64,10 +75,14 @@ type Player struct {
 	Conn     *websocket.Conn // <- TCP connection for each player's browser window open
 	Send     chan []byte
 	Room     *Room
-	Keybinds    []KeybindPayload
-	Score       int
-	PassedTests []bool
+	Keybinds     []KeybindPayload
+	Score        int
+	PassedTests  []bool
+	Submitted    bool
+	SubmitTime   time.Time
+	KeybindCount int
 	active      bool
+	inQueue     bool
 	mu          sync.Mutex
 }
 

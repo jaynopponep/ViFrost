@@ -8,13 +8,15 @@ import type {
   GameStartPayload,
   ScoreUpdateServerPayload,
   RunResultPayload,
+  TimerTickPayload,
+  GameEndPayload,
 } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
 import "./GamePage.css";
 
 export function GamePage() {
   const location = useLocation();
-  const { username, sendScoreUpdate, sendRunCode, lastMessage } =
+  const { username, sendScoreUpdate, sendRunCode, sendSubmit, lastMessage } =
     useOutletContext<AppOutletContext>();
   const gameData = location.state as GameStartPayload | null;
 
@@ -23,25 +25,91 @@ export function GamePage() {
   const [opponentScore, setOpponentScore] = useState(0);
   const [runResults, setRunResults] = useState<boolean[] | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(gameData?.duration ?? 120);
+  const [gameResult, setGameResult] = useState<"win" | "lose" | "tie" | null>(
+    null,
+  );
+  const [bonusStack, setBonusStack] = useState<
+    { label: string; amount: number; side: "player" | "opponent" }[]
+  >([]);
 
-  const { attachVimModeListener, scoreExtension } = useKeybindListener(sendScoreUpdate);
+  const { attachVimModeListener, scoreExtension } =
+    useKeybindListener(sendScoreUpdate);
 
   useEffect(() => {
-    if (lastMessage?.type === "score_update") {
-      const payload = lastMessage.payload as ScoreUpdateServerPayload;
-      setPlayerScore(payload.myScore);
-      setOpponentScore(payload.opponentScore);
-    } else if (lastMessage?.type === "run_result") {
-      const payload = lastMessage.payload as RunResultPayload;
-      setRunResults(payload.results);
-      setIsRunning(false);
-    }
+    if (!lastMessage) return;
+
+    const handlers: Partial<Record<string, () => (() => void) | void>> = {
+      score_update: () => {
+        const payload = lastMessage.payload as ScoreUpdateServerPayload;
+        setPlayerScore(payload.myScore);
+        setOpponentScore(payload.opponentScore);
+      },
+      run_result: () => {
+        const payload = lastMessage.payload as RunResultPayload;
+        setRunResults(payload.results);
+        setIsRunning(false);
+      },
+      timer_tick: () => {
+        const payload = lastMessage.payload as TimerTickPayload;
+        setTimeLeft(payload.remaining);
+      },
+      game_end: () => {
+        const payload = lastMessage.payload as GameEndPayload;
+        setGameResult(payload.tied ? "tie" : payload.won ? "win" : "lose");
+
+        const rawPlayer = payload.score - payload.keybindBonus - payload.completionBonus - payload.finishBonus;
+        const rawOpp = payload.opponentScore - payload.oppKeybindBonus - payload.oppCompletionBonus - payload.oppFinishBonus;
+        setPlayerScore(rawPlayer);
+        setOpponentScore(rawOpp);
+
+        const steps = [
+          { my: payload.keybindBonus,    opp: payload.oppKeybindBonus,    label: "efficient keybind usage" },
+          { my: payload.completionBonus, opp: payload.oppCompletionBonus, label: "highest completion" },
+          { my: payload.finishBonus,     opp: payload.oppFinishBonus,     label: "finishing early" },
+        ];
+
+        const timeouts: number[] = [];
+        let delay = 1000;
+        for (const step of steps) {
+          const { my, opp, label } = step;
+          timeouts.push(window.setTimeout(() => {
+            setPlayerScore((prev) => prev + my);
+            setOpponentScore((prev) => prev + opp);
+            const amount = my || opp;
+            if (amount > 0) {
+              setBonusStack((prev) => [...prev, { label, amount, side: my > 0 ? "player" : "opponent" }]);
+            }
+          }, delay));
+          delay += 1000;
+        }
+        return () => timeouts.forEach(clearTimeout);
+      },
+    };
+
+    return handlers[lastMessage.type]?.();
   }, [lastMessage]);
 
   const handleRun = useCallback(() => {
     setIsRunning(true);
     sendRunCode(editorValue);
   }, [sendRunCode, editorValue]);
+
+  const handleSubmit = useCallback(() => {
+    setIsSubmitted(true);
+    sendSubmit();
+  }, [sendSubmit]);
+
+  const flipResult = (r: typeof gameResult) => {
+    return r === "win" ? "lose" : r === "lose" ? "win" : r;
+  };
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  };
 
   if (!gameData) {
     return <Navigate to="/" replace />;
@@ -57,20 +125,50 @@ export function GamePage() {
                 name={username}
                 side="player"
                 color={gameData.playerColor}
+                result={gameResult}
               />
             )}
           </div>
-          <div className="game-score">
-            <span className="game-score-label">SCORE</span>
-            <span className="game-score-value">
-              {playerScore} - {opponentScore}
-            </span>
+          <div className="game-arena-header-center">
+            <div
+              className={`game-timer${timeLeft <= 12 ? " game-timer-urgent" : ""}`}
+            >
+              <span className="game-timer-dot" />
+              <span className="game-timer-value">{formatTime(timeLeft)}</span>
+            </div>
+            <div className="game-score-row">
+              <div className="game-bonus-slot game-bonus-slot--left">
+                {bonusStack
+                  .filter((b) => b.side === "player")
+                  .map((b, i) => (
+                    <span key={i} className="game-bonus-label">
+                      +{b.amount} {b.label}
+                    </span>
+                  ))}
+              </div>
+              <div className="game-score">
+                <span className="game-score-label">SCORE</span>
+                <span className="game-score-value">
+                  {playerScore} - {opponentScore}
+                </span>
+              </div>
+              <div className="game-bonus-slot game-bonus-slot--right">
+                {bonusStack
+                  .filter((b) => b.side === "opponent")
+                  .map((b, i) => (
+                    <span key={i} className="game-bonus-label">
+                      +{b.amount} {b.label}
+                    </span>
+                  ))}
+              </div>
+            </div>
           </div>
           <div className="game-arena-header-opponent">
             <Avatar
               name={gameData.opponentName || "Opponent"}
               side="opponent"
               color={gameData.opponentColor}
+              result={flipResult(gameResult)}
             />
           </div>
         </div>
@@ -82,6 +180,7 @@ export function GamePage() {
               onChange={setEditorValue}
               onCreateEditor={attachVimModeListener}
               vimMode
+              readOnly={isSubmitted}
               height="400px"
               width="600px"
               theme="dark"
@@ -103,9 +202,16 @@ export function GamePage() {
               <button
                 className="game-run-btn"
                 onClick={handleRun}
-                disabled={isRunning}
+                disabled={isRunning || isSubmitted}
               >
                 {isRunning ? "..." : "RUN"}
+              </button>
+              <button
+                className="game-submit-btn"
+                onClick={handleSubmit}
+                disabled={isSubmitted}
+              >
+                SUBMIT
               </button>
             </div>
           </div>

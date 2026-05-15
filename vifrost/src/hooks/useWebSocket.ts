@@ -20,9 +20,22 @@ export type KeybindPayload = {
   penalty: boolean;
 };
 
+export type TimerTickPayload = {
+  remaining: number;
+};
+
 export type GameEndPayload = {
   keybindsUsed?: KeybindPayload[];
-  score?: number;
+  score: number;
+  opponentScore: number;
+  won: boolean;
+  tied: boolean;
+  keybindBonus: number;
+  completionBonus: number;
+  finishBonus: number;
+  oppKeybindBonus: number;
+  oppCompletionBonus: number;
+  oppFinishBonus: number;
 };
 
 export type ScoreUpdateServerPayload = {
@@ -111,13 +124,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     [send],
   );
   const sendScoreUpdate = useCallback(
-    (delta: number) => send("score_update", { delta }),
+    (delta: number, keybindDelta = 0) =>
+      send("score_update", { delta, keybindDelta }),
     [send],
   );
   const sendRunCode = useCallback(
     (code: string) => send("run_code", { code }),
     [send],
   );
+  const sendSubmit = useCallback(() => send("submit"), [send]);
   const sendPing = useCallback(() => send("ping"), [send]);
   const sendLeave = useCallback(() => send("leave"), [send]);
 
@@ -139,6 +154,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     sendKeybind,
     sendScoreUpdate,
     sendRunCode,
+    sendSubmit,
     sendPing,
     sendLeave,
     isOpen: status === "open",
