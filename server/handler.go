@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 	"sync/atomic"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -66,15 +65,7 @@ func (p *Player) readPump(hub *Hub) {
 					p.Username = name
 				}
 			}
-			p.mu.Lock()
-			p.Score = 0
-			p.PassedTests = nil
-			p.Keybinds = nil
-			p.KeybindCount = 0
-			p.Submitted = false
-			p.SubmitTime = time.Time{}
-			p.Room = nil
-			p.mu.Unlock()
+			ResetStateToRequeue(p)
 			hub.Enqueue(p)
 		case MsgKeybind:
 			if p.Room == nil {

@@ -53,7 +53,6 @@ export type RunResultPayload = {
 export type WebSocketStatus = "connecting" | "open" | "closed" | "error";
 
 const DEFAULT_WS_URL = `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8080/ws`;
-// const DEFAULT_WS_URL = `wss://vifrost.onrender.com/ws`;
 
 export interface UseWebSocketOptions {
   url?: string;
@@ -125,7 +124,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     [send],
   );
   const sendScoreUpdate = useCallback(
-    (delta: number, keybindDelta = 0) => send("score_update", { delta, keybindDelta }),
+    (delta: number, keybindDelta = 0) =>
+      send("score_update", { delta, keybindDelta }),
     [send],
   );
   const sendRunCode = useCallback(

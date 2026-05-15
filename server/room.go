@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"time"
 )
@@ -138,64 +137,9 @@ func (r *Room) EndGame() {
 		}
 	}
 
-	// Apply keybind efficiency bonus: fewer keybinds = 20 × diff bonus points
-	keybindBonus := [2]int{}
-	if keybinds[0] != keybinds[1] {
-		bonus := int(20 * math.Abs(keybinds[0]-keybinds[1]))
-		if keybinds[0] < keybinds[1] {
-			scores[0] += bonus
-			keybindBonus[0] = bonus
-		} else {
-			scores[1] += bonus
-			keybindBonus[1] = bonus
-		}
-	}
-
-	// Apply completion bonus: more progress = 200 * (1 + gap) bonus points
-	completionBonus := [2]int{}
-	if totalTests > 0 && passed[0] != passed[1] {
-		gap := math.Abs(float64(passed[0])-float64(passed[1])) / float64(totalTests)
-		bonus := int(200.0 * (1.0 + gap))
-		if passed[0] > passed[1] {
-			scores[0] += bonus
-			completionBonus[0] = bonus
-		} else {
-			scores[1] += bonus
-			completionBonus[1] = bonus
-		}
-	}
-
-	// Apply finish-time bonus: first to submit earns points based on time gap
-	finishBonus := [2]int{}
-	t0, t1 := submitTimes[0], submitTimes[1]
-	if !t0.IsZero() || !t1.IsZero() {
-		var first int
-		var diffSec float64
-		switch {
-		case !t0.IsZero() && !t1.IsZero():
-			diff := t0.Sub(t1).Seconds()
-			if diff < 0 {
-				first, diffSec = 0, -diff
-			} else {
-				first, diffSec = 1, diff
-			}
-		case !t0.IsZero():
-			first, diffSec = 0, 21
-		default:
-			first, diffSec = 1, 21
-		}
-		var bonus int
-		switch {
-		case diffSec > 8:
-			bonus = 200
-		case diffSec >= 3:
-			bonus = int(20 * diffSec)
-		}
-		if bonus > 0 {
-			scores[first] += bonus
-			finishBonus[first] = bonus
-		}
-	}
+	keybindBonus := ApplyKeybindBonus(&scores, &keybinds)
+	completionBonus := ApplyCompletionBonus(&scores, totalTests, &passed)
+	finishBonus := ApplyFinishTimeBonus(&scores, &submitTimes)
 
 	tied := scores[0] == scores[1]
 	for i, p := range players {
