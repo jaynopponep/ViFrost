@@ -33,12 +33,17 @@ type TimerTickPayload struct {
 }
 
 type GameEndPayload struct {
-	KeybindsUsed  []KeybindPayload `json:"keybindsUsed,omitempty"`
-	Score         int              `json:"score"`
-	OpponentScore int              `json:"opponentScore"`
-	Won           bool             `json:"won"`
-	Tied          bool             `json:"tied"`
-	KeybindBonus  int              `json:"keybindBonus"`
+	KeybindsUsed       []KeybindPayload `json:"keybindsUsed,omitempty"`
+	Score              int              `json:"score"`
+	OpponentScore      int              `json:"opponentScore"`
+	Won                bool             `json:"won"`
+	Tied               bool             `json:"tied"`
+	KeybindBonus       int              `json:"keybindBonus"`
+	CompletionBonus    int              `json:"completionBonus"`
+	FinishBonus        int              `json:"finishBonus"`
+	OppKeybindBonus    int              `json:"oppKeybindBonus"`
+	OppCompletionBonus int              `json:"oppCompletionBonus"`
+	OppFinishBonus     int              `json:"oppFinishBonus"`
 }
 
 type ErrorPayload struct {
@@ -77,6 +82,7 @@ type Player struct {
 	SubmitTime   time.Time
 	KeybindCount int
 	active      bool
+	inQueue     bool
 	mu          sync.Mutex
 }
 

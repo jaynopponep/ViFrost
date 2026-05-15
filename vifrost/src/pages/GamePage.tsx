@@ -28,6 +28,7 @@ export function GamePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(gameData?.duration ?? 120);
   const [gameResult, setGameResult] = useState<"win" | "lose" | "tie" | null>(null);
+  const [bonusStack, setBonusStack] = useState<{ label: string; amount: number; side: "player" | "opponent" }[]>([]);
 
   const { attachVimModeListener, scoreExtension } = useKeybindListener(sendScoreUpdate);
 
@@ -45,9 +46,33 @@ export function GamePage() {
       setTimeLeft(payload.remaining);
     } else if (lastMessage?.type === "game_end") {
       const payload = lastMessage.payload as GameEndPayload;
-      setPlayerScore(payload.score);
-      if (payload.opponentScore !== undefined) setOpponentScore(payload.opponentScore);
       setGameResult(payload.tied ? "tie" : payload.won ? "win" : "lose");
+
+      // Start at pre-bonus scores, then animate each category in sequence
+      const rawPlayer = payload.score - payload.keybindBonus - payload.completionBonus - payload.finishBonus;
+      const rawOpp = payload.opponentScore - payload.oppKeybindBonus - payload.oppCompletionBonus - payload.oppFinishBonus;
+      setPlayerScore(rawPlayer);
+      setOpponentScore(rawOpp);
+
+      const steps = [
+        { my: payload.keybindBonus,    opp: payload.oppKeybindBonus,    label: "efficient keybind usage" },
+        { my: payload.completionBonus, opp: payload.oppCompletionBonus, label: "highest completion" },
+        { my: payload.finishBonus,     opp: payload.oppFinishBonus,     label: "finishing early" },
+      ];
+
+      let delay = 1000;
+      for (const step of steps) {
+        const { my, opp, label } = step;
+        setTimeout(() => {
+          setPlayerScore(prev => prev + my);
+          setOpponentScore(prev => prev + opp);
+          const amount = my || opp;
+          if (amount > 0) {
+            setBonusStack(prev => [...prev, { label, amount, side: my > 0 ? "player" : "opponent" }]);
+          }
+        }, delay);
+        delay += 1000;
+      }
     }
   }, [lastMessage]);
 
@@ -90,11 +115,23 @@ export function GamePage() {
               <span className="game-timer-dot" />
               <span className="game-timer-value">{formatTime(timeLeft)}</span>
             </div>
-            <div className="game-score">
-              <span className="game-score-label">SCORE</span>
-              <span className="game-score-value">
-                {playerScore} - {opponentScore}
-              </span>
+            <div className="game-score-row">
+              <div className="game-bonus-slot game-bonus-slot--left">
+                {bonusStack.filter(b => b.side === "player").map((b, i) => (
+                  <span key={i} className="game-bonus-label">+{b.amount} {b.label}</span>
+                ))}
+              </div>
+              <div className="game-score">
+                <span className="game-score-label">SCORE</span>
+                <span className="game-score-value">
+                  {playerScore} - {opponentScore}
+                </span>
+              </div>
+              <div className="game-bonus-slot game-bonus-slot--right">
+                {bonusStack.filter(b => b.side === "opponent").map((b, i) => (
+                  <span key={i} className="game-bonus-label">+{b.amount} {b.label}</span>
+                ))}
+              </div>
             </div>
           </div>
           <div className="game-arena-header-opponent">

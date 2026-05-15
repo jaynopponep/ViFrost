@@ -31,6 +31,11 @@ export type GameEndPayload = {
   won: boolean;
   tied: boolean;
   keybindBonus: number;
+  completionBonus: number;
+  finishBonus: number;
+  oppKeybindBonus: number;
+  oppCompletionBonus: number;
+  oppFinishBonus: number;
 };
 
 export type ScoreUpdateServerPayload = {

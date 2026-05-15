@@ -152,35 +152,38 @@ func (r *Room) EndGame() {
 	}
 
 	// Apply completion bonus: more progress = 200 * (1 + gap) bonus points
+	completionBonus := [2]int{}
 	if totalTests > 0 && passed[0] != passed[1] {
 		gap := math.Abs(float64(passed[0])-float64(passed[1])) / float64(totalTests)
 		bonus := int(200.0 * (1.0 + gap))
 		if passed[0] > passed[1] {
 			scores[0] += bonus
+			completionBonus[0] = bonus
 		} else {
 			scores[1] += bonus
+			completionBonus[1] = bonus
 		}
 	}
 
 	// Apply finish-time bonus: first to submit earns points based on time gap
+	finishBonus := [2]int{}
 	t0, t1 := submitTimes[0], submitTimes[1]
 	if !t0.IsZero() || !t1.IsZero() {
-		var first, second int
+		var first int
 		var diffSec float64
 		switch {
 		case !t0.IsZero() && !t1.IsZero():
 			diff := t0.Sub(t1).Seconds()
 			if diff < 0 {
-				first, second, diffSec = 0, 1, -diff
+				first, diffSec = 0, -diff
 			} else {
-				first, second, diffSec = 1, 0, diff
+				first, diffSec = 1, diff
 			}
 		case !t0.IsZero():
-			first, second, diffSec = 0, 1, 21
+			first, diffSec = 0, 21
 		default:
-			first, second, diffSec = 1, 0, 21
+			first, diffSec = 1, 21
 		}
-		_ = second
 		var bonus int
 		switch {
 		case diffSec > 8:
@@ -190,6 +193,7 @@ func (r *Room) EndGame() {
 		}
 		if bonus > 0 {
 			scores[first] += bonus
+			finishBonus[first] = bonus
 		}
 	}
 
@@ -198,12 +202,17 @@ func (r *Room) EndGame() {
 		if p != nil {
 			p.mu.Lock()
 			end := EnvelopeFromType(MsgGameEnd, GameEndPayload{
-				KeybindsUsed:  p.Keybinds,
-				Score:         scores[i],
-				OpponentScore: scores[1-i],
-				Won:           !tied && scores[i] > scores[1-i],
-				Tied:          tied,
-				KeybindBonus:  keybindBonus[i],
+				KeybindsUsed:       p.Keybinds,
+				Score:              scores[i],
+				OpponentScore:      scores[1-i],
+				Won:                !tied && scores[i] > scores[1-i],
+				Tied:               tied,
+				KeybindBonus:       keybindBonus[i],
+				CompletionBonus:    completionBonus[i],
+				FinishBonus:        finishBonus[i],
+				OppKeybindBonus:    keybindBonus[1-i],
+				OppCompletionBonus: completionBonus[1-i],
+				OppFinishBonus:     finishBonus[1-i],
 			})
 			payload := MustMarshal(end)
 			p.mu.Unlock()
