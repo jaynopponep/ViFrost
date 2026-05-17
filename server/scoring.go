@@ -95,4 +95,18 @@ func (r *Room) HandleRunCode(from *Player, code string) {
 	case from.Send <- MustMarshal(msg):
 	default:
 	}
+
+	// additive: mirror this run's pass/fail vector to the opponent so their
+	// ui can show live progress. does not touch scoring/win math.
+	for _, p := range r.Players {
+		if p != nil && p != from {
+			oppMsg := EnvelopeFromType(MsgOpponentRunResult, OpponentRunResultPayload{
+				Results: results,
+			})
+			select {
+			case p.Send <- MustMarshal(oppMsg):
+			default:
+			}
+		}
+	}
 }
