@@ -52,7 +52,7 @@ export type RunResultPayload = {
 
 export type WebSocketStatus = "connecting" | "open" | "closed" | "error";
 
-const DEFAULT_WS_URL = import.meta.env.VITE_SERVER_URL;
+const DEFAULT_WS_URL = import.meta.env.VITE_SERVER_URL ?? `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8080/ws`;
 
 export interface UseWebSocketOptions {
   url?: string;
