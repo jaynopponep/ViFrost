@@ -59,6 +59,14 @@ type RunResultPayload struct {
 	Delta   int    `json:"delta"`
 }
 
+type OpponentRunResultPayload struct {
+	Results []bool `json:"results"`
+}
+
+type MatchCountdownPayload struct {
+	Seconds int `json:"seconds"`
+}
+
 type ScoreUpdateClientPayload struct {
 	Delta        int `json:"delta"`
 	KeybindDelta int `json:"keybindDelta"`
@@ -70,20 +78,21 @@ type ScoreUpdateServerPayload struct {
 }
 
 type Player struct {
-	ID       string
-	Username string
-	Conn     *websocket.Conn // <- TCP connection for each player's browser window open
-	Send     chan []byte
-	Room     *Room
+	ID           string
+	Username     string
+	Conn         *websocket.Conn // <- TCP connection for each player's browser window open
+	Send         chan []byte
+	Room         *Room
 	Keybinds     []KeybindPayload
 	Score        int
 	PassedTests  []bool
 	Submitted    bool
+	Ready        bool
 	SubmitTime   time.Time
 	KeybindCount int
-	active      bool
-	inQueue     bool
-	mu          sync.Mutex
+	active       bool
+	inQueue      bool
+	mu           sync.Mutex
 }
 
 type Room struct {
