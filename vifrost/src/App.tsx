@@ -4,21 +4,22 @@ import { Navbar } from "./components/Navbar";
 import { useAuth } from "./contexts/AuthContext";
 import { displayNameFromUser } from "./lib/displayNameFromUser";
 import { useWebSocket } from "./hooks/useWebSocket";
-import type { Envelope, WebSocketStatus } from "./hooks/useWebSocket";
+import type { ServerMessage, WebSocketStatus } from "./hooks/useWebSocket";
 
 const USERNAME_KEY = "vifrost_username";
 
 export interface AppOutletContext {
-  username: string | null
-  setUsername: (name: string) => void
-  wsStatus: WebSocketStatus
-  connectWs: () => void
-  isWsOpen: boolean
-  sendJoinQueue: (username: string) => void
-  sendScoreUpdate: (delta: number, keybindDelta?: number) => void
-  sendRunCode: (code: string) => void
-  sendSubmit: () => void
-  lastMessage: Envelope | null
+  username: string | null;
+  setUsername: (name: string) => void;
+  wsStatus: WebSocketStatus;
+  connectWs: () => void;
+  isWsOpen: boolean;
+  sendJoinQueue: (username: string) => void;
+  sendScoreUpdate: (delta: number, keybindDelta?: number) => void;
+  sendRunCode: (code: string) => void;
+  sendReady: () => void;
+  sendSubmit: () => void;
+  lastMessage: ServerMessage | null;
 }
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
     sendJoinQueue,
     sendScoreUpdate,
     sendRunCode,
+    sendReady,
     sendSubmit,
   } = useWebSocket({
     connectImmediately: false,
@@ -62,6 +64,7 @@ function App() {
             sendJoinQueue,
             sendScoreUpdate,
             sendRunCode,
+            sendReady,
             sendSubmit,
             lastMessage,
           } satisfies AppOutletContext
