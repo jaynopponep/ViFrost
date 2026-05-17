@@ -51,4 +51,30 @@ describe("adaptServerEnvelope", () => {
   it("drops unknown types", () => {
     expect(adaptServerEnvelope({ type: "pong", payload: null })).toBeNull();
   });
+
+  it("drops run_result whose results is not a boolean array", () => {
+    expect(adaptServerEnvelope({ type: "run_result", payload: { results: "oops", delta: 0 } })).toBeNull();
+    expect(adaptServerEnvelope({ type: "run_result", payload: null })).toBeNull();
+    expect(adaptServerEnvelope({ type: "run_result" })).toBeNull();
+  });
+
+  it("drops opponent_run_result whose results is not a boolean array", () => {
+    expect(adaptServerEnvelope({ type: "opponent_run_result", payload: { results: 42 } })).toBeNull();
+    expect(adaptServerEnvelope({ type: "opponent_run_result", payload: {} })).toBeNull();
+  });
+
+  it("drops match_countdown whose seconds is not a number", () => {
+    expect(adaptServerEnvelope({ type: "match_countdown", payload: { seconds: "3" } })).toBeNull();
+    expect(adaptServerEnvelope({ type: "match_countdown", payload: null })).toBeNull();
+  });
+
+  it("still passes a well-formed run_result through unchanged", () => {
+    const raw = { type: "run_result", payload: { results: [true, false], delta: 10 } };
+    expect(adaptServerEnvelope(raw)).toEqual(raw);
+  });
+
+  it("still passes match_found (null payload) and match_start through", () => {
+    expect(adaptServerEnvelope({ type: "match_found", payload: null })).toEqual({ type: "match_found", payload: null });
+    expect(adaptServerEnvelope({ type: "match_start", payload: null })).toEqual({ type: "match_start", payload: null });
+  });
 });

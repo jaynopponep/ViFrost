@@ -41,11 +41,25 @@ export function adaptServerEnvelope(raw: RawEnvelope): ServerMessage | null {
   }
 
   if (PASSTHROUGH.has(raw.type)) {
-    // payload shape is intentionally not validated for passthrough types;
-    // downstream consumers must stay defensive. add per-type guards only if
-    // server drift becomes a real problem (yagni for now).
+    // guard only the types whose payload the reducer dereferences. a
+    // malformed frame is dropped (null) rather than crashing the reducer.
+    // payload-less passthroughs (match_found, match_start, opponent_ready,
+    // error, score_update, game_start) are intentionally not gated.
+    const p = raw.payload as Record<string, unknown> | null | undefined;
+
+    if (raw.type === "run_result" || raw.type === "opponent_run_result") {
+      if (!p || !isBoolArray(p.results)) return null;
+    }
+    if (raw.type === "match_countdown") {
+      if (!p || typeof p.seconds !== "number") return null;
+    }
+
     return raw as ServerMessage;
   }
 
   return null;
+}
+
+function isBoolArray(v: unknown): v is boolean[] {
+  return Array.isArray(v) && v.every((x) => typeof x === "boolean");
 }
