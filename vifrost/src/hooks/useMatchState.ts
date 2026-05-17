@@ -15,11 +15,13 @@ export interface MatchState {
   totalTests: number;
   winner: "player" | "opponent" | null;
   finalKeybindScores: { player: number; opponent: number } | null;
+  submitted: boolean;
 }
 
 export type MatchAction =
   | { type: "INIT"; totalTests: number }
   | { type: "MARK_PLAYER_READY" }
+  | { type: "SUBMIT" }
   | { type: "MSG"; envelope: ServerMessage };
 
 export function initialMatchState(totalTests: number): MatchState {
@@ -33,7 +35,18 @@ export function initialMatchState(totalTests: number): MatchState {
     totalTests,
     winner: null,
     finalKeybindScores: null,
+    submitted: false,
   };
+}
+
+// server scoring is cumulative: once a test passes it stays passed. the run
+// vectors the server broadcasts are per-run, so the ui must OR them into the
+// accumulated state or it diverges from the authoritative score.
+function mergePasses(prev: boolean[], next: boolean[]): boolean[] {
+  const len = Math.max(prev.length, next.length);
+  const out = new Array<boolean>(len);
+  for (let i = 0; i < len; i++) out[i] = Boolean(prev[i]) || Boolean(next[i]);
+  return out;
 }
 
 export function matchReducer(state: MatchState, action: MatchAction): MatchState {
@@ -44,6 +57,12 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
     case "MARK_PLAYER_READY":
       if (state.phase !== "waiting") return state;
       return { ...state, playerReady: true };
+
+    case "SUBMIT":
+      // one-shot, live-only: mirrors the server's `if from.Submitted` guard
+      // and the fact submit is only meaningful during a running match.
+      if (state.phase !== "live" || state.submitted) return state;
+      return { ...state, submitted: true };
 
     case "MSG": {
       const { envelope } = action;
@@ -56,17 +75,39 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
           return { ...state, phase: "countdown", countdown: envelope.payload.seconds };
 
         case "match_start":
-          if (state.phase !== "countdown") return state;
+          // recovery: advance from any pre-live phase. a dropped
+          // match_countdown must never strand the client in waiting. do not
+          // revive a match that already ended.
+          if (state.phase === "ended" || state.phase === "live") return state;
+          return { ...state, phase: "live", countdown: null };
+
+        case "timer_tick":
+          // server only ticks once the match is authoritatively live, so a
+          // tick while still pre-live means we missed match_start. otherwise
+          // a no-op (the timer ui reads the server value elsewhere).
+          if (state.phase !== "waiting" && state.phase !== "countdown") return state;
           return { ...state, phase: "live", countdown: null };
 
         case "run_result": {
           if (state.phase !== "live") return state;
-          return { ...state, playerTests: envelope.payload.results };
+          const playerTests = mergePasses(state.playerTests, envelope.payload.results);
+          // the server sends no totalTests; every run vector is the full test
+          // count, so correct the seeded guess from observed reality.
+          return {
+            ...state,
+            playerTests,
+            totalTests: Math.max(playerTests.length, state.opponentTests.length),
+          };
         }
 
         case "opponent_run_result": {
           if (state.phase !== "live") return state;
-          return { ...state, opponentTests: envelope.payload.results };
+          const opponentTests = mergePasses(state.opponentTests, envelope.payload.results);
+          return {
+            ...state,
+            opponentTests,
+            totalTests: Math.max(state.playerTests.length, opponentTests.length),
+          };
         }
 
         case "match_end":
@@ -98,6 +139,7 @@ export interface MatchStateApi extends MatchState {
   playerPct: number;
   opponentPct: number;
   markPlayerReady: () => void;
+  markSubmitted: () => void;
 }
 
 export function useMatchState(
@@ -116,6 +158,10 @@ export function useMatchState(
     dispatch({ type: "MARK_PLAYER_READY" });
   }, []);
 
+  const markSubmitted = useCallback(() => {
+    dispatch({ type: "SUBMIT" });
+  }, []);
+
   const denom = Math.max(state.totalTests, 1);
   const playerPct =
     state.playerTests.length === 0
@@ -131,5 +177,6 @@ export function useMatchState(
     playerPct,
     opponentPct,
     markPlayerReady,
+    markSubmitted,
   };
 }
