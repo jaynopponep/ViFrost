@@ -74,6 +74,7 @@ export type MatchEndPayload = {
 };
 
 export type ServerMessage =
+  | { type: "match_found"; payload: null }
   | { type: "game_start"; payload: GameStartPayload }
   | { type: "timer_tick"; payload: TimerTickPayload }
   | { type: "opponent_ready"; payload: OpponentReadyPayload }
@@ -133,10 +134,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         setLastMessage({ type: "error", payload: { message: "Invalid JSON" } });
       }
     };
-
-    return () => {
-      ws.close();
-    };
+    // teardown is owned by the connectImmediately effect below; connect() is
+    // called imperatively so a cleanup returned here would never run.
   }, [url]);
 
   const disconnect = useCallback(() => {

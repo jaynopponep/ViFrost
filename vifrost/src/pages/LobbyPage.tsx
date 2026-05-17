@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import type { Envelope, GameStartPayload } from "../hooks/useWebSocket";
+import type { GameStartPayload } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
 import "./LobbyPage.css";
 import hintData from "../data/hints.json";
@@ -60,7 +60,7 @@ export function LobbyPage() {
 
   useEffect(() => {
     if (!lastMessage) return;
-    const envelope = lastMessage as Envelope;
+    const envelope = lastMessage;
     if (envelope.type === "match_found") {
       setMatchFound(true);
       if (matchModalTimerRef.current) clearTimeout(matchModalTimerRef.current);
