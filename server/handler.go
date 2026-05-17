@@ -111,6 +111,12 @@ func (p *Player) readPump(hub *Hub) {
 				continue
 			}
 			go p.Room.HandleSubmit(p)
+		case MsgPlayerReady:
+			if p.Room == nil {
+				sendErr(p, "not in a game")
+				continue
+			}
+			p.Room.HandleReady(p)
 		case MsgPing:
 			select {
 			case p.Send <- MustMarshal(EnvelopeFromType(MsgPong, nil)):

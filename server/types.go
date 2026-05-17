@@ -104,6 +104,7 @@ type Room struct {
 	TestsContent string
 	Timer        int
 	done         chan struct{}
+	readyCh      chan struct{}
 	ended        bool
 	mu           sync.Mutex
 }

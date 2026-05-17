@@ -39,6 +39,7 @@ func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 		TestsContent: tests,
 		Timer:        GameDurationSec,
 		done:         make(chan struct{}),
+		readyCh:      make(chan struct{}, 2),
 	}
 }
 
@@ -68,6 +69,32 @@ func (r *Room) Start() {
 		default:
 		}
 	}
+
+	// additive: wait for both players to ready up, or fall back after 15s.
+	readyDeadline := time.After(15 * time.Second)
+readyWait:
+	for !r.bothReady() {
+		select {
+		case <-r.done:
+			return
+		case <-r.readyCh:
+			// re-check loop condition
+		case <-readyDeadline:
+			break readyWait
+		}
+	}
+
+	// additive: 3..2..1 countdown then match_start
+	for s := 3; s >= 1; s-- {
+		select {
+		case <-r.done:
+			return
+		default:
+		}
+		r.Broadcast(MustMarshal(EnvelopeFromType(MsgMatchCountdown, MatchCountdownPayload{Seconds: s})))
+		time.Sleep(1 * time.Second)
+	}
+	r.Broadcast(MustMarshal(EnvelopeFromType(MsgMatchStart, nil)))
 
 	ticker := time.NewTicker(TickIntervalSec * time.Second)
 	defer ticker.Stop()
@@ -189,6 +216,45 @@ func (r *Room) HandleSubmit(from *Player) {
 
 	tick := EnvelopeFromType(MsgTimerTick, TimerTickPayload{Remaining: remaining})
 	r.Broadcast(MustMarshal(tick))
+}
+
+func (r *Room) HandleReady(from *Player) {
+	from.mu.Lock()
+	already := from.Ready
+	from.Ready = true
+	from.mu.Unlock()
+	if already {
+		return
+	}
+	// tell the opponent this player is ready
+	for _, p := range r.Players {
+		if p != nil && p != from {
+			msg := EnvelopeFromType(MsgOpponentReady, nil)
+			select {
+			case p.Send <- MustMarshal(msg):
+			default:
+			}
+		}
+	}
+	select {
+	case r.readyCh <- struct{}{}:
+	default:
+	}
+}
+
+func (r *Room) bothReady() bool {
+	for _, p := range r.Players {
+		if p == nil {
+			continue
+		}
+		p.mu.Lock()
+		ready := p.Ready
+		p.mu.Unlock()
+		if !ready {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *Room) PlayerIndex(p *Player) int {
