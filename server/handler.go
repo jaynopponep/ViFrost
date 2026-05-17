@@ -72,6 +72,10 @@ func (p *Player) readPump(hub *Hub) {
 				sendErr(p, "not in a game")
 				continue
 			}
+			if !p.Room.AcceptsGameplay() {
+				sendErr(p, "match not in progress")
+				continue
+			}
 			payload, ok := parseKeybindPayload(e.Payload)
 			if !ok {
 				sendErr(p, "invalid keybind payload")
@@ -83,6 +87,10 @@ func (p *Player) readPump(hub *Hub) {
 				sendErr(p, "not in a game")
 				continue
 			}
+			if !p.Room.AcceptsGameplay() {
+				sendErr(p, "match not in progress")
+				continue
+			}
 			delta, keybindDelta, ok := parseScoreUpdatePayload(e.Payload)
 			if !ok {
 				sendErr(p, "invalid score_update payload")
@@ -92,6 +100,10 @@ func (p *Player) readPump(hub *Hub) {
 		case MsgRunCode:
 			if p.Room == nil {
 				sendErr(p, "not in a game")
+				continue
+			}
+			if !p.Room.AcceptsGameplay() {
+				sendErr(p, "match not in progress")
 				continue
 			}
 			m, ok := e.Payload.(map[string]interface{})
@@ -108,6 +120,10 @@ func (p *Player) readPump(hub *Hub) {
 		case MsgSubmit:
 			if p.Room == nil {
 				sendErr(p, "not in a game")
+				continue
+			}
+			if !p.Room.AcceptsGameplay() {
+				sendErr(p, "match not in progress")
 				continue
 			}
 			go p.Room.HandleSubmit(p)

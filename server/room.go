@@ -94,6 +94,9 @@ readyWait:
 		r.Broadcast(MustMarshal(EnvelopeFromType(MsgMatchCountdown, MatchCountdownPayload{Seconds: s})))
 		time.Sleep(1 * time.Second)
 	}
+	r.mu.Lock()
+	r.live = true
+	r.mu.Unlock()
 	r.Broadcast(MustMarshal(EnvelopeFromType(MsgMatchStart, nil)))
 
 	ticker := time.NewTicker(TickIntervalSec * time.Second)
@@ -240,6 +243,15 @@ func (r *Room) HandleReady(from *Player) {
 	case r.readyCh <- struct{}{}:
 	default:
 	}
+}
+
+// AcceptsGameplay reports whether run_code/submit/keybind/score_update should
+// be honored. the ready/countdown pre-game window and the post-game state both
+// reject gameplay so server score cannot diverge from what the ui shows.
+func (r *Room) AcceptsGameplay() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.live && !r.ended
 }
 
 func (r *Room) bothReady() bool {
