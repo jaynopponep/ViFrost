@@ -1,0 +1,84 @@
+.problem-dialog {
+  max-width: 540px;
+  background: var(--colorSurface);
+  color: var(--colorText);
+  border: 1px solid var(--colorBorder);
+}
+
+/* Defensive: shadcn's DialogContent hides the close button via showCloseButton={false},
+   but in case future versions render an X anyway, hide it in locked mode. */
+.problem-dialog--locked [data-slot="dialog-close"] {
+  display: none !important;
+}
+
+.problem-dialog__statement {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  background: var(--colorSubtleBg);
+  border: 1px solid var(--colorSoftBorder);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0;
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.problem-dialog__countdown {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 5rem;
+  color: var(--colorCyan);
+  text-align: center;
+  padding: 28px 0 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.problem-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.problem-dialog__chips {
+  display: flex;
+  gap: 8px;
+}
+
+.problem-dialog__chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--colorSubtleBg);
+  color: var(--colorTextMuted);
+  border: 1px solid var(--colorSoftBorder);
+}
+
+.problem-dialog__chip.is-ready {
+  background: var(--colorCyanDim);
+  color: var(--colorCyan);
+  border-color: var(--colorCyanGlow);
+}
+
+.problem-dialog__ready {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: var(--colorCyan);
+  color: var(--colorMain);
+  border: 1px solid var(--colorCyan);
+  cursor: pointer;
+}
+
+.problem-dialog__ready:disabled {
+  background: var(--colorCyanDim);
+  color: var(--colorCyan);
+  cursor: default;
+}

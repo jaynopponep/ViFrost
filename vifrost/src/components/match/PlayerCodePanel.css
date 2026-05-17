@@ -1,0 +1,65 @@
+.player-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--colorSurface);
+  border-right: 1px solid var(--colorBorder);
+  min-height: 0;
+  min-width: 0;
+}
+
+.player-panel__editor {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.player-panel__footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--colorBorder);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.player-panel__run {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--colorCyan);
+  color: var(--colorMain);
+  border: 1px solid var(--colorCyan);
+  cursor: pointer;
+}
+
+.player-panel__run:disabled {
+  background: var(--colorCyanDim);
+  color: var(--colorCyan);
+  cursor: default;
+}
+
+.player-panel__results {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.player-panel__result {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.player-panel__result--pass {
+  background: var(--colorCyanDim);
+  color: var(--colorCyan);
+}
+
+.player-panel__result--fail {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}

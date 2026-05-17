@@ -1,0 +1,69 @@
+.test-detail {
+  background: var(--colorSurface);
+  border: 1px solid var(--colorBorder);
+  padding: 12px 14px;
+  border-radius: 10px;
+  min-width: 260px;
+  color: var(--colorText);
+}
+
+.test-detail__header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--colorSoftBorder);
+}
+
+.test-detail__col-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--colorCyan);
+}
+
+.test-detail__col-label--opp {
+  color: var(--colorPink);
+  text-align: right;
+}
+
+.test-detail__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.test-detail__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.test-detail__cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.test-detail__cell--pass {
+  background: var(--colorCyanDim);
+  color: var(--colorCyan);
+}
+
+.test-detail__cell--fail {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.test-detail__cell--pending {
+  background: var(--colorSubtleBg);
+  color: var(--colorTextMuted);
+}
+
+.test-detail__row > .test-detail__cell:last-child {
+  justify-self: end;
+}
