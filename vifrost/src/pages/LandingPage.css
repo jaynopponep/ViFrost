@@ -93,3 +93,25 @@
   color: var(--colorText);
   letter-spacing: 0.06em;
 }
+
+/* Tutorial nudge */
+.landing-tutorial-link {
+  font-size: 0.82rem;
+  color: var(--colorTextMuted);
+  margin: 1.5rem 0 0;
+}
+
+.landing-tutorial-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--colorCyan);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+
+.landing-tutorial-btn:hover { opacity: 1; }
