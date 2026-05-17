@@ -19,6 +19,7 @@ export function GamePage() {
     sendScoreUpdate,
     sendRunCode,
     sendReady,
+    sendSubmit,
     lastMessage,
   } = useOutletContext<AppOutletContext>();
 
@@ -45,17 +46,23 @@ export function GamePage() {
   }, [lastMessage]);
 
   const handleRun = useCallback(() => {
-    if (match.phase !== "live") return;
+    if (match.phase !== "live" || match.submitted) return;
     setRunResults(null);
     setIsRunning(true);
     sendRunCode(editorValue);
-  }, [match.phase, sendRunCode, editorValue]);
+  }, [match.phase, match.submitted, sendRunCode, editorValue]);
 
-  const { markPlayerReady } = match;
+  const { markPlayerReady, markSubmitted } = match;
   const handleReadyClick = useCallback(() => {
     markPlayerReady();
     sendReady();
   }, [markPlayerReady, sendReady]);
+
+  const handleSubmit = useCallback(() => {
+    if (match.phase !== "live" || match.submitted) return;
+    markSubmitted();
+    sendSubmit();
+  }, [match.phase, match.submitted, markSubmitted, sendSubmit]);
 
   if (!gameData) {
     return <Navigate to="/" replace />;
@@ -95,12 +102,14 @@ export function GamePage() {
           <PlayerCodePanel
             value={editorValue}
             onChange={setEditorValue}
-            editable={match.phase === "live"}
+            editable={match.phase === "live" && !match.submitted}
             onCreateEditor={attachVimModeListener}
             scoreExtension={scoreExtension}
             onRun={handleRun}
             isRunning={isRunning}
             runResults={runResults}
+            onSubmit={handleSubmit}
+            submitted={match.submitted}
           />
           <OpponentCodePanel
             starterCode={gameData.snippet}

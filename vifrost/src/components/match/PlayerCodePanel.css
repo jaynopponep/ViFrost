@@ -41,6 +41,25 @@
   cursor: default;
 }
 
+.player-panel__submit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--colorMain);
+  color: var(--colorCyan);
+  border: 1px solid var(--colorCyan);
+  cursor: pointer;
+}
+
+.player-panel__submit:disabled {
+  background: var(--colorMain);
+  color: var(--colorCyanDim);
+  border-color: var(--colorCyanDim);
+  cursor: default;
+}
+
 .player-panel__results {
   display: flex;
   gap: 6px;

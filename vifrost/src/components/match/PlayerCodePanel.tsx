@@ -12,6 +12,8 @@ export interface PlayerCodePanelProps {
   onRun: () => void;
   isRunning: boolean;
   runResults: boolean[] | null;
+  onSubmit: () => void;
+  submitted: boolean;
 }
 
 export function PlayerCodePanel(props: PlayerCodePanelProps) {
@@ -24,6 +26,8 @@ export function PlayerCodePanel(props: PlayerCodePanelProps) {
     onRun,
     isRunning,
     runResults,
+    onSubmit,
+    submitted,
   } = props;
 
   return (
@@ -49,6 +53,14 @@ export function PlayerCodePanel(props: PlayerCodePanelProps) {
           disabled={!editable || isRunning}
         >
           {isRunning ? "Running…" : "Run"}
+        </button>
+        <button
+          type="button"
+          className="player-panel__submit"
+          onClick={onSubmit}
+          disabled={!editable || submitted}
+        >
+          {submitted ? "Submitted" : "Submit"}
         </button>
         {runResults && (
           <div className="player-panel__results">
