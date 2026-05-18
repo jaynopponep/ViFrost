@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { adaptServerEnvelope } from "./adaptServerEnvelope";
+import type { KeybindEventKind } from "./vimPenalty";
 
 export type Envelope<T = unknown> = {
   type: string;
@@ -114,7 +115,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   onMessageRef.current = onMessage;
 
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    // bail if already open or still connecting. without the CONNECTING check a
+    // rapid second call (double-clicked join, early reconnect) would create a
+    // duplicate socket whose handlers also mutate shared state.
+    const rs = wsRef.current?.readyState;
+    if (rs === WebSocket.OPEN || rs === WebSocket.CONNECTING) return;
     setStatus("connecting");
     const ws = new WebSocket(url);
     wsRef.current = ws;
@@ -159,13 +164,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     (username: string) => send("join_queue", { username }),
     [send],
   );
-  const sendKeybind = useCallback(
-    (payload: KeybindPayload) => send("keybind", payload),
-    [send],
-  );
-  const sendScoreUpdate = useCallback(
-    (delta: number, keybindDelta = 0) =>
-      send("score_update", { delta, keybindDelta }),
+  // the client only reports which vim event happened. the server owns the
+  // point values, so this cannot inject a score (see server/scoring_events.go).
+  const sendKeybindEvent = useCallback(
+    (kind: KeybindEventKind, count = 1) =>
+      send("keybind_event", { kind, count }),
     [send],
   );
   const sendRunCode = useCallback(
@@ -192,8 +195,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     disconnect,
     send,
     sendJoinQueue,
-    sendKeybind,
-    sendScoreUpdate,
+    sendKeybindEvent,
     sendRunCode,
     sendReady,
     sendSubmit,

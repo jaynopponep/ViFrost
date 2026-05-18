@@ -1,5 +1,17 @@
-// penalty helpers. 
+// penalty helpers.
 // useKeybindListener wires dom events to these.
+
+// the kinds the client reports to the server. the server owns the point
+// values, count bounds and rate limit (see server/scoring_events.go), so the
+// client never sends a raw score. the numeric constants here drive only the
+// cosmetic floating animation, the scoreboard reads the server total.
+export type KeybindEventKind =
+  | "arrow_penalty"
+  | "mouse_penalty"
+  | "counter_productive"
+  | "nav_shortcut"
+  | "normal_edit"
+  | "macro_usage";
 
 export const PENALTY_ARROW = -100;
 export const PENALTY_MOUSE = -200;

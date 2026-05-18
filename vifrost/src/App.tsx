@@ -5,6 +5,7 @@ import { useAuth } from "./contexts/AuthContext";
 import { displayNameFromUser } from "./lib/displayNameFromUser";
 import { useWebSocket } from "./hooks/useWebSocket";
 import type { ServerMessage, WebSocketStatus } from "./hooks/useWebSocket";
+import type { KeybindEventKind } from "./hooks/vimPenalty";
 
 const USERNAME_KEY = "vifrost_username";
 
@@ -15,7 +16,7 @@ export interface AppOutletContext {
   connectWs: () => void;
   isWsOpen: boolean;
   sendJoinQueue: (username: string) => void;
-  sendScoreUpdate: (delta: number, keybindDelta?: number) => void;
+  sendKeybindEvent: (kind: KeybindEventKind, count?: number) => void;
   sendRunCode: (code: string) => void;
   sendReady: () => void;
   sendSubmit: () => void;
@@ -42,7 +43,7 @@ function App() {
     lastMessage,
     connect,
     sendJoinQueue,
-    sendScoreUpdate,
+    sendKeybindEvent,
     sendRunCode,
     sendReady,
     sendSubmit,
@@ -62,7 +63,7 @@ function App() {
             connectWs: connect,
             isWsOpen: status === "open",
             sendJoinQueue,
-            sendScoreUpdate,
+            sendKeybindEvent,
             sendRunCode,
             sendReady,
             sendSubmit,

@@ -16,6 +16,7 @@ const (
 	MsgLeave             = "leave"
 	MsgError             = "error"
 	MsgScoreUpdate       = "score_update"
+	MsgKeybindEvent      = "keybind_event"
 	MsgPing              = "ping"
 	MsgPong              = "pong"
 	MsgRunCode           = "run_code"

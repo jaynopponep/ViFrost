@@ -71,11 +71,6 @@ type MatchCountdownPayload struct {
 	Seconds int `json:"seconds"`
 }
 
-type ScoreUpdateClientPayload struct {
-	Delta        int `json:"delta"`
-	KeybindDelta int `json:"keybindDelta"`
-}
-
 type ScoreUpdateServerPayload struct {
 	MyScore       int `json:"myScore"`
 	OpponentScore int `json:"opponentScore"`
@@ -94,9 +89,16 @@ type Player struct {
 	Ready        bool
 	SubmitTime   time.Time
 	KeybindCount int
-	active       bool
-	inQueue      bool
-	mu           sync.Mutex
+	// server-authoritative keybind scoring state, all guarded by mu.
+	// macroUseCount is the player's lifetime macro run count, it drives the
+	// escalating macro reward. kbWindowStart/kbWindowCount are the per-player
+	// keybind_event rate-limit window.
+	macroUseCount int
+	kbWindowStart time.Time
+	kbWindowCount int
+	active        bool
+	inQueue       bool
+	mu            sync.Mutex
 }
 
 type Room struct {

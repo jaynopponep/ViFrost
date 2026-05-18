@@ -16,11 +16,12 @@ export function GamePage() {
   const location = useLocation();
   const {
     username,
-    sendScoreUpdate,
+    sendKeybindEvent,
     sendRunCode,
     sendReady,
     sendSubmit,
     lastMessage,
+    wsStatus,
   } = useOutletContext<AppOutletContext>();
 
   const gameData = location.state as GameStartPayload | null;
@@ -40,9 +41,8 @@ export function GamePage() {
     scoreExtension,
     vimDeltas,
     dismissVimDelta,
-    playerVimTotal,
   } = useKeybindListener(
-    sendScoreUpdate,
+    sendKeybindEvent,
     match.phase === "live" && !match.submitted,
   );
 
@@ -56,6 +56,16 @@ export function GamePage() {
       setIsRunning(false);
     }
   }, [lastMessage]);
+
+  useEffect(() => {
+    // a run only clears isRunning via run_result. if the match ends or the
+    // socket drops mid-run that frame never arrives, so clear it here too,
+    // otherwise the run button stays disabled until a reload.
+    if (match.phase === "ended" || wsStatus !== "open") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI state with match/socket lifecycle
+      setIsRunning(false);
+    }
+  }, [match.phase, wsStatus]);
 
   const handleRun = useCallback(() => {
     if (match.phase !== "live" || match.submitted) return;
@@ -101,9 +111,9 @@ export function GamePage() {
             name: username ?? "you",
             color: gameData.playerColor,
             pct: match.playerPct,
-            // exact client-side tally (race-free). opponent stays derived
-            // since we never see the opponent's individual vim deltas.
-            vim: playerVimTotal,
+            // both vim figures are derived from the server-authoritative
+            // score (see deriveVim), so a client cannot inflate its own.
+            vim: match.playerVim,
           }}
           opponent={{
             name: gameData.opponentName ?? "opponent",

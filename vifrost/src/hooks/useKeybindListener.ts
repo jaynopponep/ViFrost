@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo, useState } from "react";
+import { useRef, useCallback, useMemo, useState, useEffect } from "react";
 import { EditorView } from "@codemirror/view";
 import type { ViewUpdate } from "@codemirror/view";
 import { Vim } from "@replit/codemirror-vim";
@@ -9,6 +9,7 @@ import {
   isExactReversal,
   type NavCommand,
   type NavAxis,
+  type KeybindEventKind,
 } from "./vimPenalty";
 
 const SCORE_NORMAL_MODE_EDIT = -5;
@@ -33,17 +34,17 @@ type VimGlobalState = {
 type VimWithGlobalState = typeof Vim & { getVimGlobalState_(): VimGlobalState };
 
 export function useKeybindListener(
-  sendScoreUpdate: (delta: number, keybindDelta?: number) => void,
-  // the server only accepts score_update while the match is live (see
+  sendKeybindEvent: (kind: KeybindEventKind, count?: number) => void,
+  // the server only accepts keybind_event while the match is live (see
   // AcceptsGameplay). the editor stays mounted (read-only) during
   // countdown/after submit/after end, where keydown+selection still fire but
-  // the server rejects the update. without this gate the optimistic
-  // playerVimTotal would drift from the server and phantom floats would show.
-  // defaults true so the preview page (no real match) is unaffected.
+  // the server rejects the event. without this gate the cosmetic floats would
+  // show for keystrokes the server never scored. defaults true so the preview
+  // page (no real match) is unaffected.
   scoringActive: boolean = true,
 ) {
-  const sendScoreUpdateRef = useRef(sendScoreUpdate);
-  sendScoreUpdateRef.current = sendScoreUpdate;
+  const sendKeybindEventRef = useRef(sendKeybindEvent);
+  sendKeybindEventRef.current = sendKeybindEvent;
   const scoringActiveRef = useRef(scoringActive);
   scoringActiveRef.current = scoringActive;
 
@@ -62,25 +63,25 @@ export function useKeybindListener(
   const [vimDeltas, setVimDeltas] = useState<{ id: number; value: number }[]>([]);
   const deltaIdRef = useRef(0);
 
-  // authoritative client-side player vim total. every vim point the client
-  // scores flows through emit() and nowhere else (test passes are server-side
-  // and never call emit), so this sum equals the player's vim contribution
-  // exactly. derived-from-server-score would race the +400 test-pass
-  // score_update against run_result and flash a phantom +400 (see deriveVim).
-  const [playerVimTotal, setPlayerVimTotal] = useState(0);
-
-  const emit = useCallback((delta: number, keybindDelta?: number) => {
-    // outside live the server rejects this anyway; suppressing fully keeps the
-    // client tally server-authoritative and stops post-submit phantom floats.
-    if (!scoringActiveRef.current) return;
-    sendScoreUpdateRef.current(delta, keybindDelta);
-    setPlayerVimTotal((v) => v + delta);
-    deltaIdRef.current += 1;
-    const id = deltaIdRef.current;
-    setVimDeltas((prev) =>
-      [...prev, { id, value: delta }].slice(-VIM_DELTA_CAP),
-    );
-  }, []);
+  // emit reports a vim event to the server (which owns the score) and queues
+  // the cosmetic float. value is only the float number, the scoreboard reads
+  // the server total. value 0 still reports the event (so server-side macro
+  // escalation keeps counting) but shows no float.
+  const emit = useCallback(
+    (kind: KeybindEventKind, value: number, count: number = 1) => {
+      // outside live the server rejects the event anyway, suppressing fully
+      // stops post-submit phantom floats.
+      if (!scoringActiveRef.current) return;
+      sendKeybindEventRef.current(kind, count);
+      if (value === 0) return;
+      deltaIdRef.current += 1;
+      const id = deltaIdRef.current;
+      setVimDeltas((prev) =>
+        [...prev, { id, value }].slice(-VIM_DELTA_CAP),
+      );
+    },
+    [],
+  );
   const emitRef = useRef(emit);
   emitRef.current = emit;
 
@@ -102,7 +103,17 @@ export function useKeybindListener(
   const navSentRef = useRef(false);
   const macroUseCountRef = useRef<Map<string, number>>(new Map());
 
+  // every view.dom listener below is registered with this controller's signal,
+  // so a single abort() removes all of them. it is aborted when the editor is
+  // recreated and on unmount, otherwise listeners (and their rAF closures over
+  // the old view) accumulate on each remount.
+  const listenerAbortRef = useRef<AbortController | null>(null);
+
   const attachVimModeListener = useCallback((view: EditorViewWithVim) => {
+    listenerAbortRef.current?.abort();
+    const controller = new AbortController();
+    listenerAbortRef.current = controller;
+    const { signal } = controller;
     view.focus();
 
     view.cm?.on("vim-mode-change", (e) => {
@@ -146,7 +157,7 @@ export function useKeybindListener(
           event.key === "ArrowLeft" ||
           event.key === "ArrowRight"
         ) {
-          emitRef.current(PENALTY_ARROW);
+          emitRef.current("arrow_penalty", PENALTY_ARROW);
           lastNavRef.current = null;
           // an arrow move is already penalised at PENALTY_ARROW; suppress the
           // follow-up normal-mode -5 so it is not double-charged. only matters
@@ -157,7 +168,7 @@ export function useKeybindListener(
           }
         }
       },
-      { capture: true },
+      { capture: true, signal },
     );
 
     // mouse navigation. a mousedown in the editor that lands on a
@@ -192,7 +203,7 @@ export function useKeybindListener(
           // is the public signal that the view is gone.
           if (!view.dom.isConnected) return;
           if (view.state.selection.main.head !== before) {
-            emitRef.current(PENALTY_MOUSE);
+            emitRef.current("mouse_penalty", PENALTY_MOUSE);
             lastNavRef.current = null;
           }
           // release the suppression for the whole click update cluster (the
@@ -200,7 +211,7 @@ export function useKeybindListener(
           navSentRef.current = false;
         });
       },
-      { capture: true },
+      { capture: true, signal },
     );
 
     view.dom.addEventListener(
@@ -253,7 +264,9 @@ export function useKeybindListener(
                 }
               }
               macroUseCountRef.current.set(regName, prev + count);
-              if (totalDelta > 0) emitRef.current(totalDelta, count);
+              // always report so the server-side escalation count advances,
+              // even when this run is worth 0. totalDelta is only the float.
+              emitRef.current("macro_usage", totalDelta, count);
             }
           }
           return;
@@ -272,9 +285,9 @@ export function useKeybindListener(
           const cmd: NavCommand = { axis: "word", forward: key === "w", count: 1 };
           // counter-productive disabled (see COUNTER_PRODUCTIVE_ENABLED).
           if (COUNTER_PRODUCTIVE_ENABLED && isExactReversal(prevNav, cmd)) {
-            emitRef.current(PENALTY_COUNTER_PRODUCTIVE);
+            emitRef.current("counter_productive", PENALTY_COUNTER_PRODUCTIVE);
           }
-          emitRef.current(SCORE_NAV_SHORTCUT, 1);
+          emitRef.current("nav_shortcut", SCORE_NAV_SHORTCUT);
           lastNavRef.current = cmd;
           keyBufferRef.current = "";
           endNavSuppression(before, prevNav);
@@ -296,9 +309,9 @@ export function useKeybindListener(
           const cmd: NavCommand = { axis, forward, count: parseInt(buf, 10) };
           // counter-productive disabled (see COUNTER_PRODUCTIVE_ENABLED).
           if (COUNTER_PRODUCTIVE_ENABLED && isExactReversal(prevNav, cmd)) {
-            emitRef.current(PENALTY_COUNTER_PRODUCTIVE);
+            emitRef.current("counter_productive", PENALTY_COUNTER_PRODUCTIVE);
           }
-          emitRef.current(SCORE_NAV_SHORTCUT, 1);
+          emitRef.current("nav_shortcut", SCORE_NAV_SHORTCUT);
           lastNavRef.current = cmd;
           keyBufferRef.current = "";
           endNavSuppression(before, prevNav);
@@ -307,7 +320,7 @@ export function useKeybindListener(
 
         keyBufferRef.current = "";
       },
-      { capture: true },
+      { capture: true, signal },
     );
   }, []);
 
@@ -334,9 +347,9 @@ export function useKeybindListener(
         const cmd: NavCommand = { axis: "find", forward: true, count: 1 };
         // counter-productive disabled (see COUNTER_PRODUCTIVE_ENABLED).
         if (COUNTER_PRODUCTIVE_ENABLED && isExactReversal(lastNavRef.current, cmd)) {
-          emitRef.current(PENALTY_COUNTER_PRODUCTIVE);
+          emitRef.current("counter_productive", PENALTY_COUNTER_PRODUCTIVE);
         }
-        emitRef.current(SCORE_NAV_SHORTCUT, 1);
+        emitRef.current("nav_shortcut", SCORE_NAV_SHORTCUT);
         lastNavRef.current = cmd;
       }
       return;
@@ -357,7 +370,7 @@ export function useKeybindListener(
       }
       // any non-nav cursor move breaks exact-reversal adjacency.
       lastNavRef.current = null;
-      emitRef.current(SCORE_NORMAL_MODE_EDIT);
+      emitRef.current("normal_edit", SCORE_NORMAL_MODE_EDIT);
     }
   }, []);
 
@@ -366,11 +379,15 @@ export function useKeybindListener(
     [onEditorUpdate],
   );
 
+  // remove all editor listeners when the hook unmounts.
+  useEffect(() => {
+    return () => listenerAbortRef.current?.abort();
+  }, []);
+
   return {
     attachVimModeListener,
     scoreExtension,
     vimDeltas,
     dismissVimDelta,
-    playerVimTotal,
   };
 }

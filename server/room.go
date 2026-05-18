@@ -206,6 +206,11 @@ func (r *Room) EndGame() {
 }
 
 func (r *Room) HandleSubmit(from *Player) {
+	// the goroutine may have been scheduled just before the match ended.
+	if !r.AcceptsGameplay() {
+		return
+	}
+
 	from.mu.Lock()
 	if from.Submitted {
 		from.mu.Unlock()
