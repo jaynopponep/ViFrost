@@ -3,6 +3,16 @@ import { cn } from "@/lib/utils"
 import { useAdminMutations } from "@/hooks/useAdminDashboard"
 import type { Profile, UserStatus } from "@/types/profile"
 import { useAuth } from "@/contexts/AuthContext"
+import { AdminTableCell, AdminTableHeadCell } from "./admin-table"
+
+const TABLE_COLUMNS = [
+  "Name",
+  "Email",
+  "Role",
+  "Status",
+  "Created",
+  "Actions",
+] as const
 
 const STATUS_STYLES: Record<UserStatus, string> = {
   pending:
@@ -64,24 +74,9 @@ export function AdminUserTable({ users, isLoading }: AdminUserTableProps) {
         <table className="w-full min-w-[880px] text-left text-sm">
           <thead>
             <tr className="border-b border-[color:var(--colorSoftBorder)] bg-[var(--colorSurfaceAlt)]">
-              <th className="px-4 py-3 font-medium text-[var(--colorTextMuted)]">
-                Name
-              </th>
-              <th className="px-4 py-3 font-medium text-[var(--colorTextMuted)]">
-                Email
-              </th>
-              <th className="px-4 py-3 font-medium text-[var(--colorTextMuted)]">
-                Role
-              </th>
-              <th className="px-4 py-3 font-medium text-[var(--colorTextMuted)]">
-                Status
-              </th>
-              <th className="px-4 py-3 font-medium text-[var(--colorTextMuted)]">
-                Created
-              </th>
-              <th className="px-4 py-3 font-medium text-[var(--colorTextMuted)]">
-                Actions
-              </th>
+              {TABLE_COLUMNS.map((label) => (
+                <AdminTableHeadCell key={label}>{label}</AdminTableHeadCell>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -103,19 +98,19 @@ export function AdminUserTable({ users, isLoading }: AdminUserTableProps) {
                     i % 2 === 1 && "bg-[var(--colorZebra)]",
                   )}
                 >
-                  <td className="px-4 py-3 font-medium">
+                  <AdminTableCell className="font-medium">
                     {row.full_name ?? "—"}
                     {row.id === currentUser?.id ? (
                       <span className="ml-2 text-xs text-[var(--colorTextMuted)]">
                         (you)
                       </span>
                     ) : null}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--colorTextMuted)]">
+                  </AdminTableCell>
+                  <AdminTableCell className="text-[var(--colorTextMuted)]">
                     {row.email}
-                  </td>
-                  <td className="px-4 py-3 capitalize">{row.role}</td>
-                  <td className="px-4 py-3">
+                  </AdminTableCell>
+                  <AdminTableCell className="capitalize">{row.role}</AdminTableCell>
+                  <AdminTableCell>
                     <span
                       className={cn(
                         "inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize",
@@ -124,11 +119,11 @@ export function AdminUserTable({ users, isLoading }: AdminUserTableProps) {
                     >
                       {row.status}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--colorTextMuted)]">
+                  </AdminTableCell>
+                  <AdminTableCell className="text-[var(--colorTextMuted)]">
                     {new Date(row.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3">
+                  </AdminTableCell>
+                  <AdminTableCell>
                     <UserActions
                       profile={row}
                       isSelf={row.id === currentUser?.id}
@@ -142,7 +137,7 @@ export function AdminUserTable({ users, isLoading }: AdminUserTableProps) {
                         moderate.isPending || setRole.isPending
                       }
                     />
-                  </td>
+                  </AdminTableCell>
                 </tr>
               ))
             )}
