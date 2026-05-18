@@ -13,6 +13,8 @@ import { MatchHistoryPage } from "./pages/MatchHistoryPage.tsx";
 import { LeaderboardPage } from "./pages/LeaderboardPage.tsx";
 import { LoginPage } from "./pages/LoginPage.tsx";
 import { SignupPage } from "./pages/SignupPage.tsx";
+// TEMPORARY: ui preview route, remove with MatchPreviewPage when design lands.
+import { MatchPreviewPage } from "./pages/MatchPreviewPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +28,7 @@ const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       { path: "lobby", element: <LobbyPage /> },
       { path: "game", element: <GamePage /> },
+      { path: "match-preview", element: <MatchPreviewPage /> },
       { path: "profile", element: <ProfilePage /> },
       { path: "match-history", element: <MatchHistoryPage /> },
       { path: "leaderboard", element: <LeaderboardPage /> },
