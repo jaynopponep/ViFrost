@@ -57,6 +57,10 @@ type RunCodePayload struct {
 type RunResultPayload struct {
 	Results []bool `json:"results"`
 	Delta   int    `json:"delta"`
+	// reason a run produced no results (syntax error,
+	// runtime traceback, or timeout). empty on a normal run. forwarded to the
+	// client for display only; does not affect scoring or win math.
+	Error string `json:"error,omitempty"`
 }
 
 type OpponentRunResultPayload struct {

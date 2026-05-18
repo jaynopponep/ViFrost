@@ -1,10 +1,10 @@
 package main
 
 const (
-	PointsKeybindComplex  = 2
-	PointsKeybindNormal   = 1
-	PointsKeybindPenalty  = -1
-	PointsTestPass        = 400
+	PointsKeybindComplex = 2
+	PointsKeybindNormal  = 1
+	PointsKeybindPenalty = -1
+	PointsTestPass       = 400
 )
 
 func (r *Room) HandleKeybind(from *Player, payload KeybindPayload) {
@@ -66,7 +66,9 @@ func (r *Room) HandleScoreUpdate(from *Player, delta int, keybindDelta int) {
 }
 
 func (r *Room) HandleRunCode(from *Player, code string) {
-	results := RunTests(code, r.TestsContent)
+	// runErr is forwarded to the client for display only (syntax
+	// error / traceback / timeout). it does not touch scoring or win math.
+	results, runErr := RunTests(code, r.TestsContent)
 
 	from.mu.Lock()
 	if len(from.PassedTests) < len(results) {
@@ -90,6 +92,7 @@ func (r *Room) HandleRunCode(from *Player, code string) {
 	msg := EnvelopeFromType(MsgRunResult, RunResultPayload{
 		Results: results,
 		Delta:   delta,
+		Error:   runErr,
 	})
 	select {
 	case from.Send <- MustMarshal(msg):
