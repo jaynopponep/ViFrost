@@ -70,17 +70,22 @@ func (r *Room) Start() {
 		}
 	}
 
-	// additive: wait for both players to ready up, or fall back after 15s.
-	readyDeadline := time.After(15 * time.Second)
-readyWait:
+	// wait for both players to ready up. there is intentionally no automatic
+	// start: the match only begins once everyone has readied.
+	//
+	// if you guys want 15s fallback timeout (auto-start even if a player
+	// never readies, so an idle or disconnected player cannot hang the room),
+	// uncomment the four lines marked FALLBACK below.
+	// readyDeadline := time.After(15 * time.Second) // FALLBACK
+	// readyWait:                                    // FALLBACK
 	for !r.bothReady() {
 		select {
 		case <-r.done:
 			return
 		case <-r.readyCh:
 			// re-check loop condition
-		case <-readyDeadline:
-			break readyWait
+			// case <-readyDeadline: // FALLBACK
+			// 	break readyWait    // FALLBACK
 		}
 	}
 
