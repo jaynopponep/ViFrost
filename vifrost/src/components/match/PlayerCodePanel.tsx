@@ -14,6 +14,7 @@ export interface PlayerCodePanelProps {
   onRun: () => void;
   isRunning: boolean;
   runResults: boolean[] | null;
+  runError: string | null;
   onSubmit: () => void;
   submitted: boolean;
 }
@@ -28,6 +29,7 @@ export function PlayerCodePanel(props: PlayerCodePanelProps) {
     onRun,
     isRunning,
     runResults,
+    runError,
     onSubmit,
     submitted,
   } = props;
@@ -66,7 +68,11 @@ export function PlayerCodePanel(props: PlayerCodePanelProps) {
         >
           {submitted ? "Submitted" : "Submit"}
         </button>
-        {runResults && (
+        {runError ? (
+          <pre className="player-panel__error" role="alert">
+            {runError}
+          </pre>
+        ) : runResults && runResults.length > 0 ? (
           <div className="player-panel__results">
             {runResults.map((passed, i) => (
               <span
@@ -77,7 +83,9 @@ export function PlayerCodePanel(props: PlayerCodePanelProps) {
               </span>
             ))}
           </div>
-        )}
+        ) : runResults ? (
+          <span className="player-panel__error">no test output</span>
+        ) : null}
       </div>
     </div>
   );

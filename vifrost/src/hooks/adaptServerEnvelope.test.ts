@@ -52,15 +52,33 @@ describe("adaptServerEnvelope", () => {
     expect(adaptServerEnvelope({ type: "pong", payload: null })).toBeNull();
   });
 
-  it("drops run_result whose results is not a boolean array", () => {
-    expect(adaptServerEnvelope({ type: "run_result", payload: { results: "oops", delta: 0 } })).toBeNull();
-    expect(adaptServerEnvelope({ type: "run_result", payload: null })).toBeNull();
-    expect(adaptServerEnvelope({ type: "run_result" })).toBeNull();
+  // a syntax error / timeout makes the server send results: null. the frame
+  // must pass through (results normalised to []) so the client leaves the
+  // "running" state instead of hanging forever.
+  it("normalises run_result with non-array results to [] instead of dropping", () => {
+    expect(adaptServerEnvelope({ type: "run_result", payload: { results: "oops", delta: 0 } })).toEqual({
+      type: "run_result",
+      payload: { results: [], delta: 0 },
+    });
+    expect(adaptServerEnvelope({ type: "run_result", payload: null })).toEqual({
+      type: "run_result",
+      payload: { results: [] },
+    });
+    expect(adaptServerEnvelope({ type: "run_result" })).toEqual({
+      type: "run_result",
+      payload: { results: [] },
+    });
   });
 
-  it("drops opponent_run_result whose results is not a boolean array", () => {
-    expect(adaptServerEnvelope({ type: "opponent_run_result", payload: { results: 42 } })).toBeNull();
-    expect(adaptServerEnvelope({ type: "opponent_run_result", payload: {} })).toBeNull();
+  it("normalises opponent_run_result with non-array results to [] instead of dropping", () => {
+    expect(adaptServerEnvelope({ type: "opponent_run_result", payload: { results: 42 } })).toEqual({
+      type: "opponent_run_result",
+      payload: { results: [] },
+    });
+    expect(adaptServerEnvelope({ type: "opponent_run_result", payload: {} })).toEqual({
+      type: "opponent_run_result",
+      payload: { results: [] },
+    });
   });
 
   it("drops match_countdown whose seconds is not a number", () => {

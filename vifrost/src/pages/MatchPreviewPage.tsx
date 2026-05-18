@@ -61,6 +61,23 @@ export function MatchPreviewPage() {
   const [problemForceOpen, setProblemForceOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
+  // TEMPORARY: mock vim score + delta queue for design iteration
+  const [playerVim, setPlayerVim] = useState(0);
+  const [opponentVim, setOpponentVim] = useState(0);
+  const [simDeltas, setSimDeltas] = useState<{ id: number; value: number }[]>(
+    [],
+  );
+  const simIdRef = useRef(0);
+
+  const fireDelta = (value: number) => {
+    simIdRef.current += 1;
+    const id = simIdRef.current;
+    setSimDeltas((prev) => [...prev, { id, value }]);
+    setPlayerVim((v) => v + value);
+  };
+  const dismissSimDelta = (id: number) =>
+    setSimDeltas((prev) => prev.filter((d) => d.id !== id));
+
   const infoBtnRef = useRef<HTMLButtonElement | null>(null);
 
   // real editor extensions, with a no-op score sender (no websocket here).
@@ -119,6 +136,8 @@ export function MatchPreviewPage() {
         setCountdown={setCountdown}
         onSimulateRun={simulateRun}
         onSimulateCountdown={simulateCountdown}
+        onFireDelta={fireDelta}
+        onBumpOpponentVim={() => setOpponentVim((v) => v + 20)}
       />
 
       <div className="game__stage">
@@ -128,14 +147,18 @@ export function MatchPreviewPage() {
             name: MOCK.username,
             color: MOCK.playerColor,
             pct: playerPct,
+            vim: playerVim,
           }}
           opponent={{
             name: MOCK.opponentName,
             color: MOCK.opponentColor,
             pct: opponentPct,
+            vim: opponentVim,
           }}
           onInfoClick={() => setPopoverOpen((v) => !v)}
           onReopenProblem={() => setProblemForceOpen(true)}
+          vimDeltas={simDeltas}
+          onDismissVimDelta={dismissSimDelta}
         />
 
         <div className="game__panels">
@@ -148,6 +171,7 @@ export function MatchPreviewPage() {
             onRun={simulateRun}
             isRunning={isRunning}
             runResults={runResults}
+            runError={null}
             onSubmit={() => setSubmitted(true)}
             submitted={submitted}
           />
@@ -221,10 +245,22 @@ interface DevControlsProps {
   setCountdown: (n: number) => void;
   onSimulateRun: () => void;
   onSimulateCountdown: () => void;
+  onFireDelta: (value: number) => void;
+  onBumpOpponentVim: () => void;
 }
 
 function DevControls(props: DevControlsProps) {
   const phases: MatchPhase[] = ["waiting", "countdown", "live", "ended"];
+  // TEMPORARY: shared button style mirroring the existing simulate buttons
+  const simBtn: React.CSSProperties = {
+    marginLeft: 4,
+    padding: "2px 6px",
+    borderRadius: 4,
+    border: "1px solid #555",
+    cursor: "pointer",
+    background: "transparent",
+    color: "#eee",
+  };
   const box: React.CSSProperties = {
     position: "fixed",
     bottom: 12,
@@ -360,6 +396,48 @@ function DevControls(props: DevControlsProps) {
       >
         simulate run
       </button>
+
+      {/* TEMPORARY: vim event simulators */}
+      <span>
+        vim event
+        <button type="button" style={simBtn} onClick={() => props.onFireDelta(20)}>
+          +20 nav
+        </button>
+        <button type="button" style={simBtn} onClick={() => props.onFireDelta(-5)}>
+          -5 move
+        </button>
+        <button
+          type="button"
+          style={simBtn}
+          onClick={() => props.onFireDelta(50)}
+        >
+          +50 macro
+        </button>
+        <button
+          type="button"
+          style={simBtn}
+          onClick={() => props.onFireDelta(-100)}
+        >
+          -100 arrow
+        </button>
+        <button
+          type="button"
+          style={simBtn}
+          onClick={() => props.onFireDelta(-200)}
+        >
+          -200 mouse
+        </button>
+        <button
+          type="button"
+          style={simBtn}
+          onClick={() => props.onFireDelta(-60)}
+        >
+          -60 revert
+        </button>
+        <button type="button" style={simBtn} onClick={props.onBumpOpponentVim}>
+          opp +20
+        </button>
+      </span>
 
       <button
         onClick={props.onSimulateCountdown}

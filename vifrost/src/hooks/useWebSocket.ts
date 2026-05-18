@@ -52,6 +52,9 @@ export type ErrorPayload = { message: string };
 export type RunResultPayload = {
   results: boolean[];
   delta: number;
+  // present when a run produced no results: syntax error, runtime traceback,
+  // or timeout. display only.
+  error?: string;
 };
 
 export type OpponentReadyPayload = Record<string, never>;

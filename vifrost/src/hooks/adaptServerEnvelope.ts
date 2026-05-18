@@ -48,7 +48,14 @@ export function adaptServerEnvelope(raw: RawEnvelope): ServerMessage | null {
     const p = raw.payload as Record<string, unknown> | null | undefined;
 
     if (raw.type === "run_result" || raw.type === "opponent_run_result") {
-      if (!p || !isBoolArray(p.results)) return null;
+      // a syntax error / timeout / unparseable output makes the server send
+      // results: null (go marshals a nil []bool as null). dropping the frame
+      // here strands the client in "running" forever (setIsRunning(false)
+      // only fires on a delivered run_result). normalise instead: pass the
+      // frame through with results coerced to [] so the run completes with
+      // zero passed tests and the reducer still gets a valid array.
+      const results = p && isBoolArray(p.results) ? p.results : [];
+      return { type: raw.type, payload: { ...(p ?? {}), results } } as ServerMessage;
     }
     if (raw.type === "match_countdown") {
       if (!p || typeof p.seconds !== "number") return null;

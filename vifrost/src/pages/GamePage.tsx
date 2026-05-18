@@ -28,18 +28,30 @@ export function GamePage() {
   const [editorValue, setEditorValue] = useState(gameData?.snippet ?? "");
   const [isRunning, setIsRunning] = useState(false);
   const [runResults, setRunResults] = useState<boolean[] | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
   const [problemForceOpen, setProblemForceOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const infoBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const match = useMatchState(gameData, lastMessage);
-  const { attachVimModeListener, scoreExtension } = useKeybindListener(sendScoreUpdate);
+  const {
+    attachVimModeListener,
+    scoreExtension,
+    vimDeltas,
+    dismissVimDelta,
+    playerVimTotal,
+  } = useKeybindListener(
+    sendScoreUpdate,
+    match.phase === "live" && !match.submitted,
+  );
 
   useEffect(() => {
     if (lastMessage?.type === "run_result") {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI state with websocket event stream
       setRunResults(lastMessage.payload.results);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI state with websocket event stream
+      setRunError(lastMessage.payload.error ?? null);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI state with websocket event stream
       setIsRunning(false);
     }
@@ -48,6 +60,7 @@ export function GamePage() {
   const handleRun = useCallback(() => {
     if (match.phase !== "live" || match.submitted) return;
     setRunResults(null);
+    setRunError(null);
     setIsRunning(true);
     sendRunCode(editorValue);
   }, [match.phase, match.submitted, sendRunCode, editorValue]);
@@ -88,14 +101,20 @@ export function GamePage() {
             name: username ?? "you",
             color: gameData.playerColor,
             pct: match.playerPct,
+            // exact client-side tally (race-free). opponent stays derived
+            // since we never see the opponent's individual vim deltas.
+            vim: playerVimTotal,
           }}
           opponent={{
             name: gameData.opponentName ?? "opponent",
             color: gameData.opponentColor,
             pct: match.opponentPct,
+            vim: match.opponentVim,
           }}
           onInfoClick={() => setPopoverOpen((v) => !v)}
           onReopenProblem={() => setProblemForceOpen(true)}
+          vimDeltas={vimDeltas}
+          onDismissVimDelta={dismissVimDelta}
         />
 
         <div className="game__panels">
@@ -108,6 +127,7 @@ export function GamePage() {
             onRun={handleRun}
             isRunning={isRunning}
             runResults={runResults}
+            runError={runError}
             onSubmit={handleSubmit}
             submitted={match.submitted}
           />

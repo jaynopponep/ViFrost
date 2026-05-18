@@ -102,3 +102,19 @@
   background: rgba(239, 68, 68, 0.15);
   color: #fca5a5;
 }
+
+.player-panel__error {
+  flex-basis: 100%;
+  margin: 0;
+  max-height: 160px;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
