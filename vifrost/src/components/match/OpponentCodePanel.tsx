@@ -1,4 +1,6 @@
 import { GameScreen } from "@/components/GameScreen";
+import { useIsDarkTheme } from "@/hooks/useIsDarkTheme";
+import { vifrostDarkTheme } from "@/theme/codemirrorTheme";
 import "./OpponentCodePanel.css";
 
 export interface OpponentCodePanelProps {
@@ -8,6 +10,8 @@ export interface OpponentCodePanelProps {
 
 export function OpponentCodePanel(props: OpponentCodePanelProps) {
   const { starterCode, opponentName } = props;
+
+  const isDark = useIsDarkTheme();
 
   if (!starterCode) {
     return (
@@ -27,7 +31,7 @@ export function OpponentCodePanel(props: OpponentCodePanelProps) {
           vimMode={false}
           height="100%"
           width="100%"
-          theme="dark"
+          theme={isDark ? vifrostDarkTheme : "light"}
         />
       </div>
     </div>

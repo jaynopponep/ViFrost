@@ -15,7 +15,7 @@ export interface GameScreenProps {
   placeholder?: string
   height: string
   width: string
-  theme?: 'light' | 'dark'
+  theme?: 'light' | 'dark' | Extension
   extensions?: Extension[]
 }
 
