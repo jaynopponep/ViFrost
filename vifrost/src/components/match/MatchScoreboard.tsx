@@ -1,6 +1,10 @@
 import { forwardRef } from "react";
+import { motion } from "motion/react";
 import { Avatar } from "@/components/Avatar";
+import { CountingNumber } from "@/components/ui/counting-number";
 import "./MatchScoreboard.css";
+
+const FILL_SPRING = { type: "spring", stiffness: 100, damping: 30 } as const;
 
 export interface MatchScoreboardProps {
   player: { name: string; color: string; pct: number };
@@ -16,17 +20,32 @@ export const MatchScoreboard = forwardRef<HTMLButtonElement, MatchScoreboardProp
     return (
       <div className="match-scoreboard">
         <div className="match-scoreboard__player">
-          <Avatar name={player.name} side="player" color={player.color} />
+          <Avatar
+            name={player.name}
+            side="player"
+            color={player.color}
+            showName={false}
+          />
           <div className="match-scoreboard__meta">
             <div className="match-scoreboard__row">
+              <span className="match-scoreboard__name">{player.name}</span>
               <span className="match-scoreboard__pct match-scoreboard__pct--player">
-                {Math.round(player.pct)}%
+                <CountingNumber value={player.pct} />%
               </span>
             </div>
-            <div className="match-scoreboard__bar">
-              <div
+            <div
+              className="match-scoreboard__bar"
+              role="progressbar"
+              aria-label={`${player.name} test progress`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(player.pct)}
+            >
+              <motion.div
                 className="match-scoreboard__fill match-scoreboard__fill--player"
-                style={{ width: `${player.pct}%` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${player.pct}%` }}
+                transition={FILL_SPRING}
               />
             </div>
           </div>
@@ -54,19 +73,35 @@ export const MatchScoreboard = forwardRef<HTMLButtonElement, MatchScoreboardProp
 
         <div className="match-scoreboard__player match-scoreboard__player--opp">
           <div className="match-scoreboard__meta">
-            <div className="match-scoreboard__row match-scoreboard__row--opp">
+            <div className="match-scoreboard__row">
               <span className="match-scoreboard__pct match-scoreboard__pct--opp">
-                {Math.round(opponent.pct)}%
+                <CountingNumber value={opponent.pct} />%
               </span>
+              <span className="match-scoreboard__name">{opponent.name}</span>
             </div>
-            <div className="match-scoreboard__bar">
-              <div
+            <div
+              className="match-scoreboard__bar"
+              role="progressbar"
+              aria-label={`${opponent.name} test progress`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(opponent.pct)}
+            >
+              <motion.div
                 className="match-scoreboard__fill match-scoreboard__fill--opp"
-                style={{ width: `${opponent.pct}%`, marginLeft: "auto" }}
+                style={{ marginLeft: "auto" }}
+                initial={{ width: 0 }}
+                animate={{ width: `${opponent.pct}%` }}
+                transition={FILL_SPRING}
               />
             </div>
           </div>
-          <Avatar name={opponent.name} side="opponent" color={opponent.color} />
+          <Avatar
+            name={opponent.name}
+            side="opponent"
+            color={opponent.color}
+            showName={false}
+          />
         </div>
       </div>
     );

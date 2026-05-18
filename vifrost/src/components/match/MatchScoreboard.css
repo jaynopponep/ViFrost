@@ -37,12 +37,19 @@
 
 .match-scoreboard__row {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
 }
 
-.match-scoreboard__row--opp {
-  justify-content: flex-start;
+.match-scoreboard__name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--colorAvatarName);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .match-scoreboard__pct {
@@ -64,7 +71,9 @@
 .match-scoreboard__fill {
   height: 100%;
   border-radius: 99px;
-  transition: width 0.35s ease;
+  /* width is animated by motion's spring (see MatchScoreboard.tsx). a css
+     transition here would fight it: css eases toward each per-frame spring
+     value over 0.35s, lagging then spurting to catch up at the end. */
 }
 
 .match-scoreboard__fill--player {

@@ -5,6 +5,9 @@ interface AvatarProps {
   side: "player" | "opponent";
   color: string;
   result?: "win" | "lose" | "tie" | null;
+  // when false, render only the circle (and result badge); the caller lays
+  // out the name itself. defaults true so existing usages are unchanged.
+  showName?: boolean;
 }
 
 // player side:   [circle] name [result]
@@ -15,7 +18,13 @@ const RESULT_DISPLAY = {
   tie: { icon: "🏳️", className: "avatar-result-tie" },
 };
 
-export function Avatar({ name, side, color, result }: AvatarProps) {
+export function Avatar({
+  name,
+  side,
+  color,
+  result,
+  showName = true,
+}: AvatarProps) {
   const display = result ? RESULT_DISPLAY[result] : null;
 
   return (
@@ -25,7 +34,7 @@ export function Avatar({ name, side, color, result }: AvatarProps) {
           {display.icon}
         </span>
       )}
-      {side === "opponent" && (
+      {side === "opponent" && showName && (
         <span
           className="avatar-name"
           style={{ color: "var(--colorAvatarName)" }}
@@ -34,7 +43,7 @@ export function Avatar({ name, side, color, result }: AvatarProps) {
         </span>
       )}
       <div className="avatar-circle" style={{ backgroundColor: color }} />
-      {side === "player" && (
+      {side === "player" && showName && (
         <span
           className="avatar-name"
           style={{ color: "var(--colorAvatarName)" }}
