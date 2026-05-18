@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import { AuthRedirect } from "./components/guards/AuthRedirect";
 import { useAuth } from "./contexts/AuthContext";
+import { useProfile } from "./contexts/ProfileContext";
 import { displayNameFromUser } from "./lib/displayNameFromUser";
 import { useWebSocket } from "./hooks/useWebSocket";
 import type { Envelope, WebSocketStatus } from "./hooks/useWebSocket";
@@ -23,6 +25,7 @@ export interface AppOutletContext {
 
 function App() {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [guestUsername, setGuestUsernameState] = useState<string | null>(() =>
     typeof sessionStorage !== "undefined"
       ? sessionStorage.getItem(USERNAME_KEY)
@@ -34,7 +37,9 @@ function App() {
     sessionStorage.setItem(USERNAME_KEY, name);
   };
 
-  const username = user ? displayNameFromUser(user) : guestUsername;
+  const username = user
+    ? profile?.full_name?.trim() || displayNameFromUser(user)
+    : guestUsername;
 
   const {
     status,
@@ -50,6 +55,7 @@ function App() {
 
   return (
     <>
+      <AuthRedirect />
       <Navbar />
       <Outlet
         context={

@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
 export function Navbar() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const { isAdmin } = useProfile();
   return (
     <nav className="navbar">
       {/* Left: Logo */}
@@ -17,6 +19,16 @@ export function Navbar() {
       </Link>
 
       <div className="navbar__right">
+        {isAdmin ? (
+          <button
+            type="button"
+            className="navbar__auth-btn"
+            title="Admin dashboard"
+            onClick={() => navigate("/admin/dashboard")}
+          >
+            Admin
+          </button>
+        ) : null}
         <button
           type="button"
           className="navbar__stats-btn"
