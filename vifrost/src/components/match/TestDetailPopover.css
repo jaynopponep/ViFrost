@@ -7,6 +7,13 @@
   color: var(--colorText);
 }
 
+/* dark --colorSurface is near-black; match the rest of the dark match ui
+   (--colorMain) instead of a black popover. light is unchanged. */
+.dark .test-detail {
+  background: var(--colorMain);
+  color: var(--colorText);
+}
+
 .test-detail__header {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -46,7 +53,12 @@
   font-size: 0.72rem;
   padding: 2px 8px;
   border-radius: 4px;
-  display: inline-block;
+  /* fill the 1fr grid track so the chip width is identical for you and
+     rival and across every row, regardless of pass/fail/pending glyph. */
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .test-detail__cell--pass {
@@ -65,5 +77,6 @@
 }
 
 .test-detail__row > .test-detail__cell:last-child {
-  justify-self: end;
+  /* cells now stretch to fill their track, so both columns are symmetric. */
+  justify-self: stretch;
 }

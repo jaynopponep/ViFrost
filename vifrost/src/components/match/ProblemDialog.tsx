@@ -37,6 +37,17 @@ export function ProblemDialog(props: ProblemDialogProps) {
   const readOnly = onReadyClick === undefined;
   const preventDismiss = !readOnly;
 
+  // traffic-light cue for the pre-game countdown: far out = red, closing =
+  // yellow, imminent = green. generic high/mid/low so any count maps sanely.
+  const countdownLevel =
+    countdown === null
+      ? null
+      : countdown >= 3
+        ? "high"
+        : countdown === 2
+          ? "mid"
+          : "low";
+
   // base-ui's onOpenChange signature is (open, eventDetails). We adapt it to
   // the simpler (open: boolean) => void contract exposed by ProblemDialog,
   // and use eventDetails.cancel() to block dismissal in locked mode.
@@ -72,7 +83,10 @@ export function ProblemDialog(props: ProblemDialogProps) {
         <pre className="problem-dialog__statement">{problemStatement}</pre>
 
         {countdown !== null ? (
-          <div className="problem-dialog__countdown" aria-live="polite">
+          <div
+            className={`problem-dialog__countdown problem-dialog__countdown--${countdownLevel}`}
+            aria-live="polite"
+          >
             {countdown}
           </div>
         ) : (
