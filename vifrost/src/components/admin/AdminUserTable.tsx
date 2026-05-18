@@ -170,7 +170,7 @@ function UserActions({
 }: UserActionsProps) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {profile.status !== "approved" ? (
+      {profile.status === "pending" ? (
         <ActionBtn
           label="Approve"
           variant="success"
