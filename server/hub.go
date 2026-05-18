@@ -34,15 +34,27 @@ func (h *Hub) matchmaking() {
 			continue
 		}
 		queue = append(queue, p)
-		if len(queue) >= 2 {
-			room := NewRoom(h, queue[0], queue[1])
-			queue[0].Room = room
-			queue[1].Room = room
+		for len(queue) >= 2 {
+			p1, p2 := queue[0], queue[1]
+			// catching bug where user can play against self.
+			// Ideally it is better to handle by unique user ID but im too lazy rn
+			if p1.Username != "" && p1.Username == p2.Username {
+				queue = queue[1:]
+				continue
+			}
+			room := NewRoom(h, p1, p2)
+			p1.mu.Lock()
+			p1.Room = room
+			p1.mu.Unlock()
+			p2.mu.Lock()
+			p2.Room = room
+			p2.mu.Unlock()
 			h.roomMu.Lock()
 			h.rooms[room.ID] = room
 			h.roomMu.Unlock()
-			queue = queue[:0]
+			queue = queue[2:]
 			go room.Start()
+			break
 		}
 	}
 }
