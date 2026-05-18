@@ -22,7 +22,6 @@ function VimLogo({ className }: { className?: string }) {
   )
 }
 
-// for border glow
 function useIsDark() {
   const [isDark, setIsDark] = useState(() =>
     document.documentElement.classList.contains('dark')
@@ -96,6 +95,18 @@ export function LandingPage() {
           </div>
         </BorderGlow>
       </div>
+
+      {/* Tutorial link */}
+      <p className="landing-tutorial-link">
+        New to Vim?{' '}
+        <button
+          type="button"
+          className="landing-tutorial-btn"
+          onClick={() => navigate('/tutorial')}
+        >
+          Try the Tutorial
+        </button>
+      </p>
     </main>
   )
 }
