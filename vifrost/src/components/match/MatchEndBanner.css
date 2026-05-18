@@ -17,6 +17,12 @@
   text-align: center;
 }
 
+/* dark --colorSurface is near-black; match the dark match ui (--colorMain). */
+.dark .match-end-banner__card {
+  background: var(--colorMain);
+  color: var(--colorText);
+}
+
 .match-end-banner__title {
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.8rem;

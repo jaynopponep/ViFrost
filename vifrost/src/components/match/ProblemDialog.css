@@ -5,6 +5,13 @@
   border: 1px solid var(--colorBorder);
 }
 
+/* dark --colorSurface is near-black; match the rest of the dark match ui
+   (--colorMain teal) so the dialog is not a black box. light is unchanged. */
+.dark .problem-dialog {
+  background: var(--colorMain);
+  color: var(--colorText);
+}
+
 /* Defensive: shadcn's DialogContent hides the close button via showCloseButton={false},
    but in case future versions render an X anyway, hide it in locked mode. */
 .problem-dialog--locked [data-slot="dialog-close"] {
@@ -33,7 +40,13 @@
   padding: 28px 0 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
+  transition: color 0.2s ease;
 }
+
+/* traffic-light progression as the match start approaches. */
+.problem-dialog__countdown--high { color: #ef4444; } /* red   */
+.problem-dialog__countdown--mid  { color: #eab308; } /* yellow */
+.problem-dialog__countdown--low  { color: #22c55e; } /* green  */
 
 .problem-dialog__footer {
   display: flex;
