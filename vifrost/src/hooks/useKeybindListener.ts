@@ -1,11 +1,24 @@
-import { useRef, useCallback, useMemo } from "react";
+import { useRef, useCallback, useMemo, useState } from "react";
 import { EditorView } from "@codemirror/view";
 import type { ViewUpdate } from "@codemirror/view";
 import { Vim } from "@replit/codemirror-vim";
+import {
+  PENALTY_ARROW,
+  PENALTY_MOUSE,
+  PENALTY_COUNTER_PRODUCTIVE,
+  isExactReversal,
+  type NavCommand,
+  type NavAxis,
+} from "./vimPenalty";
 
 const SCORE_NORMAL_MODE_EDIT = -5;
 const SCORE_NAV_SHORTCUT = 20;
 const SCORE_MACRO_USAGE = 50;
+
+// claude counter-productive (-60 per exact same-count opposite-direction reversal,
+// e.g. 10j then 10k) but i disabled since it might be finnicky
+
+const COUNTER_PRODUCTIVE_ENABLED = false;
 
 type VimModeChangeEvent = { mode: string };
 type VimCm = {
@@ -19,9 +32,67 @@ type VimGlobalState = {
 };
 type VimWithGlobalState = typeof Vim & { getVimGlobalState_(): VimGlobalState };
 
-export function useKeybindListener(sendScoreUpdate: (delta: number, keybindDelta?: number) => void) {
+export function useKeybindListener(
+  sendScoreUpdate: (delta: number, keybindDelta?: number) => void,
+  // the server only accepts score_update while the match is live (see
+  // AcceptsGameplay). the editor stays mounted (read-only) during
+  // countdown/after submit/after end, where keydown+selection still fire but
+  // the server rejects the update. without this gate the optimistic
+  // playerVimTotal would drift from the server and phantom floats would show.
+  // defaults true so the preview page (no real match) is unaffected.
+  scoringActive: boolean = true,
+) {
   const sendScoreUpdateRef = useRef(sendScoreUpdate);
   sendScoreUpdateRef.current = sendScoreUpdate;
+  const scoringActiveRef = useRef(scoringActive);
+  scoringActiveRef.current = scoringActive;
+
+  // every emitted delta also feeds the floating animation. a queue (not a
+  // single latest-value state) is required: a penalised nav emits two deltas
+  // synchronously in one handler (e.g. -60 then +20); react 18 batches the
+  // setState calls, so a single-value state would only ever surface the last
+  // one and silently drop the penalty float. functional appends survive the
+  // batch in order. id is monotonic so identical consecutive values are
+  // distinct list entries.
+  // hard cap independent of the consumer: VimDeltaFloat drains by id via
+  // dismissVimDelta, but the queue must stay bounded even if a consumer is
+  // absent or buggy. floats live <1s so a small cap can never drop a
+  // still-visible one; oldest entries fall off first.
+  const VIM_DELTA_CAP = 40;
+  const [vimDeltas, setVimDeltas] = useState<{ id: number; value: number }[]>([]);
+  const deltaIdRef = useRef(0);
+
+  // authoritative client-side player vim total. every vim point the client
+  // scores flows through emit() and nowhere else (test passes are server-side
+  // and never call emit), so this sum equals the player's vim contribution
+  // exactly. derived-from-server-score would race the +400 test-pass
+  // score_update against run_result and flash a phantom +400 (see deriveVim).
+  const [playerVimTotal, setPlayerVimTotal] = useState(0);
+
+  const emit = useCallback((delta: number, keybindDelta?: number) => {
+    // outside live the server rejects this anyway; suppressing fully keeps the
+    // client tally server-authoritative and stops post-submit phantom floats.
+    if (!scoringActiveRef.current) return;
+    sendScoreUpdateRef.current(delta, keybindDelta);
+    setPlayerVimTotal((v) => v + delta);
+    deltaIdRef.current += 1;
+    const id = deltaIdRef.current;
+    setVimDeltas((prev) =>
+      [...prev, { id, value: delta }].slice(-VIM_DELTA_CAP),
+    );
+  }, []);
+  const emitRef = useRef(emit);
+  emitRef.current = emit;
+
+  // VimDeltaFloat calls this once each float finishes animating; the cap
+  // above is the backstop if no consumer drains.
+  const dismissVimDelta = useCallback((id: number) => {
+    setVimDeltas((prev) => prev.filter((d) => d.id !== id));
+  }, []);
+
+  // counter-productive: last counted nav command, or null if a cursor
+  // move has since intervened.
+  const lastNavRef = useRef<NavCommand | null>(null);
 
   const vimModeRef = useRef<string>("normal");
   const keyBufferRef = useRef<string>("");
@@ -40,9 +111,102 @@ export function useKeybindListener(sendScoreUpdate: (delta: number, keybindDelta
       fNavPendingRef.current = null;
     });
 
+    // a scored nav / arrow / mouse-jump suppresses the -5 move penalty for the
+    // WHOLE cluster of view updates it triggers this frame. one vim motion
+    // (e.g. `5j`) commonly emits several updates: the move itself, then a
+    // column clamp and/or a scroll-into-view adjust. the old code consumed
+    // navSentRef on the *first* update, so a second selection update from the
+    // same motion still hit the -5 path — that is the "+20 and -5 on 5j" bug.
+    // instead: hold the suppression until the next animation frame, then
+    // always release it. on a no-op nav (cursor never moved) also restore the
+    // prior nav so it does not anchor reversal adjacency 
+    const endNavSuppression = (
+      before: number,
+      prevNav?: NavCommand | null,
+    ) => {
+      requestAnimationFrame(() => {
+        if (!view.dom.isConnected) return;
+        const moved = view.state.selection.main.head !== before;
+        navSentRef.current = false;
+        if (!moved && prevNav !== undefined) lastNavRef.current = prevNav;
+      });
+    };
+
+    // arrow keys are bad navigation in any mode.
     view.dom.addEventListener(
       "keydown",
       (event: KeyboardEvent) => {
+        // gate the whole scoring subsystem (not just emit) outside live, so no
+        // scoring state — lastNavRef, macro counts, buffers — is mutated by
+        // pre-live/post-submit keystrokes and bleeds into the live match.
+        if (!scoringActiveRef.current) return;
+        if (
+          event.key === "ArrowUp" ||
+          event.key === "ArrowDown" ||
+          event.key === "ArrowLeft" ||
+          event.key === "ArrowRight"
+        ) {
+          emitRef.current(PENALTY_ARROW);
+          lastNavRef.current = null;
+          // an arrow move is already penalised at PENALTY_ARROW; suppress the
+          // follow-up normal-mode -5 so it is not double-charged. only matters
+          // in normal mode (insert mode never charges the -5 anyway).
+          if (vimModeRef.current === "normal") {
+            navSentRef.current = true;
+            endNavSuppression(view.state.selection.main.head);
+          }
+        }
+      },
+      { capture: true },
+    );
+
+    // mouse navigation. a mousedown in the editor that lands on a
+    // different position than the current cursor is a mouse jump. capture
+    // phase so navSentRef is set before codemirror processes the click and
+    // before the synchronous -5 in onEditorUpdate could fire.
+    view.dom.addEventListener(
+      "mousedown",
+      () => {
+        if (!scoringActiveRef.current) return;
+        const hadFocus = view.hasFocus;
+        const before = view.state.selection.main.head;
+
+        // might edit below later, people can technically abuse out of focus in
+        // focus to use mouse
+
+        // entering the editor (the first click just to focus it at match
+        // start) is not mouse navigation — it must not be penalised, nor
+        // trigger the -5 from the cursor placement it causes.
+        if (!hadFocus) {
+          navSentRef.current = true;
+          endNavSuppression(before);
+          return;
+        }
+        // a click that moves the cursor is already penalised at PENALTY_MOUSE;
+        // pre-suppress the follow-up normal-mode -5 (emitted synchronously
+        // when the click changes the selection, before the rAF below runs).
+        if (vimModeRef.current === "normal") navSentRef.current = true;
+        requestAnimationFrame(() => {
+          // editor may unmount between mousedown and the next frame.
+          // `destroyed` is private in this codemirror version; a detached dom
+          // is the public signal that the view is gone.
+          if (!view.dom.isConnected) return;
+          if (view.state.selection.main.head !== before) {
+            emitRef.current(PENALTY_MOUSE);
+            lastNavRef.current = null;
+          }
+          // release the suppression for the whole click update cluster (the
+          // selection change plus any scroll adjust) on the next frame.
+          navSentRef.current = false;
+        });
+      },
+      { capture: true },
+    );
+
+    view.dom.addEventListener(
+      "keydown",
+      (event: KeyboardEvent) => {
+        if (!scoringActiveRef.current) return;
         if (vimModeRef.current !== "normal") return;
 
         const key = event.key;
@@ -89,7 +253,7 @@ export function useKeybindListener(sendScoreUpdate: (delta: number, keybindDelta
                 }
               }
               macroUseCountRef.current.set(regName, prev + count);
-              if (totalDelta > 0) sendScoreUpdateRef.current(totalDelta, count);
+              if (totalDelta > 0) emitRef.current(totalDelta, count);
             }
           }
           return;
@@ -102,9 +266,18 @@ export function useKeybindListener(sendScoreUpdate: (delta: number, keybindDelta
         }
 
         if (key === "w" || key === "b") {
+          const before = view.state.selection.main.head;
+          const prevNav = lastNavRef.current;
           navSentRef.current = true;
-          sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT, 1);
+          const cmd: NavCommand = { axis: "word", forward: key === "w", count: 1 };
+          // counter-productive disabled (see COUNTER_PRODUCTIVE_ENABLED).
+          if (COUNTER_PRODUCTIVE_ENABLED && isExactReversal(prevNav, cmd)) {
+            emitRef.current(PENALTY_COUNTER_PRODUCTIVE);
+          }
+          emitRef.current(SCORE_NAV_SHORTCUT, 1);
+          lastNavRef.current = cmd;
           keyBufferRef.current = "";
+          endNavSuppression(before, prevNav);
           return;
         }
 
@@ -115,9 +288,20 @@ export function useKeybindListener(sendScoreUpdate: (delta: number, keybindDelta
 
         // {n}hjkl — only awards when a numeric count is present
         if ("hjkl".includes(key) && key.length === 1 && /^\d+$/.test(buf)) {
+          const before = view.state.selection.main.head;
+          const prevNav = lastNavRef.current;
           navSentRef.current = true;
-          sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT, 1);
+          const axis: NavAxis = key === "h" || key === "l" ? "horizontal" : "vertical";
+          const forward = key === "j" || key === "l";
+          const cmd: NavCommand = { axis, forward, count: parseInt(buf, 10) };
+          // counter-productive disabled (see COUNTER_PRODUCTIVE_ENABLED).
+          if (COUNTER_PRODUCTIVE_ENABLED && isExactReversal(prevNav, cmd)) {
+            emitRef.current(PENALTY_COUNTER_PRODUCTIVE);
+          }
+          emitRef.current(SCORE_NAV_SHORTCUT, 1);
+          lastNavRef.current = cmd;
           keyBufferRef.current = "";
+          endNavSuppression(before, prevNav);
           return;
         }
 
@@ -128,27 +312,52 @@ export function useKeybindListener(sendScoreUpdate: (delta: number, keybindDelta
   }, []);
 
   const onEditorUpdate = useCallback((update: ViewUpdate) => {
-    if (vimModeRef.current === "insert") return;
+    if (!scoringActiveRef.current) return;
+    if (vimModeRef.current === "insert") {
+      // an insert-mode edit is an intervening action; it must break
+      // exact-reversal adjacency or a later opposite nav is wrongly -60'd.
+      lastNavRef.current = null;
+      return;
+    }
 
     // f{char} verification: cursor must have moved for the point to count
     if (fNavPendingRef.current !== null) {
       const prevPos = fNavPendingRef.current;
       fNavPendingRef.current = null;
       if (update.state.selection.main.head !== prevPos) {
-        sendScoreUpdateRef.current(SCORE_NAV_SHORTCUT, 1);
+        // intentional scope decision: only lowercase `f` is buffered/scored by
+        // the existing listener; capital-`F` reverse-find is deliberately not
+        // counted (counting it would change the teammate's scoring mechanics,
+        // out of scope per spec). so forward is always true here and find-axis
+        // reversal effectively cannot trigger; vertical/horizontal/word
+        // reversals are the practical triggers. do not "fix" this to add F.
+        const cmd: NavCommand = { axis: "find", forward: true, count: 1 };
+        // counter-productive disabled (see COUNTER_PRODUCTIVE_ENABLED).
+        if (COUNTER_PRODUCTIVE_ENABLED && isExactReversal(lastNavRef.current, cmd)) {
+          emitRef.current(PENALTY_COUNTER_PRODUCTIVE);
+        }
+        emitRef.current(SCORE_NAV_SHORTCUT, 1);
+        lastNavRef.current = cmd;
       }
       return;
     }
 
-    if (navSentRef.current) {
-      navSentRef.current = false;
-      return;
-    }
+    // a scored nav holds this until the next animation frame (see
+    // endNavSuppression), so every update in the motion's cluster is skipped,
+    // not just the first.
+    if (navSentRef.current) return;
 
     if (update.selectionSet || update.docChanged) {
       const gs = (Vim as unknown as VimWithGlobalState).getVimGlobalState_();
-      if (gs.macroModeState.isPlaying) return;
-      sendScoreUpdateRef.current(SCORE_NORMAL_MODE_EDIT);
+      if (gs.macroModeState.isPlaying) {
+        // macro playback moves the cursor; that is an intervening move and
+        // must also break exact-reversal adjacency.
+        lastNavRef.current = null;
+        return;
+      }
+      // any non-nav cursor move breaks exact-reversal adjacency.
+      lastNavRef.current = null;
+      emitRef.current(SCORE_NORMAL_MODE_EDIT);
     }
   }, []);
 
@@ -157,5 +366,11 @@ export function useKeybindListener(sendScoreUpdate: (delta: number, keybindDelta
     [onEditorUpdate],
   );
 
-  return { attachVimModeListener, scoreExtension };
+  return {
+    attachVimModeListener,
+    scoreExtension,
+    vimDeltas,
+    dismissVimDelta,
+    playerVimTotal,
+  };
 }

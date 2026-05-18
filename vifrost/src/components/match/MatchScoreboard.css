@@ -108,3 +108,21 @@
 .match-scoreboard__icon-btn:hover {
   background: var(--colorCyanGlow);
 }
+
+.match-scoreboard__metrics {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.match-scoreboard__vim {
+  position: relative;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.match-scoreboard__vim--player { color: var(--colorCyan); }
+.match-scoreboard__vim--opp    { color: var(--colorPink); }

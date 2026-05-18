@@ -2,20 +2,30 @@ import { forwardRef } from "react";
 import { motion } from "motion/react";
 import { Avatar } from "@/components/Avatar";
 import { CountingNumber } from "@/components/ui/counting-number";
+import { VimDeltaFloat, type VimDelta } from "./VimDeltaFloat";
 import "./MatchScoreboard.css";
 
 const FILL_SPRING = { type: "spring", stiffness: 100, damping: 30 } as const;
 
 export interface MatchScoreboardProps {
-  player: { name: string; color: string; pct: number };
-  opponent: { name: string; color: string; pct: number };
+  player: { name: string; color: string; pct: number; vim: number };
+  opponent: { name: string; color: string; pct: number; vim: number };
   onInfoClick: () => void;
   onReopenProblem: () => void;
+  vimDeltas?: VimDelta[];
+  onDismissVimDelta?: (id: number) => void;
 }
 
 export const MatchScoreboard = forwardRef<HTMLButtonElement, MatchScoreboardProps>(
   function MatchScoreboard(props, infoBtnRef) {
-    const { player, opponent, onInfoClick, onReopenProblem } = props;
+    const {
+      player,
+      opponent,
+      onInfoClick,
+      onReopenProblem,
+      vimDeltas = [],
+      onDismissVimDelta,
+    } = props;
 
     return (
       <div className="match-scoreboard">
@@ -29,8 +39,18 @@ export const MatchScoreboard = forwardRef<HTMLButtonElement, MatchScoreboardProp
           <div className="match-scoreboard__meta">
             <div className="match-scoreboard__row">
               <span className="match-scoreboard__name">{player.name}</span>
-              <span className="match-scoreboard__pct match-scoreboard__pct--player">
-                <CountingNumber value={player.pct} />%
+              <span className="match-scoreboard__metrics">
+                <span className="match-scoreboard__pct match-scoreboard__pct--player">
+                  <CountingNumber value={player.pct} />%
+                </span>
+                <span className="match-scoreboard__vim match-scoreboard__vim--player">
+                  <span aria-hidden="true">⌨</span>{" "}
+                  <CountingNumber value={player.vim} />
+                  <VimDeltaFloat
+                    deltas={vimDeltas}
+                    onDismiss={onDismissVimDelta ?? (() => {})}
+                  />
+                </span>
               </span>
             </div>
             <div
@@ -74,8 +94,14 @@ export const MatchScoreboard = forwardRef<HTMLButtonElement, MatchScoreboardProp
         <div className="match-scoreboard__player match-scoreboard__player--opp">
           <div className="match-scoreboard__meta">
             <div className="match-scoreboard__row">
-              <span className="match-scoreboard__pct match-scoreboard__pct--opp">
-                <CountingNumber value={opponent.pct} />%
+              <span className="match-scoreboard__metrics">
+                <span className="match-scoreboard__vim match-scoreboard__vim--opp">
+                  <CountingNumber value={opponent.vim} />{" "}
+                  <span aria-hidden="true">⌨</span>
+                </span>
+                <span className="match-scoreboard__pct match-scoreboard__pct--opp">
+                  <CountingNumber value={opponent.pct} />%
+                </span>
               </span>
               <span className="match-scoreboard__name">{opponent.name}</span>
             </div>
