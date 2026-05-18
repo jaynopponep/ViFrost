@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
@@ -31,6 +32,7 @@ function AuthButtons() {
 function AvatarDropdown({ username }: { username: string }) {
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { isAdmin } = useProfile();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -57,27 +59,47 @@ function AvatarDropdown({ username }: { username: string }) {
         title="Profile"
         onClick={() => setOpen((p) => !p)}
       >
-        <div className="navbar-avatar">{username[0].toUpperCase()}</div>
+        <div className="navbar-avatar">{username[0]?.toUpperCase() ?? "?"}</div>
         <span className="navbar-username">{username}</span>
       </button>
-      {open && (
+      {open ? (
         <div className="navbar-dropdown">
-          <button type="button" className="navbar-dropdown-item" onClick={() => go("/profile")}>
+          <button
+            type="button"
+            className="navbar-dropdown-item"
+            onClick={() => go("/profile")}
+          >
             Profile
           </button>
-          <button type="button" className="navbar-dropdown-item" onClick={() => go("/match-history")}>
+          <button
+            type="button"
+            className="navbar-dropdown-item"
+            onClick={() => go("/match-history")}
+          >
             Match History
           </button>
+          {isAdmin ? (
+            <button
+              type="button"
+              className="navbar-dropdown-item"
+              onClick={() => go("/admin/dashboard")}
+            >
+              Admin dashboard
+            </button>
+          ) : null}
           <div className="navbar-dropdown-divider" />
           <button
             type="button"
             className="navbar-dropdown-item navbar-dropdown-item--danger"
-            onClick={() => { setOpen(false); void signOut(); }}
+            onClick={() => {
+              setOpen(false);
+              void signOut();
+            }}
           >
             Sign Out
           </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -85,19 +107,30 @@ function AvatarDropdown({ username }: { username: string }) {
 function NavbarRight() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const { isAdmin } = useProfile();
 
   const username: string =
     (user?.user_metadata?.username as string | undefined) ?? user?.email ?? "?";
 
   return (
     <div className="navbar-right">
+      {isAdmin ? (
+        <button
+          type="button"
+          className="navbar-auth-btn"
+          title="Admin dashboard"
+          onClick={() => navigate("/admin/dashboard")}
+        >
+          Admin
+        </button>
+      ) : null}
       <button
         type="button"
         className="navbar-stats-btn"
         title="Leaderboard"
         onClick={() => navigate("/leaderboard")}
       >
-        <img src="LeaderboardIcon.svg" alt="Leaderboard" />
+        <img src="/LeaderboardIcon.svg" alt="Leaderboard" />
       </button>
 
       <AnimatedThemeToggler className="navbar-theme-btn" />
