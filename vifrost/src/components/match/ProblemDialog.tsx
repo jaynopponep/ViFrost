@@ -10,9 +10,9 @@ import "./ProblemDialog.css";
 
 
 const COUNTDOWN_BEAM_COLOR: Record<string, string> = {
-  high: "#ef4444", 
-  mid: "#eab308", 
-  low: "#22c55e", 
+  high: "var(--countdown-beam-high)",
+  mid: "var(--countdown-beam-mid)",
+  low: "var(--countdown-beam-low)",
 };
 
 export interface ProblemDialogProps {
@@ -104,9 +104,15 @@ export function ProblemDialog(props: ProblemDialogProps) {
             key={countdownLevel}
             size={190}
             duration={1.6}
-            borderWidth={2}
-            colorFrom="transparent"
+            borderWidth={3}
+            // both stops the level color (only the tail fades to transparent)
+            // so the comet stays solid instead of washing out to the white
+            // light-mode surface; drop-shadow gives the actual glow.
+            colorFrom={COUNTDOWN_BEAM_COLOR[countdownLevel]}
             colorTo={COUNTDOWN_BEAM_COLOR[countdownLevel]}
+            style={{
+              filter: `drop-shadow(0 0 5px ${COUNTDOWN_BEAM_COLOR[countdownLevel]})`,
+            }}
             transition={{
               type: "spring",
               stiffness: 60,

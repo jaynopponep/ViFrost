@@ -3,6 +3,9 @@
   background: var(--colorSurface);
   color: var(--colorText);
   border: 1px solid var(--colorBorder);
+  --countdown-beam-high: #dc2626; 
+  --countdown-beam-mid: #b45309;  
+  --countdown-beam-low: #15803d;  
 }
 
 /* dark --colorSurface is near-black; match the rest of the dark match ui
@@ -10,6 +13,9 @@
 .dark .problem-dialog {
   background: var(--colorMain);
   color: var(--colorText);
+  --countdown-beam-high: #ef4444;
+  --countdown-beam-mid: #eab308;
+  --countdown-beam-low: #22c55e;
 }
 
 /* Defensive: shadcn's DialogContent hides the close button via showCloseButton={false},
@@ -43,10 +49,9 @@
   transition: color 0.2s ease;
 }
 
-/* traffic-light progression as the match start approaches. */
-.problem-dialog__countdown--high { color: #ef4444; } /* red   */
-.problem-dialog__countdown--mid  { color: #eab308; } /* yellow */
-.problem-dialog__countdown--low  { color: #22c55e; } /* green  */
+.problem-dialog__countdown--high { color: var(--countdown-beam-high); }
+.problem-dialog__countdown--mid  { color: var(--countdown-beam-mid); }
+.problem-dialog__countdown--low  { color: var(--countdown-beam-low); }
 
 .problem-dialog__footer {
   display: flex;

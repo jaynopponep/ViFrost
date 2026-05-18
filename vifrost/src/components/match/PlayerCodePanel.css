@@ -100,6 +100,10 @@
 
 .player-panel__result--fail {
   background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+
+.dark .player-panel__result--fail {
   color: #fca5a5;
 }
 
@@ -111,10 +115,14 @@
   padding: 8px 10px;
   border-radius: 6px;
   background: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
+  color: #b91c1c;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.72rem;
   line-height: 1.4;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.dark .player-panel__error {
+  color: #fca5a5;
 }
