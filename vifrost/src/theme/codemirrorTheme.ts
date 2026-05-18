@@ -75,7 +75,9 @@ const highlightStyle = HighlightStyle.define([
   // keywords / control flow: def, for, if, return, import, class
   { tag: [t.keyword, t.operatorKeyword, t.modifier], color: violet },
   { tag: [t.controlKeyword, t.moduleKeyword], color: violet },
-  { tag: [t.definitionKeyword, t.self], color: violet, fontStyle: "italic" },
+  // no italic here: light mode uses @uiw's default theme (no custom
+  // highlightstyle), so an italic-only-in-dark def/class looked inconsistent.
+  { tag: [t.definitionKeyword, t.self], color: violet },
   // strings and the regex / escape family
   { tag: [t.string, t.special(t.string)], color: green },
   { tag: [t.regexp, t.escape, t.character], color: pink },
