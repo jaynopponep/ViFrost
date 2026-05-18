@@ -7,11 +7,31 @@
   min-width: 0;
 }
 
+/* NOTE: dark --colorSurface is near-black; the run/submit footer inherits this.
+   match the editor background (--colorMain) so the panel is flush with the
+   code area, mirroring how light mode shares one color. */
+.dark .player-panel {
+  background: var(--colorMain);
+}
+
 .player-panel__editor {
   flex: 1;
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+}
+
+/* @uiw/react-codemirror nests an intermediate wrapper that does not inherit
+   height, so the editor collapses to content size. force the whole chain to
+   fill the flex panel and let the scroller handle overflow. */
+.player-panel__editor > div,
+.player-panel__editor .cm-theme,
+.player-panel__editor .cm-editor {
+  height: 100%;
+}
+
+.player-panel__editor .cm-scroller {
+  overflow: auto;
 }
 
 .player-panel__footer {

@@ -1,6 +1,8 @@
 import type { Extension } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { GameScreen } from "@/components/GameScreen";
+import { useIsDarkTheme } from "@/hooks/useIsDarkTheme";
+import { vifrostDarkTheme } from "@/theme/codemirrorTheme";
 import "./PlayerCodePanel.css";
 
 export interface PlayerCodePanelProps {
@@ -30,6 +32,8 @@ export function PlayerCodePanel(props: PlayerCodePanelProps) {
     submitted,
   } = props;
 
+  const isDark = useIsDarkTheme();
+
   return (
     <div className="player-panel">
       <div className="player-panel__editor">
@@ -41,7 +45,7 @@ export function PlayerCodePanel(props: PlayerCodePanelProps) {
           readOnly={!editable}
           height="100%"
           width="100%"
-          theme="dark"
+          theme={isDark ? vifrostDarkTheme : "light"}
           extensions={scoreExtension}
         />
       </div>
