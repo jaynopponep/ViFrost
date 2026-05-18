@@ -60,6 +60,9 @@ export function MatchPreviewPage() {
   const [runResults, setRunResults] = useState<boolean[] | null>(null);
   const [problemForceOpen, setProblemForceOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  // bump on "simulate win" so the end banner remounts and the win confetti
+  // re-fires even when we're already on the ended phase.
+  const [bannerKey, setBannerKey] = useState(0);
 
   // TEMPORARY: mock vim score + delta queue for design iteration
   const [playerVim, setPlayerVim] = useState(0);
@@ -104,6 +107,14 @@ export function MatchPreviewPage() {
     window.setTimeout(() => setPhase("live"), 3000);
   };
 
+  // jump straight to the win screen (player victory) and force a banner
+  // remount so the confetti flourish plays every press.
+  const simulateWin = () => {
+    setWinnerIsPlayer(true);
+    setPhase("ended");
+    setBannerKey((k) => k + 1);
+  };
+
   const simulateRun = () => {
     setRunResults(null);
     setIsRunning(true);
@@ -135,6 +146,7 @@ export function MatchPreviewPage() {
         countdown={countdown}
         setCountdown={setCountdown}
         onSimulateRun={simulateRun}
+        onSimulateWin={simulateWin}
         onSimulateCountdown={simulateCountdown}
         onFireDelta={fireDelta}
         onBumpOpponentVim={() => setOpponentVim((v) => v + 20)}
@@ -183,6 +195,7 @@ export function MatchPreviewPage() {
 
         {phase === "ended" && (
           <MatchEndBanner
+            key={bannerKey}
             winner={winnerIsPlayer ? "player" : "opponent"}
             playerName={MOCK.username}
             opponentName={MOCK.opponentName}
@@ -244,6 +257,7 @@ interface DevControlsProps {
   countdown: number | null;
   setCountdown: (n: number) => void;
   onSimulateRun: () => void;
+  onSimulateWin: () => void;
   onSimulateCountdown: () => void;
   onFireDelta: (value: number) => void;
   onBumpOpponentVim: () => void;
@@ -395,6 +409,20 @@ function DevControls(props: DevControlsProps) {
         }}
       >
         simulate run
+      </button>
+
+      <button
+        onClick={props.onSimulateWin}
+        style={{
+          padding: "2px 8px",
+          borderRadius: 4,
+          border: "1px solid #555",
+          cursor: "pointer",
+          background: "transparent",
+          color: "#eee",
+        }}
+      >
+        simulate win
       </button>
 
       {/* TEMPORARY: vim event simulators */}

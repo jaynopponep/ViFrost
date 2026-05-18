@@ -5,7 +5,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { BorderBeam } from "@/components/ui/border-beam";
 import "./ProblemDialog.css";
+
+
+const COUNTDOWN_BEAM_COLOR: Record<string, string> = {
+  high: "#ef4444", 
+  mid: "#eab308", 
+  low: "#22c55e", 
+};
 
 export interface ProblemDialogProps {
   open: boolean;
@@ -82,14 +90,32 @@ export function ProblemDialog(props: ProblemDialogProps) {
 
         <pre className="problem-dialog__statement">{problemStatement}</pre>
 
-        {countdown !== null ? (
+        {countdown !== null && (
           <div
             className={`problem-dialog__countdown problem-dialog__countdown--${countdownLevel}`}
             aria-live="polite"
           >
             {countdown}
           </div>
-        ) : (
+        )}
+        {countdownLevel !== null && (
+          <BorderBeam
+            // re-key per level so the new color swaps cleanly between ticks.
+            key={countdownLevel}
+            size={190}
+            duration={1.6}
+            borderWidth={2}
+            colorFrom="transparent"
+            colorTo={COUNTDOWN_BEAM_COLOR[countdownLevel]}
+            transition={{
+              type: "spring",
+              stiffness: 60,
+              damping: 20,
+              duration: 1.6,
+            }}
+          />
+        )}
+        {countdown === null && (
           <div className="problem-dialog__footer">
             <div className="problem-dialog__chips">
               <span
