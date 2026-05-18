@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { matchReducer, initialMatchState } from "./useMatchState";
+import { matchReducer, initialMatchState, deriveVim } from "./useMatchState";
 
 const init = () => initialMatchState(5);
 
@@ -217,13 +217,59 @@ describe("matchReducer", () => {
     expect(after.finalKeybindScores).toEqual({ player: 42, opponent: 31 });
   });
 
-  it("score_update mid-match is ignored", () => {
-    const s = { ...init(), phase: "live" as const };
-    const after = matchReducer(s, {
+  it("score_update records both totals while live", () => {
+    const live = { ...init(), phase: "live" as const };
+    const after = matchReducer(live, {
       type: "MSG",
-      envelope: { type: "score_update", payload: { myScore: 99, opponentScore: 1 } },
+      envelope: { type: "score_update", payload: { myScore: 815, opponentScore: 400 } },
     });
-    expect(after).toBe(s);
+    expect(after.playerScore).toBe(815);
+    expect(after.opponentScore).toBe(400);
+  });
+
+  it("score_update is a no-op when both scores are unchanged", () => {
+    const live = {
+      ...init(),
+      phase: "live" as const,
+      playerScore: 815,
+      opponentScore: 400,
+    };
+    const after = matchReducer(live, {
+      type: "MSG",
+      envelope: { type: "score_update", payload: { myScore: 815, opponentScore: 400 } },
+    });
+    expect(after).toBe(live); // unchanged reference, no re-render
+  });
+
+  it("score_update is ignored outside live", () => {
+    const waiting = init();
+    expect(
+      matchReducer(waiting, {
+        type: "MSG",
+        envelope: { type: "score_update", payload: { myScore: 99, opponentScore: 1 } },
+      }),
+    ).toBe(waiting);
+    const ended = { ...init(), phase: "ended" as const };
+    expect(
+      matchReducer(ended, {
+        type: "MSG",
+        envelope: { type: "score_update", payload: { myScore: 99, opponentScore: 1 } },
+      }),
+    ).toBe(ended);
+  });
+
+  it("INIT resets the scores to zero", () => {
+    const s = initialMatchState(5);
+    expect(s.playerScore).toBe(0);
+    expect(s.opponentScore).toBe(0);
+  });
+
+  it("deriveVim subtracts the test component and allows negatives", () => {
+    // mid-match server score = passes*400 + vim deltas (exactly)
+    expect(deriveVim(815, 2)).toBe(15); // 815 - 800
+    expect(deriveVim(400, 1)).toBe(0); // pure test pass, no vim yet
+    expect(deriveVim(-35, 0)).toBe(-35); // penalties exceed gains; not clamped
+    expect(deriveVim(0, 0)).toBe(0); // initial state
   });
 
   it("opponent_ready is ignored outside waiting", () => {

@@ -16,6 +16,8 @@ export interface MatchState {
   winner: "player" | "opponent" | null;
   finalKeybindScores: { player: number; opponent: number } | null;
   submitted: boolean;
+  playerScore: number;
+  opponentScore: number;
 }
 
 export type MatchAction =
@@ -36,6 +38,8 @@ export function initialMatchState(totalTests: number): MatchState {
     winner: null,
     finalKeybindScores: null,
     submitted: false,
+    playerScore: 0,
+    opponentScore: 0,
   };
 }
 
@@ -122,8 +126,20 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
           };
 
         case "score_update":
-          // server still echoes during match; new UI ignores mid-match scores
-          return state;
+          // authoritative combined totals (tests*400 + vim deltas). guarded to
+          // live like the other gameplay cases. vim figures are derived, not
+          // stored (see deriveVim).
+          if (state.phase !== "live") return state;
+          if (
+            state.playerScore === envelope.payload.myScore &&
+            state.opponentScore === envelope.payload.opponentScore
+          )
+            return state;
+          return {
+            ...state,
+            playerScore: envelope.payload.myScore,
+            opponentScore: envelope.payload.opponentScore,
+          };
 
         default:
           return state;
@@ -138,6 +154,8 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
 export interface MatchStateApi extends MatchState {
   playerPct: number;
   opponentPct: number;
+  playerVim: number;
+  opponentVim: number;
   markPlayerReady: () => void;
   markSubmitted: () => void;
 }
@@ -172,11 +190,28 @@ export function useMatchState(
       ? 0
       : (state.opponentTests.filter(Boolean).length / denom) * 100;
 
+  const playerVim = deriveVim(
+    state.playerScore,
+    state.playerTests.filter(Boolean).length,
+  );
+  const opponentVim = deriveVim(
+    state.opponentScore,
+    state.opponentTests.filter(Boolean).length,
+  );
+
   return {
     ...state,
     playerPct,
     opponentPct,
+    playerVim,
+    opponentVim,
     markPlayerReady,
     markSubmitted,
   };
+}
+
+// mid-match the server applies only test passes (+400 each) and client vim
+// deltas to Score, so vim = score - passes*400 
+export function deriveVim(score: number, passedCount: number): number {
+  return score - passedCount * 400;
 }
