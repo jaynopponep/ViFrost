@@ -22,6 +22,14 @@ const pink = "#e3c0d3"; // --colorPink
 const cyanDim = "rgba(157, 227, 247, 0.14)"; // --colorCyanDim
 const cyanGlow = "rgba(157, 227, 247, 0.28)"; // --colorCyanGlow
 
+// of the index.css custom-property set.
+const violet = "#c792ea"; // keywords: def, for, if, return, import
+const gold = "#f7d488"; // function / method names
+const green = "#a9e0a0"; // strings
+const orange = "#f7a36c"; // numbers, booleans, null
+const blue = "#82aaff"; // properties, attributes
+const red = "#f87171"; // --colorDanger (invalid)
+
 const editorTheme = EditorView.theme(
   {
     "&": {
@@ -64,17 +72,27 @@ const editorTheme = EditorView.theme(
 );
 
 const highlightStyle = HighlightStyle.define([
-  { tag: [t.keyword, t.operatorKeyword, t.modifier], color: cyan },
-  { tag: [t.controlKeyword, t.moduleKeyword], color: cyan },
-  { tag: [t.string, t.special(t.string)], color: pink },
-  { tag: [t.comment, t.lineComment, t.blockComment], color: muted, fontStyle: "italic" },
-  { tag: [t.number, t.bool, t.null], color: pink },
-  { tag: [t.function(t.variableName), t.function(t.propertyName)], color: cyan },
-  { tag: [t.definition(t.variableName), t.variableName], color: text },
-  { tag: [t.propertyName, t.attributeName], color: cyan },
+  // keywords / control flow: def, for, if, return, import, class
+  { tag: [t.keyword, t.operatorKeyword, t.modifier], color: violet },
+  { tag: [t.controlKeyword, t.moduleKeyword], color: violet },
+  { tag: [t.definitionKeyword, t.self], color: violet, fontStyle: "italic" },
+  // strings and the regex / escape family
+  { tag: [t.string, t.special(t.string)], color: green },
+  { tag: [t.regexp, t.escape, t.character], color: pink },
+  // values
+  { tag: [t.number, t.integer, t.float], color: orange },
+  { tag: [t.bool, t.null, t.atom], color: orange },
+  // callables and types
+  { tag: [t.function(t.variableName), t.function(t.propertyName)], color: gold },
   { tag: [t.typeName, t.className, t.namespace], color: cyan },
-  { tag: [t.operator, t.punctuation, t.bracket], color: text },
-  { tag: [t.invalid], color: "#f87171" },
+  { tag: [t.typeOperator, t.annotation], color: cyan },
+  // identifiers / members
+  { tag: [t.propertyName, t.attributeName], color: blue },
+  { tag: [t.definition(t.variableName), t.variableName], color: text },
+  // structure and trivia
+  { tag: [t.operator, t.punctuation, t.bracket, t.separator], color: muted },
+  { tag: [t.comment, t.lineComment, t.blockComment], color: muted, fontStyle: "italic" },
+  { tag: [t.invalid], color: red },
 ]);
 
 // the full dark theme extension to pass as codemirror's `theme` prop.
