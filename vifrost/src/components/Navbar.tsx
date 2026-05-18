@@ -130,7 +130,7 @@ function NavbarRight() {
         title="Leaderboard"
         onClick={() => navigate("/leaderboard")}
       >
-        <img src="LeaderboardIcon.svg" alt="Leaderboard" />
+        <img src="/LeaderboardIcon.svg" alt="Leaderboard" />
       </button>
 
       <AnimatedThemeToggler className="navbar-theme-btn" />
