@@ -1,92 +1,85 @@
 .navbar {
-    background: rgba(10, 14, 20, 0.88);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(44, 81, 76, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 2rem;
-    height: 56px;
+    padding: 0 50px;
+    height: 60px;
     width: 100%;
     box-sizing: border-box;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
     flex-shrink: 0;
     position: relative;
     z-index: 10;
 }
 
-/* ── Logo ── */
+/* Left: Logo */
 .navbar-logo {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 18px;
+    cursor: pointer;
     text-decoration: none;
-    flex-shrink: 0;
 }
 
 .navbar-logo-icon {
-    width: 30px;
-    height: 30px;
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .navbar-logo-icon img {
-    height: 30px;
+    height: 38px;
     width: auto;
 }
 
 .navbar-title {
     font-family: "JetBrains Mono", monospace;
-    font-weight: 700;
-    font-size: 1.2rem;
-    color: var(--colorCyan);
-    letter-spacing: 0.06em;
-    text-shadow: 0 0 16px var(--colorCyanGlow);
+    font-weight: 600;
+    font-size: 1.48rem;
+    color: #ede8f5;
+    letter-spacing: 0.04em;
 }
 
 /* Right: Icons + Login */
-.navbar__right {
+.navbar-right {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    flex-shrink: 0;
+    gap: 20px;
 }
 
-.navbar__stats-btn {
+.navbar-stats-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.55);
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-    flex-shrink: 0;
     background: none;
     border: none;
+    padding: 0;
+    cursor: pointer;
 }
 
-.navbar__stats-btn img {
+.navbar-stats-btn img {
     height: 28px;
     width: auto;
 }
 
 /* Login */
-.navbar__login {
+.navbar-login {
     display: flex;
     align-items: center;
     position: relative;
 }
 
-.navbar__auth-actions {
+.navbar-auth-actions {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.navbar__auth-btn {
+.navbar-auth-btn {
     font-family: "JetBrains Mono", monospace;
     font-size: 13px;
     font-weight: 500;
@@ -103,40 +96,20 @@
         background 0.2s ease;
 }
 
-.navbar__auth-btn:hover {
+.navbar-auth-btn:hover {
     border-color: var(--colorCyan);
     box-shadow: 0 0 10px var(--colorCyanGlow);
 }
 
-.navbar__auth-btn--primary {
+.navbar-auth-btn--primary {
     border-color: var(--colorCyan);
     background: color-mix(in srgb, var(--colorCyan) 35%, transparent);
 }
 
-.navbar__auth-btn--primary:hover {
+.navbar-auth-btn--primary:hover {
     background: color-mix(in srgb, var(--colorCyan) 50%, transparent);
 }
 
-.navbar__theme-btn {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: #ede8f5;
-    display: flex;
-    align-items: center;
-}
-
-.navbar__theme-btn svg {
-    height: 24px;
-    width: 24px;
-}
-
-.navbar__theme-btn:hover {
-    color: var(--colorCyan);
-}
-
-/* User area (logged-in dropdown) */
 .navbar-user-btn {
     display: flex;
     align-items: center;
@@ -146,12 +119,90 @@
     border-radius: 6px;
     padding: 0.25rem 0.6rem 0.25rem 0.3rem;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
+    transition:
+        border-color 0.15s,
+        background 0.15s;
 }
 
-.navbar-user-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+.navbar-theme-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #ede8f5;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-theme-btn svg {
+    height: 24px;
+    width: 24px;
+}
+
+.navbar-theme-btn:hover {
+    color: var(--colorCyan);
+}
+
+.navbar-username {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 500;
+    font-size: 13px;
+    color: #ede8f5;
+    letter-spacing: 0.04em;
+}
+
+.navbar-user-wrapper {
+    position: relative;
+}
+
+.navbar-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 160px;
+    background: rgba(24, 36, 34, 0.97);
+    border: 1px solid rgba(237, 232, 245, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    z-index: 100;
+}
+
+.navbar-dropdown-item {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: #ede8f5;
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.navbar-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.navbar-dropdown-item--danger {
+    color: #f87171;
+}
+
+.navbar-dropdown-item--danger:hover {
+    background: rgba(248, 113, 113, 0.12);
+}
+
+.navbar-dropdown-divider {
+    height: 1px;
+    background: rgba(237, 232, 245, 0.1);
+    margin: 4px 0;
 }
 
 .navbar-avatar {
@@ -166,74 +217,4 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-}
-
-.navbar-username {
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
-    letter-spacing: 0.03em;
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Dropdown */
-.navbar-dropdown {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    background: #0f1318;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    min-width: 150px;
-    z-index: 100;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.navbar-dropdown-header {
-    padding: 0.6rem 1rem 0.4rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--colorCyan);
-    text-transform: uppercase;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.navbar-dropdown-item {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 0.83rem;
-    letter-spacing: 0.03em;
-    padding: 0.6rem 1rem;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s;
-    width: 100%;
-}
-
-.navbar-dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: #fff;
-}
-
-.navbar-dropdown-item--danger {
-    color: #f87171;
-}
-
-.navbar-dropdown-item--danger:hover {
-    background: rgba(248, 113, 113, 0.08);
-    color: #fca5a5;
-}
-
-.navbar-dropdown-divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.07);
-    margin: 0.2rem 0;
 }

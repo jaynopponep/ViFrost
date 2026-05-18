@@ -58,24 +58,31 @@ export function LobbyPage() {
     }
   }, [navigate]);
 
+  const startModalTimer = useCallback(() => {
+    if (matchModalTimerRef.current || readyToEnterGameRef.current) return;
+    matchModalTimerRef.current = setTimeout(() => {
+      matchModalTimerRef.current = null;
+      readyToEnterGameRef.current = true;
+      tryEnterGame();
+    }, MATCH_MODAL_DELAY_MS);
+  }, [tryEnterGame]);
+
   useEffect(() => {
     if (!lastMessage) return;
     const envelope = lastMessage as Envelope;
     if (envelope.type === "match_found") {
       setMatchFound(true);
-      if (matchModalTimerRef.current) clearTimeout(matchModalTimerRef.current);
-      matchModalTimerRef.current = setTimeout(() => {
-        matchModalTimerRef.current = null;
-        readyToEnterGameRef.current = true;
-        tryEnterGame();
-      }, MATCH_MODAL_DELAY_MS);
+      startModalTimer();
     }
     if (envelope.type === "game_start" && envelope.payload) {
-      const payload = envelope.payload as GameStartPayload;
-      gameDataRef.current = payload;
+      gameDataRef.current = envelope.payload as GameStartPayload;
+      // Show the modal and start the timer even if match_found was missed (React
+      // batching can drop it when both messages arrive in the same render cycle).
+      setMatchFound(true);
+      startModalTimer();
       tryEnterGame();
     }
-  }, [lastMessage, tryEnterGame]);
+  }, [lastMessage, tryEnterGame, startModalTimer]);
 
   useEffect(() => {
     if (isWsOpen && joinWhenOpenRef.current) {

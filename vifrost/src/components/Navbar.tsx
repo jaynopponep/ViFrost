@@ -1,102 +1,123 @@
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { displayNameFromUser } from "@/lib/displayNameFromUser";
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
-export function Navbar() {
+function NavbarLeft() {
+  return (
+    <Link to="/" className="navbar-logo">
+      <div className="navbar-logo-icon">
+        <img src="/Icon.svg" alt="ViFrost" />
+      </div>
+      <span className="navbar-title">ViFrost</span>
+    </Link>
+  );
+}
+
+function AuthButtons() {
+  return (
+    <div className="navbar-auth-actions">
+      <Link to="/login" className="navbar-auth-btn">
+        Log in
+      </Link>
+      <Link to="/signup" className="navbar-auth-btn navbar-auth-btn--primary">
+        Sign up
+      </Link>
+    </div>
+  );
+}
+
+function AvatarDropdown({ username }: { username: string }) {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const username = user ? displayNameFromUser(user) : null;
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const handleLogout = async () => {
-    setDropdownOpen(false);
-    await signOut();
+  const go = (path: string) => {
+    setOpen(false);
+    navigate(path);
   };
 
   return (
-    <nav className="navbar">
-      {/* Logo */}
-      <Link to="/" className="navbar-logo">
-        <div className="navbar-logo-icon">
-          <img src="/Icon.svg" alt="ViFrost" />
+    <div className="navbar-user-wrapper" ref={wrapperRef}>
+      <button
+        type="button"
+        className="navbar-user-btn"
+        title="Profile"
+        onClick={() => setOpen((p) => !p)}
+      >
+        <div className="navbar-avatar">{username[0].toUpperCase()}</div>
+        <span className="navbar-username">{username}</span>
+      </button>
+      {open && (
+        <div className="navbar-dropdown">
+          <button type="button" className="navbar-dropdown-item" onClick={() => go("/profile")}>
+            Profile
+          </button>
+          <button type="button" className="navbar-dropdown-item" onClick={() => go("/match-history")}>
+            Match History
+          </button>
+          <div className="navbar-dropdown-divider" />
+          <button
+            type="button"
+            className="navbar-dropdown-item navbar-dropdown-item--danger"
+            onClick={() => { setOpen(false); void signOut(); }}
+          >
+            Sign Out
+          </button>
         </div>
-        <span className="navbar-title">ViFrost</span>
-      </Link>
+      )}
+    </div>
+  );
+}
 
-      <div className="navbar__right">
-        <button
-          type="button"
-          className="navbar__stats-btn"
-          title="Leaderboard"
-          onClick={() => navigate("/leaderboard")}
-        >
-          <img src="LeaderboardIcon.svg" alt="Leaderboard" />
-        </button>
+function NavbarRight() {
+  const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
 
-        <AnimatedThemeToggler className="navbar__theme-btn" />
+  const username: string =
+    (user?.user_metadata?.username as string | undefined) ?? user?.email ?? "?";
 
-        <div className="navbar__login" ref={dropdownRef}>
-          {user ? (
-            <>
-              <button
-                type="button"
-                className="navbar-user-btn"
-                onClick={() => setDropdownOpen((p) => !p)}
-              >
-                <div className="navbar-avatar">
-                  {username ? username[0].toUpperCase() : "?"}
-                </div>
-                {username && <span className="navbar-username">{username}</span>}
-              </button>
+  return (
+    <div className="navbar-right">
+      <button
+        type="button"
+        className="navbar-stats-btn"
+        title="Leaderboard"
+        onClick={() => navigate("/leaderboard")}
+      >
+        <img src="LeaderboardIcon.svg" alt="Leaderboard" />
+      </button>
 
-              {dropdownOpen && (
-                <div className="navbar-dropdown">
-                  <div className="navbar-dropdown-header">{username}</div>
-                  <button
-                    type="button"
-                    className="navbar-dropdown-item"
-                    onClick={() => { setDropdownOpen(false); navigate("/profile"); }}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    type="button"
-                    className="navbar-dropdown-item"
-                    onClick={() => { setDropdownOpen(false); navigate("/match-history"); }}
-                  >
-                    Match History
-                  </button>
-                  <div className="navbar-dropdown-divider" />
-                  <button
-                    type="button"
-                    className="navbar-dropdown-item navbar-dropdown-item--danger"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="navbar__auth-actions">
-              <Link to="/login" className="navbar__auth-btn">
-                Log in
-              </Link>
-              <Link
-                to="/signup"
-                className="navbar__auth-btn navbar__auth-btn--primary"
-              >
-                Sign up
-              </Link>
-            </div>
-          )}
-        </div>
+      <AnimatedThemeToggler className="navbar-theme-btn" />
+
+      <div className="navbar-login">
+        {isLoading ? null : user ? (
+          <AvatarDropdown username={username} />
+        ) : (
+          <AuthButtons />
+        )}
       </div>
+    </div>
+  );
+}
+
+export function Navbar() {
+  return (
+    <nav className="navbar">
+      <NavbarLeft />
+      <NavbarRight />
     </nav>
   );
 }
