@@ -25,7 +25,7 @@ func generateColors() (string, string) {
 func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
-	snippet, tests, err := LoadSnippetWithTests(SnippetsDir)
+	snippet, tests, _, err := LoadSnippetWithTests(SnippetsDir, "")
 	if err != nil {
 		LogErr("failed to load snippet: %v", err)
 		snippet = ""

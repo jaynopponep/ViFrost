@@ -39,9 +39,10 @@ func (p *Player) readPump(hub *Hub) {
 	defer func() {
 		p.mu.Lock()
 		p.active = false
+		room := p.Room
 		p.mu.Unlock()
-		if p.Room != nil {
-			p.Room.EndGame()
+		if room != nil {
+			room.EndGame()
 		}
 		p.Conn.Close()
 	}()
