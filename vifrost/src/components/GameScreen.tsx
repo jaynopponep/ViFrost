@@ -1,10 +1,9 @@
 import type { Extension } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
-import { python } from '@codemirror/lang-python'
-import { vim } from '@replit/codemirror-vim'
 import CodeMirror from '@uiw/react-codemirror'
 import { lineNumbersRelative } from '@uiw/codemirror-extensions-line-numbers-relative'
 import { useMemo } from 'react'
+import { buildEditorExtensions } from './editorExtensions'
 
 export interface GameScreenProps {
   value?: string
@@ -31,16 +30,10 @@ export function GameScreen({
   theme = 'dark',
   extensions: extraExtensions = [],
 }: GameScreenProps) {
-  const extensions = useMemo(() => {
-    const exts: Extension[] = [
-      python(),
-      ...extraExtensions,
-    ]
-    if (vimMode) {
-      exts.unshift(vim())
-    }
-    return exts
-  }, [vimMode, extraExtensions])
+  const extensions = useMemo(
+    () => buildEditorExtensions(vimMode, extraExtensions),
+    [vimMode, extraExtensions],
+  )
 
   return (
     <CodeMirror
