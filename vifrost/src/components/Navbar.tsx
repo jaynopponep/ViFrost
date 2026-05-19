@@ -11,7 +11,9 @@ import {
   UserCircleIcon,
   Clock01Icon,
   Logout03Icon,
+  DashboardSquare01Icon,
 } from "@hugeicons/core-free-icons";
+import { useProfile } from "@/contexts/ProfileContext";
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import "./Navbar.css";
 
@@ -52,6 +54,7 @@ function AvatarDropdown({ username }: { username: string }) {
   // controlled so selecting an item closes the panel. base-ui's popover owns
   // outside-click / escape / focus return, so the old manual mousedown
   // listener + wrapper ref are gone.
+  const { isAdmin } = useProfile();
   const [open, setOpen] = useState(false);
 
   const go = (path: string) => {
@@ -62,7 +65,7 @@ function AvatarDropdown({ username }: { username: string }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="navbar-user-btn" title="Profile">
-        <div className="navbar-avatar">{username[0].toUpperCase()}</div>
+        <div className="navbar-avatar">{username[0]?.toUpperCase() ?? "?"}</div>
         <span className="navbar-username">{username}</span>
       </PopoverTrigger>
       <PopoverContent
@@ -82,6 +85,20 @@ function AvatarDropdown({ username }: { username: string }) {
           <HugeiconsIcon icon={Clock01Icon} size={17} strokeWidth={2} />
           Match History
         </button>
+        {isAdmin ? (
+          <button
+            type="button"
+            className={MENU_ITEM}
+            onClick={() => go("/admin/dashboard")}
+          >
+            <HugeiconsIcon
+              icon={DashboardSquare01Icon}
+              size={17}
+              strokeWidth={2}
+            />
+            Admin dashboard
+          </button>
+        ) : null}
         <div className="my-1 h-px bg-[var(--colorBorder)]" />
         <button
           type="button"
@@ -105,19 +122,30 @@ function AvatarDropdown({ username }: { username: string }) {
 function NavbarRight() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const { isAdmin } = useProfile();
 
   const username: string =
     (user?.user_metadata?.username as string | undefined) ?? user?.email ?? "?";
 
   return (
     <div className="navbar-right">
+      {isAdmin ? (
+        <button
+          type="button"
+          className="navbar-auth-btn"
+          title="Admin dashboard"
+          onClick={() => navigate("/admin/dashboard")}
+        >
+          Admin
+        </button>
+      ) : null}
       <button
         type="button"
         className="navbar-stats-btn"
         title="Leaderboard"
         onClick={() => navigate("/leaderboard")}
       >
-        <img src="LeaderboardIcon.svg" alt="Leaderboard" />
+        <img src="/LeaderboardIcon.svg" alt="Leaderboard" />
       </button>
 
       <AnimatedThemeToggler className="navbar-theme-btn" />

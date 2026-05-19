@@ -50,11 +50,11 @@ export function SignupPage() {
       return
     }
     if (session) {
-      navigate("/")
+      navigate("/pending")
       return
     }
     setSuccess(
-      "Check your email to confirm your account if required. You can sign in once your account is active.",
+      "Account created. Your account is awaiting admin approval — sign in after confirming your email if required.",
     )
   }
 
