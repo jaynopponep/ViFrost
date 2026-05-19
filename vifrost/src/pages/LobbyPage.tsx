@@ -129,7 +129,7 @@ export function LobbyPage() {
         {/* left panel: spinner, status, queue stats */}
         <section className="lobby-panel lobby-panel--left">
           <div className="lobby-status-block">
-            <Loader />
+            {inQueue && <Loader />}
 
             {inQueue ? (
               <div className="lobby-finding-group">
