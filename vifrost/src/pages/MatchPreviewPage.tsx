@@ -204,6 +204,8 @@ export function MatchPreviewPage() {
             opponentPct={opponentPct}
             playerStyle={42}
             opponentStyle={37}
+            playerBonuses={{ keybind: 0, completion: 0, finish: 0 }}
+            opponentBonuses={{ keybind: 0, completion: 0, finish: 0 }}
           />
         )}
       </div>
