@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { readPersistedSession } from "@/lib/persistedSession";
 
 export type AuthContextValue = {
   session: Session | null;
@@ -32,8 +33,15 @@ function slugFromEmail(email: string): string {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const initialSession = useMemo(
+    () =>
+      typeof localStorage !== "undefined"
+        ? readPersistedSession(localStorage)
+        : null,
+    [],
+  );
+  const [session, setSession] = useState<Session | null>(initialSession);
+  const [isLoading, setIsLoading] = useState(initialSession === null);
 
   useEffect(() => {
     const sb = supabase
