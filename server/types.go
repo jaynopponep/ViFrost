@@ -20,6 +20,11 @@ type GameStartPayload struct {
 	OpponentName  string `json:"opponentName"`
 	PlayerColor   string `json:"playerColor"`
 	OpponentColor string `json:"opponentColor"`
+	// the loaded challenge name and (optional) statement. omitempty so an
+	// absent .desc.txt is omitted entirely, letting the frontend's nullish
+	// `?? fallback` fire instead of rendering an empty string.
+	ProblemTitle     string `json:"problemTitle,omitempty"`
+	ProblemStatement string `json:"problemStatement,omitempty"`
 }
 
 type KeybindPayload struct {
@@ -57,11 +62,18 @@ type RunCodePayload struct {
 type RunResultPayload struct {
 	Results []bool `json:"results"`
 	Delta   int    `json:"delta"`
+	// reason a run produced no results (syntax error,
+	// runtime traceback, or timeout). empty on a normal run. forwarded to the
+	// client for display only; does not affect scoring or win math.
+	Error string `json:"error,omitempty"`
 }
 
-type ScoreUpdateClientPayload struct {
-	Delta        int `json:"delta"`
-	KeybindDelta int `json:"keybindDelta"`
+type OpponentRunResultPayload struct {
+	Results []bool `json:"results"`
+}
+
+type MatchCountdownPayload struct {
+	Seconds int `json:"seconds"`
 }
 
 type ScoreUpdateServerPayload struct {
@@ -70,24 +82,41 @@ type ScoreUpdateServerPayload struct {
 }
 
 type Player struct {
-	ID       string
-	Username string
-	Conn     *websocket.Conn // <- TCP connection for each player's browser window open
-	Send     chan []byte
-	Room     *Room
+	ID           string
+	Username     string
+	UserID       string          // verified Supabase profiles.id (from JWT sub); "" if unauthenticated
+	Mode         string          // "ranked" | "casual"; chosen at join_queue
+	Conn         *websocket.Conn // <- TCP connection for each player's browser window open
+	Send         chan []byte
+	Room         *Room
 	Keybinds     []KeybindPayload
 	Score        int
 	PassedTests  []bool
 	Submitted    bool
+	Ready        bool
 	SubmitTime   time.Time
 	KeybindCount int
-	active      bool
-	inQueue     bool
-	mu          sync.Mutex
+	// server-authoritative keybind scoring state, all guarded by mu.
+	// macroUseCount is the player's lifetime macro run count, it drives the
+	// escalating macro reward. kbWindowStart/kbWindowCount are the per-player
+	// keybind_event rate-limit window.
+	macroUseCount int
+	kbWindowStart time.Time
+	kbWindowCount int
+	active        bool
+	inQueue       bool
+	// queueSeq is bumped under mu on every Enqueue. each queued entry carries
+	// the seq it was created with; an entry whose seq != queueSeq has been
+	// superseded by a newer enqueue and is no longer a valid waiter.
+	queueSeq uint64
+	mu       sync.Mutex
 }
 
 type Room struct {
 	ID           string
+	Mode         string
+	Challenge    string
+	Description  string
 	Hub          *Hub
 	Players      [2]*Player
 	Colors       [2]string
@@ -95,6 +124,8 @@ type Room struct {
 	TestsContent string
 	Timer        int
 	done         chan struct{}
+	readyCh      chan struct{}
+	live         bool
 	ended        bool
 	mu           sync.Mutex
 }

@@ -13,18 +13,26 @@ const (
 	AssumedMaxFinishTimeGap = 12
 )
 
-func ApplyKeybindBonus(scores *[2]int, keybinds *[2]float64) [2]int {
+func ApplyKeybindBonus(scores *[2]int, keybinds *[2]float64, passed *[2]int) [2]int {
 	// given x = absolute difference between two players' keybind count
-	// player with fewest keybinds gains (20 * x) bonus points
+	// player with fewest keybinds gains (20 * x) bonus points.
+	//
+	// participation gate: the recipient is whoever pressed FEWER counted
+	// keybinds, so an idle player (0 keybinds) is always the candidate. a
+	// player who neither passed a test nor used a counted keybind did
+	// nothing, and "fewest keystrokes" must not reward idling -- otherwise
+	// an opponent who never touched the keyboard collects 20 * yourCount.
 	keybindBonus := [2]int{}
 	if keybinds[0] != keybinds[1] {
-		bonus := int(KeybindBonusMultiplier * math.Abs(keybinds[0]-keybinds[1]))
-		if keybinds[0] < keybinds[1] {
-			scores[0] += bonus
-			keybindBonus[0] = bonus
-		} else {
-			scores[1] += bonus
-			keybindBonus[1] = bonus
+		recipient := 0
+		if keybinds[1] < keybinds[0] {
+			recipient = 1
+		}
+		participated := passed[recipient] > 0 || keybinds[recipient] > 0
+		if participated {
+			bonus := int(KeybindBonusMultiplier * math.Abs(keybinds[0]-keybinds[1]))
+			scores[recipient] += bonus
+			keybindBonus[recipient] = bonus
 		}
 	}
 	return keybindBonus

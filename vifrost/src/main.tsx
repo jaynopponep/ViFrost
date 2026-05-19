@@ -16,6 +16,7 @@ import { ProfilePage } from "./pages/ProfilePage.tsx"
 import { MatchHistoryPage } from "./pages/MatchHistoryPage.tsx"
 import { TutorialPage } from "./pages/TutorialPage.tsx"
 import { LeaderboardPage } from "./pages/LeaderboardPage.tsx"
+import { PublicProfilePage } from "./pages/PublicProfilePage.tsx"
 import { LoginPage } from "./pages/LoginPage.tsx"
 import { SignupPage } from "./pages/SignupPage.tsx"
 import { PendingApprovalPage } from "./pages/PendingApprovalPage.tsx"
@@ -25,6 +26,8 @@ import { AdminDashboardPage } from "./pages/AdminDashboardPage.tsx"
 import { ApprovedRoute } from "./components/guards/ApprovedRoute.tsx"
 import { AdminRoute } from "./components/guards/AdminRoute.tsx"
 import { ProtectedRoute } from "./components/guards/ProtectedRoute.tsx"
+// TEMPORARY: ui preview route, remove with MatchPreviewPage when design lands.
+import { MatchPreviewPage } from "./pages/MatchPreviewPage.tsx"
 
 const router = createBrowserRouter([
   {
@@ -57,11 +60,21 @@ const router = createBrowserRouter([
           </ApprovedRoute>
         ),
       },
+      // TEMPORARY: ui preview route, remove with MatchPreviewPage when design lands.
+      { path: "match-preview", element: <MatchPreviewPage /> },
       {
         path: "profile",
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile/:userId",
+        element: (
+          <ProtectedRoute>
+            <PublicProfilePage />
           </ProtectedRoute>
         ),
       },

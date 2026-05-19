@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
-import type { Envelope, GameStartPayload } from "../hooks/useWebSocket";
+import { useLocation, useOutletContext } from "react-router-dom";
+import { useRouteTransition } from "../providers/TransitionProvider";
+import { resolveQueueMode } from "../lib/resolveQueueMode";
+import type { GameStartPayload } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
 import "./LobbyPage.css";
 import hintData from "../data/hints.json";
 import { animationFrames } from "../data/animationFrames";
 import { Loader } from "../components/ui/loader";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Hint {
   id: number;
@@ -15,9 +18,15 @@ interface Hint {
 const MATCH_MODAL_DELAY_MS = 3000;
 
 export function LobbyPage() {
-  const navigate = useNavigate();
+  const { navigateWithTransition } = useRouteTransition();
   const { username, wsStatus, connectWs, sendJoinQueue, isWsOpen, lastMessage } =
     useOutletContext<AppOutletContext>();
+  const { session } = useAuth();
+  // mode comes from which landing card the player entered through
+  // (LandingPage navigates to /lobby with state.mode). direct navigation
+  // defaults to casual so it never silently joins the ranked ladder.
+  const { state } = useLocation();
+  const queueMode = resolveQueueMode(state);
 
   // hint rotation
   const [hint, setHint] = useState<Hint | null>(null);
@@ -54,9 +63,9 @@ export function LobbyPage() {
 
   const tryEnterGame = useCallback(() => {
     if (readyToEnterGameRef.current && gameDataRef.current) {
-      navigate("/game", { state: gameDataRef.current });
+      navigateWithTransition("/game", { state: gameDataRef.current });
     }
-  }, [navigate]);
+  }, [navigateWithTransition]);
 
   const startModalTimer = useCallback(() => {
     if (matchModalTimerRef.current || readyToEnterGameRef.current) return;
@@ -69,7 +78,7 @@ export function LobbyPage() {
 
   useEffect(() => {
     if (!lastMessage) return;
-    const envelope = lastMessage as Envelope;
+    const envelope = lastMessage;
     if (envelope.type === "match_found") {
       setMatchFound(true);
       startModalTimer();
@@ -86,11 +95,11 @@ export function LobbyPage() {
 
   useEffect(() => {
     if (isWsOpen && joinWhenOpenRef.current) {
-      sendJoinQueue(username!);
+      sendJoinQueue(username!, session?.access_token ?? "", queueMode);
       joinWhenOpenRef.current = false;
       setInQueue(true);
     }
-  }, [isWsOpen, sendJoinQueue, username]);
+  }, [isWsOpen, sendJoinQueue, username, session]);
 
   useEffect(() => {
     return () => {
@@ -100,7 +109,7 @@ export function LobbyPage() {
 
   const handleJoinQueue = () => {
     if (isWsOpen) {
-      sendJoinQueue(username!);
+      sendJoinQueue(username!, session?.access_token ?? "", queueMode);
       setInQueue(true);
     } else if (wsStatus === "closed" || wsStatus === "error") {
       joinWhenOpenRef.current = true;
@@ -120,7 +129,9 @@ export function LobbyPage() {
           aria-label="Match found"
         >
           <div className="modal match-modal">
+            <span className="match-modal-dot" aria-hidden="true" />
             <p className="match-modal-text">Match found!</p>
+            <p className="match-modal-sub">Loading your match…</p>
           </div>
         </div>
       )}
@@ -129,7 +140,7 @@ export function LobbyPage() {
         {/* left panel: spinner, status, queue stats */}
         <section className="lobby-panel lobby-panel--left">
           <div className="lobby-status-block">
-            <Loader />
+            {inQueue && <Loader />}
 
             {inQueue ? (
               <div className="lobby-finding-group">

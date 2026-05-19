@@ -47,7 +47,17 @@ export function TutorialPage() {
         body: JSON.stringify({ code: editorValue, tests: level.tests }),
       });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
-      const data = (await res.json()) as { results: boolean[] };
+      const data = (await res.json()) as {
+        results: boolean[] | null;
+        error?: string;
+      };
+      if (!data.results) {
+        // the server responded but the code did not produce results (syntax
+        // error, traceback, timeout). show that, not the cannot-reach message.
+        setRunError(data.error ?? "Your code produced no test output.");
+        setTestResults(null);
+        return;
+      }
       setTestResults(data.results);
       if (data.results.length > 0 && data.results.every(Boolean)) {
         setLevelComplete(true);

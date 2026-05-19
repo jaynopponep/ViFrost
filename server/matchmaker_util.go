@@ -11,6 +11,7 @@ func ResetStateToRequeue(p *Player) {
 	p.Keybinds = nil
 	p.KeybindCount = 0
 	p.Submitted = false
+	p.Ready = false
 	p.SubmitTime = time.Time{}
 	p.Room = nil
 	p.mu.Unlock()
