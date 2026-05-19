@@ -79,6 +79,8 @@ type ScoreUpdateServerPayload struct {
 type Player struct {
 	ID           string
 	Username     string
+	UserID       string          // verified Supabase profiles.id (from JWT sub); "" if unauthenticated
+	Mode         string          // "ranked" | "casual"; chosen at join_queue
 	Conn         *websocket.Conn // <- TCP connection for each player's browser window open
 	Send         chan []byte
 	Room         *Room
@@ -98,11 +100,17 @@ type Player struct {
 	kbWindowCount int
 	active        bool
 	inQueue       bool
-	mu            sync.Mutex
+	// queueSeq is bumped under mu on every Enqueue. each queued entry carries
+	// the seq it was created with; an entry whose seq != queueSeq has been
+	// superseded by a newer enqueue and is no longer a valid waiter.
+	queueSeq uint64
+	mu       sync.Mutex
 }
 
 type Room struct {
 	ID           string
+	Mode         string
+	Challenge    string
 	Hub          *Hub
 	Players      [2]*Player
 	Colors       [2]string

@@ -42,13 +42,16 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	loadDotEnv(".env")
+	cfg := mustSupabaseConfig()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = DefaultPort
 	}
 	addr := ":" + port
 
-	hub := NewHub()
+	hub := NewHub(cfg)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ServeWs(hub, w, r)
 	})

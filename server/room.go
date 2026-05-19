@@ -22,14 +22,18 @@ func generateColors() (string, string) {
 	return fmt.Sprintf("hsl(%d, 65%%, 55%%)", h1), fmt.Sprintf("hsl(%d, 65%%, 55%%)", h2)
 }
 
-func NewRoom(hub *Hub, p1, p2 *Player) *Room {
+func NewRoom(hub *Hub, p1, p2 *Player, mode string) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
-	snippet, tests, _, err := LoadSnippetWithTests(SnippetsDir, "")
+	name, snippet, tests, _, err := LoadSnippetWithTests(SnippetsDir, "")
 	if err != nil {
 		LogErr("failed to load snippet: %v", err)
 		snippet = ""
+		name = "unknown"
 	}
+	// mode is the pool the pair was matched in, frozen at enqueue. it is NOT
+	// re-derived from p1.Mode here: a concurrent re-queue could have flipped
+	// that field, which would mis-settle ELO (see settle.go p_mode).
 	return &Room{
 		ID:           roomID,
 		Hub:          hub,
@@ -37,6 +41,8 @@ func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 		Colors:       [2]string{c1, c2},
 		Snippet:      snippet,
 		TestsContent: tests,
+		Mode:         mode,
+		Challenge:    name,
 		Timer:        GameDurationSec,
 		done:         make(chan struct{}),
 		readyCh:      make(chan struct{}, 2),
@@ -200,6 +206,12 @@ func (r *Room) EndGame() {
 			default:
 			}
 		}
+	}
+
+	// persist the result + award ELO. async + best-effort: never block or
+	// crash match teardown on a Supabase hiccup.
+	if r.Hub != nil {
+		go settleMatch(r.Hub.cfg, r, scores)
 	}
 
 	r.Hub.RemoveRoom(r.ID)

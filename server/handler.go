@@ -35,6 +35,15 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	player.readPump(hub)
 }
 
+// modeOrDefault normalizes the client-supplied mode; anything other than
+// "ranked" falls back to "casual" (the gentler-points pool).
+func modeOrDefault(m string) string {
+	if m == "ranked" {
+		return "ranked"
+	}
+	return "casual"
+}
+
 func (p *Player) readPump(hub *Hub) {
 	defer func() {
 		p.mu.Lock()
@@ -61,11 +70,33 @@ func (p *Player) readPump(hub *Hub) {
 		}
 		switch e.Type {
 		case MsgJoinQueue:
-			if m, ok := e.Payload.(map[string]interface{}); ok {
-				if name, ok := m["username"].(string); ok {
-					p.Username = name
-				}
+			m, ok := e.Payload.(map[string]interface{})
+			if !ok {
+				sendErr(p, "invalid join_queue payload")
+				continue
 			}
+			if name, ok := m["username"].(string); ok {
+				p.Username = name
+			}
+			// guarded: the matchmaking goroutine freezes this under p.mu at
+			// Enqueue. an unlocked write here races that read (handler.go and
+			// matchmaking are separate goroutines on the same *Player).
+			rawMode := asString(m["mode"])
+			p.mu.Lock()
+			p.Mode = modeOrDefault(rawMode)
+			p.mu.Unlock()
+			// diagnostic: ground truth for what each client actually queued.
+			LogInfo("join_queue player=%s raw=%q normalized=%s", p.ID, rawMode, p.Mode)
+			// identity: the JWT sub is the player's profiles.id. without a
+			// valid token the match cannot be attributed, so refuse to queue.
+			token := asString(m["token"])
+			uid, verr := hub.auth.verify(token)
+			if verr != nil {
+				LogErr("join_queue auth failed for %s: %v", p.ID, verr)
+				sendErr(p, "authentication required to queue")
+				continue
+			}
+			p.UserID = uid
 			// if still in a room, end it first. otherwise the abandoned room
 			// keeps running and broadcasts old game messages into this
 			// player's channel after they join a new match.
@@ -230,4 +261,10 @@ func (p *Player) writePump() {
 			return
 		}
 	}
+}
+
+// asString safely extracts a string from a decoded JSON map value.
+func asString(v interface{}) string {
+	s, _ := v.(string)
+	return s
 }
