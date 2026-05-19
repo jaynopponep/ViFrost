@@ -16,8 +16,8 @@ export interface MatchEndBannerProps {
   opponentName: string;
   playerPct: number;
   opponentPct: number;
-  playerKeybindScore: number;
-  opponentKeybindScore: number;
+  playerStyle: number;
+  opponentStyle: number;
 }
 
 export function MatchEndBanner(props: MatchEndBannerProps) {
@@ -27,8 +27,8 @@ export function MatchEndBanner(props: MatchEndBannerProps) {
     opponentName,
     playerPct,
     opponentPct,
-    playerKeybindScore,
-    opponentKeybindScore,
+    playerStyle,
+    opponentStyle,
   } = props;
   const navigate = useNavigate();
   const outcome = matchEndOutcome(winner);
@@ -76,12 +76,12 @@ export function MatchEndBanner(props: MatchEndBannerProps) {
           <div>
             <div className="match-end-banner__name">{playerName}</div>
             <div className="match-end-banner__stat">Tests: {Math.round(playerPct)}%</div>
-            <div className="match-end-banner__stat">Style: {playerKeybindScore}</div>
+            <div className="match-end-banner__stat">Style: {playerStyle}</div>
           </div>
           <div>
             <div className="match-end-banner__name">{opponentName}</div>
             <div className="match-end-banner__stat">Tests: {Math.round(opponentPct)}%</div>
-            <div className="match-end-banner__stat">Style: {opponentKeybindScore}</div>
+            <div className="match-end-banner__stat">Style: {opponentStyle}</div>
           </div>
         </div>
         <button

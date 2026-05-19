@@ -202,8 +202,8 @@ export function MatchPreviewPage() {
             opponentName={MOCK.opponentName}
             playerPct={playerPct}
             opponentPct={opponentPct}
-            playerKeybindScore={42}
-            opponentKeybindScore={37}
+            playerStyle={42}
+            opponentStyle={37}
           />
         )}
       </div>

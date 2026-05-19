@@ -10,6 +10,7 @@ import { TestDetailPopover } from "../components/match/TestDetailPopover";
 import { PlayerCodePanel } from "../components/match/PlayerCodePanel";
 import { OpponentCodePanel } from "../components/match/OpponentCodePanel";
 import { MatchEndBanner } from "../components/match/MatchEndBanner";
+import { matchEndStyleScores } from "../components/match/matchEndStats";
 import "./GamePage.css";
 
 export function GamePage() {
@@ -102,6 +103,16 @@ export function GamePage() {
 
   const dialogReadOnly = match.phase !== "waiting" && match.phase !== "countdown";
 
+  // per-player accumulated style for the end banner, identical to the live
+  // scoreboard's vim figure (never the comparative keybind bonus).
+  const endStyle =
+    match.phase === "ended" && match.winner
+      ? matchEndStyleScores({
+          playerVim: match.playerVim,
+          opponentVim: match.opponentVim,
+        })
+      : null;
+
   return (
     <main className="game">
       <div className="game__stage">
@@ -147,15 +158,15 @@ export function GamePage() {
           />
         </div>
 
-        {match.phase === "ended" && match.winner && match.finalKeybindScores && (
+        {endStyle && match.winner && (
           <MatchEndBanner
             winner={match.winner}
             playerName={username ?? "you"}
             opponentName={gameData.opponentName ?? "opponent"}
             playerPct={match.playerPct}
             opponentPct={match.opponentPct}
-            playerKeybindScore={match.finalKeybindScores.player}
-            opponentKeybindScore={match.finalKeybindScores.opponent}
+            playerStyle={endStyle.player}
+            opponentStyle={endStyle.opponent}
           />
         )}
       </div>
