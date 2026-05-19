@@ -3,6 +3,11 @@ import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { PageShell } from "@/components/ui/page-shell"
+import {
+  AuthPenguin,
+  EyeIcon,
+  useAuthPenguin,
+} from "@/components/auth/AuthPenguin"
 import "./AuthPages.css"
 
 export function SignupPage() {
@@ -15,6 +20,8 @@ export function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const { penguin, identityField, passwordField, revealed, toggleReveal } =
+    useAuthPenguin()
 
   useEffect(() => {
     if (!success) return
@@ -61,6 +68,7 @@ export function SignupPage() {
   return (
     <PageShell maxWidth="max-w-[480px]" className="auth-page">
       <div className="auth-card">
+        <AuthPenguin {...penguin} />
         <h1 className="auth-card__title">Sign up</h1>
         <p className="auth-card__subtitle">Create an account with email and password. Your display name is used in-game.</p>
 
@@ -77,6 +85,7 @@ export function SignupPage() {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Shown in lobby and profile"
+              {...identityField}
             />
           </div>
           <div className="auth-field">
@@ -89,29 +98,56 @@ export function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
+              {...identityField}
             />
           </div>
           <div className="auth-field">
             <label htmlFor="signup-password">Password</label>
-            <input
-              id="signup-password"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="auth-password-wrap">
+              <input
+                id="signup-password"
+                type={revealed ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                {...passwordField}
+              />
+              <button
+                type="button"
+                className="auth-eye-btn"
+                onClick={toggleReveal}
+                onMouseDown={(e) => e.preventDefault()}
+                aria-label={revealed ? "Hide password" : "Show password"}
+              >
+                <EyeIcon off={revealed} />
+              </button>
+            </div>
           </div>
           <div className="auth-field">
             <label htmlFor="signup-confirm">Confirm password</label>
-            <input
-              id="signup-confirm"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-            />
+            <div className="auth-password-wrap">
+              <input
+                id="signup-confirm"
+                type={revealed ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="••••••••"
+                {...passwordField}
+              />
+              <button
+                type="button"
+                className="auth-eye-btn"
+                onClick={toggleReveal}
+                onMouseDown={(e) => e.preventDefault()}
+                aria-label={revealed ? "Hide password" : "Show password"}
+              >
+                <EyeIcon off={revealed} />
+              </button>
+            </div>
           </div>
           <button type="submit" className="auth-submit" disabled={pending || Boolean(success)}>
             {pending ? "Creating account…" : "Create account"}

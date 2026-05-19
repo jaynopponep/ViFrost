@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useOutletContext } from "react-router-dom";
+import { useRouteTransition } from "../providers/TransitionProvider";
 import { resolveQueueMode } from "../lib/resolveQueueMode";
 import type { GameStartPayload } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
@@ -17,7 +18,7 @@ interface Hint {
 const MATCH_MODAL_DELAY_MS = 3000;
 
 export function LobbyPage() {
-  const navigate = useNavigate();
+  const { navigateWithTransition } = useRouteTransition();
   const { username, wsStatus, connectWs, sendJoinQueue, isWsOpen, lastMessage } =
     useOutletContext<AppOutletContext>();
   const { session } = useAuth();
@@ -62,9 +63,9 @@ export function LobbyPage() {
 
   const tryEnterGame = useCallback(() => {
     if (readyToEnterGameRef.current && gameDataRef.current) {
-      navigate("/game", { state: gameDataRef.current });
+      navigateWithTransition("/game", { state: gameDataRef.current });
     }
-  }, [navigate]);
+  }, [navigateWithTransition]);
 
   const startModalTimer = useCallback(() => {
     if (matchModalTimerRef.current || readyToEnterGameRef.current) return;
@@ -128,7 +129,9 @@ export function LobbyPage() {
           aria-label="Match found"
         >
           <div className="modal match-modal">
+            <span className="match-modal-dot" aria-hidden="true" />
             <p className="match-modal-text">Match found!</p>
+            <p className="match-modal-sub">Loading your match…</p>
           </div>
         </div>
       )}

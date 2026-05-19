@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import TransitionProvider from "./providers/TransitionProvider";
 import { AuthRedirect } from "./components/guards/AuthRedirect";
 import { useAuth } from "./contexts/AuthContext";
 import { useProfile } from "./contexts/ProfileContext";
@@ -57,7 +58,7 @@ function App() {
   });
 
   return (
-    <>
+    <TransitionProvider>
       <AuthRedirect />
       <Navbar />
       <Outlet
@@ -77,7 +78,7 @@ function App() {
           } satisfies AppOutletContext
         }
       />
-    </>
+    </TransitionProvider>
   );
 }
 
