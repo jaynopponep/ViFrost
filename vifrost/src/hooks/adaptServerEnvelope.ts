@@ -22,17 +22,17 @@ export function adaptServerEnvelope(raw: RawEnvelope): ServerMessage | null {
     if (!raw.payload || typeof raw.payload !== "object") return null;
     const p = raw.payload as {
       won?: boolean;
+      tied?: boolean;
       keybindBonus?: number;
       oppKeybindBonus?: number;
     };
     return {
       type: "match_end",
       payload: {
-        // client `match_end` only models winner "me" | "opponent" (the match state reducer
-        // is frozen by spec). a tie (won=false, tied=true) maps
-        // to "opponent", accepted for the demo; richer tie display is a
-        // separate future ui concern
-        winner: p.won ? "me" : "opponent",
+        // three-way outcome: tied wins over won (a draw is not a player win).
+        // the server (room.go) sets tied iff scores are equal, won iff
+        // strictly greater, so these are mutually exclusive.
+        winner: p.tied ? "tie" : p.won ? "me" : "opponent",
         reason: "completed",
         playerKeybindScore: p.keybindBonus ?? 0,
         opponentKeybindScore: p.oppKeybindBonus ?? 0,

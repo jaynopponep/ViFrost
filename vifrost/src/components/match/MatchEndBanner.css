@@ -41,6 +41,7 @@
 
 .match-end-banner__title.is-win  { color: var(--colorCyan); }
 .match-end-banner__title.is-loss { color: var(--colorPink); }
+.match-end-banner__title.is-tie  { color: var(--colorTextMuted); }
 
 .match-end-banner__grid {
   display: grid;

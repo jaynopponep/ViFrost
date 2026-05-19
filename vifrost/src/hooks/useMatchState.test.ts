@@ -309,4 +309,25 @@ describe("matchReducer", () => {
     expect(after.winner).toBe("opponent");
     expect(after.finalKeybindScores).toEqual({ player: 10, opponent: 99 });
   });
+
+  it("match_end with winner='tie' maps to local winner='tie'", () => {
+    const after = matchReducer(
+      { ...init(), phase: "live" },
+      {
+        type: "MSG",
+        envelope: {
+          type: "match_end",
+          payload: {
+            winner: "tie",
+            reason: "completed",
+            playerKeybindScore: 0,
+            opponentKeybindScore: 0,
+          },
+        },
+      },
+    );
+    expect(after.phase).toBe("ended");
+    expect(after.winner).toBe("tie");
+    expect(after.finalKeybindScores).toEqual({ player: 0, opponent: 0 });
+  });
 });

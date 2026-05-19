@@ -2,9 +2,16 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Confetti, type ConfettiRef } from "@/components/ui/confetti";
 import "./MatchEndBanner.css";
+import {
+  matchEndOutcome,
+  outcomeTitle,
+  outcomeTitleClass,
+  outcomeShowsConfetti,
+  type MatchWinner,
+} from "./matchEndOutcome";
 
 export interface MatchEndBannerProps {
-  winner: "player" | "opponent";
+  winner: MatchWinner;
   playerName: string;
   opponentName: string;
   playerPct: number;
@@ -24,11 +31,12 @@ export function MatchEndBanner(props: MatchEndBannerProps) {
     opponentKeybindScore,
   } = props;
   const navigate = useNavigate();
-  const youWon = winner === "player";
+  const outcome = matchEndOutcome(winner);
+  const showConfetti = outcomeShowsConfetti(outcome);
   const confettiRef = useRef<ConfettiRef>(null);
 
   useEffect(() => {
-    if (!youWon) return;
+    if (!showConfetti) return;
     const ref = confettiRef.current;
     if (!ref) return;
     const burst = () => {
@@ -49,11 +57,11 @@ export function MatchEndBanner(props: MatchEndBannerProps) {
     };
     const timers = [0, 250, 500].map((d) => window.setTimeout(burst, d));
     return () => timers.forEach(window.clearTimeout);
-  }, [youWon]);
+  }, [showConfetti]);
 
   return (
     <div className="match-end-banner">
-      {youWon && (
+      {showConfetti && (
         <Confetti
           ref={confettiRef}
           manualstart
@@ -61,8 +69,8 @@ export function MatchEndBanner(props: MatchEndBannerProps) {
         />
       )}
       <div className="match-end-banner__card">
-        <h2 className={`match-end-banner__title ${youWon ? "is-win" : "is-loss"}`}>
-          {youWon ? "You won" : "You lost"}
+        <h2 className={`match-end-banner__title ${outcomeTitleClass(outcome)}`}>
+          {outcomeTitle(outcome)}
         </h2>
         <div className="match-end-banner__grid">
           <div>

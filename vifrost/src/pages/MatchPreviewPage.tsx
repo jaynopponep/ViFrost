@@ -8,6 +8,7 @@
 import { useRef, useState } from "react";
 import { useKeybindListener } from "../hooks/useKeybindListener";
 import type { MatchPhase } from "../hooks/useMatchState";
+import type { MatchWinner } from "../components/match/matchEndOutcome";
 import { ProblemDialog } from "../components/match/ProblemDialog";
 import { MatchScoreboard } from "../components/match/MatchScoreboard";
 import { TestDetailPopover } from "../components/match/TestDetailPopover";
@@ -50,7 +51,7 @@ export function MatchPreviewPage() {
   const [playerPassed, setPlayerPassed] = useState(3);
   const [opponentPassed, setOpponentPassed] = useState(2);
   const [submitted, setSubmitted] = useState(false);
-  const [winnerIsPlayer, setWinnerIsPlayer] = useState(true);
+  const [outcome, setOutcome] = useState<MatchWinner>("player");
   const [playerReady, setPlayerReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(3);
@@ -110,7 +111,7 @@ export function MatchPreviewPage() {
   // jump straight to the win screen (player victory) and force a banner
   // remount so the confetti flourish plays every press.
   const simulateWin = () => {
-    setWinnerIsPlayer(true);
+    setOutcome("player");
     setPhase("ended");
     setBannerKey((k) => k + 1);
   };
@@ -137,8 +138,8 @@ export function MatchPreviewPage() {
         setOpponentPassed={setOpponentPassed}
         submitted={submitted}
         setSubmitted={setSubmitted}
-        winnerIsPlayer={winnerIsPlayer}
-        setWinnerIsPlayer={setWinnerIsPlayer}
+        outcome={outcome}
+        setOutcome={setOutcome}
         playerReady={playerReady}
         setPlayerReady={setPlayerReady}
         opponentReady={opponentReady}
@@ -196,7 +197,7 @@ export function MatchPreviewPage() {
         {phase === "ended" && (
           <MatchEndBanner
             key={bannerKey}
-            winner={winnerIsPlayer ? "player" : "opponent"}
+            winner={outcome}
             playerName={MOCK.username}
             opponentName={MOCK.opponentName}
             playerPct={playerPct}
@@ -248,8 +249,8 @@ interface DevControlsProps {
   setOpponentPassed: (n: number) => void;
   submitted: boolean;
   setSubmitted: (b: boolean) => void;
-  winnerIsPlayer: boolean;
-  setWinnerIsPlayer: (b: boolean) => void;
+  outcome: MatchWinner;
+  setOutcome: (o: MatchWinner) => void;
   playerReady: boolean;
   setPlayerReady: (b: boolean) => void;
   opponentReady: boolean;
@@ -362,12 +363,17 @@ function DevControls(props: DevControlsProps) {
         submitted
       </label>
       <label>
-        <input
-          type="checkbox"
-          checked={props.winnerIsPlayer}
-          onChange={(e) => props.setWinnerIsPlayer(e.target.checked)}
-        />{" "}
-        you win
+        outcome{" "}
+        <select
+          value={props.outcome}
+          onChange={(e) =>
+            props.setOutcome(e.target.value as MatchWinner)
+          }
+        >
+          <option value="player">you win</option>
+          <option value="opponent">you lose</option>
+          <option value="tie">tie</option>
+        </select>
       </label>
       <label>
         <input

@@ -26,9 +26,9 @@ describe("adaptServerEnvelope", () => {
     expect(out).toEqual({ type: "match_end", payload: { winner: "opponent", reason: "completed", playerKeybindScore: 0, opponentKeybindScore: 60 } });
   });
 
-  it("maps a tie to winner opponent (deliberate lossy mapping; reducer is frozen)", () => {
+  it("maps a tie (tied=true) to winner 'tie'", () => {
     const raw = { type: "game_end", payload: { score: 500, opponentScore: 500, won: false, tied: true, keybindBonus: 0, completionBonus: 0, finishBonus: 0, oppKeybindBonus: 0, oppCompletionBonus: 0, oppFinishBonus: 0 } };
-    expect(adaptServerEnvelope(raw)).toEqual({ type: "match_end", payload: { winner: "opponent", reason: "completed", playerKeybindScore: 0, opponentKeybindScore: 0 } });
+    expect(adaptServerEnvelope(raw)).toEqual({ type: "match_end", payload: { winner: "tie", reason: "completed", playerKeybindScore: 0, opponentKeybindScore: 0 } });
   });
 
   it("drops game_end with missing payload", () => {

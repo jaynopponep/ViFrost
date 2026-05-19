@@ -71,7 +71,7 @@ export type OpponentRunResultPayload = {
 };
 
 export type MatchEndPayload = {
-  winner: "me" | "opponent";
+  winner: "me" | "opponent" | "tie";
   reason: "completed" | "forfeit";
   playerKeybindScore: number;
   opponentKeybindScore: number;

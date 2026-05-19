@@ -13,7 +13,7 @@ export interface MatchState {
   playerTests: boolean[];
   opponentTests: boolean[];
   totalTests: number;
-  winner: "player" | "opponent" | null;
+  winner: "player" | "opponent" | "tie" | null;
   finalKeybindScores: { player: number; opponent: number } | null;
   submitted: boolean;
   playerScore: number;
@@ -118,7 +118,12 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
           return {
             ...state,
             phase: "ended",
-            winner: envelope.payload.winner === "me" ? "player" : "opponent",
+            winner:
+              envelope.payload.winner === "me"
+                ? "player"
+                : envelope.payload.winner === "tie"
+                  ? "tie"
+                  : "opponent",
             finalKeybindScores: {
               player: envelope.payload.playerKeybindScore,
               opponent: envelope.payload.opponentKeybindScore,
