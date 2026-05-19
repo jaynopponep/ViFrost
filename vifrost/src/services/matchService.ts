@@ -1,5 +1,5 @@
 import { requireSupabase } from "@/lib/supabase"
-import type { LeaderboardRow, MatchRecord } from "@/types/profile"
+import type { LeaderboardRow, MatchRecord, PublicProfile } from "@/types/profile"
 import type { MatchRowData } from "@/components/match/MatchRow"
 
 // pure mapping from a symmetric match row to the current user's perspective.
@@ -56,6 +56,40 @@ export async function fetchMatchHistory(
 export async function fetchMatchRecords(): Promise<MatchRecord[]> {
   const sb = requireSupabase()
   const { data, error } = await sb.rpc("get_match_history")
+  if (error) throw error
+  return (data ?? []) as MatchRecord[]
+}
+
+// pure: the public-profile RPC returns an array; one row = found, zero = not
+// found. no network here so it is unit-testable.
+export function firstPublicProfile(
+  data: PublicProfile[] | null | undefined,
+): PublicProfile | null {
+  return data && data.length > 0 ? data[0] : null
+}
+
+// another player's safe profile. authenticated-only RPC (same grants as
+// get_match_history). null when the id has no profile row (not found).
+export async function fetchPublicProfile(
+  userId: string,
+): Promise<PublicProfile | null> {
+  const sb = requireSupabase()
+  const { data, error } = await sb.rpc("get_public_profile", {
+    p_user: userId,
+  })
+  if (error) throw error
+  return firstPublicProfile(data as PublicProfile[] | null)
+}
+
+// another player's recent (last 50) matches (raw records, same shape/type as
+// fetchMatchRecords) for the public profile insights.
+export async function fetchPublicMatchRecords(
+  userId: string,
+): Promise<MatchRecord[]> {
+  const sb = requireSupabase()
+  const { data, error } = await sb.rpc("get_public_match_history", {
+    p_user: userId,
+  })
   if (error) throw error
   return (data ?? []) as MatchRecord[]
 }

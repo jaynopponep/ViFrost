@@ -16,6 +16,7 @@ import { ProfilePage } from "./pages/ProfilePage.tsx"
 import { MatchHistoryPage } from "./pages/MatchHistoryPage.tsx"
 import { TutorialPage } from "./pages/TutorialPage.tsx"
 import { LeaderboardPage } from "./pages/LeaderboardPage.tsx"
+import { PublicProfilePage } from "./pages/PublicProfilePage.tsx"
 import { LoginPage } from "./pages/LoginPage.tsx"
 import { SignupPage } from "./pages/SignupPage.tsx"
 import { PendingApprovalPage } from "./pages/PendingApprovalPage.tsx"
@@ -66,6 +67,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile/:userId",
+        element: (
+          <ProtectedRoute>
+            <PublicProfilePage />
           </ProtectedRoute>
         ),
       },

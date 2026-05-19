@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { deriveRatingTimeline } from "./profileInsights"
 import type { MatchRecord } from "@/types/profile"
+import { matchRecordsQuerySpec } from "@/hooks/useProfileInsights"
 
 function rec(over: Partial<MatchRecord>): MatchRecord {
   return {
@@ -75,6 +76,21 @@ describe("deriveActivityHeatmap", () => {
     const h = deriveActivityHeatmap([], 12, now)
     expect(h.total).toBe(0)
     expect(h.cells.every((c) => c === 0)).toBe(true)
+  })
+
+  it("exposes raw per-day counts (unclamped, same indexing as cells)", () => {
+    const day = (n: number) =>
+      Array.from({ length: n }, () => rec({ created_at: "2026-05-18T09:00:00Z" }))
+    const h = deriveActivityHeatmap(day(5), 12, now)
+    expect(h.counts.length).toBe(h.cells.length)
+    // yesterday cell holds the raw 5 while the level is clamped to 4
+    expect(h.counts.at(-2)).toBe(5)
+    expect(h.cells.at(-2)).toBe(4)
+    // a day with no matches is 0 in counts too
+    expect(h.counts.at(-1)).toBe(0)
+    expect(deriveActivityHeatmap([], 12, now).counts.every((c) => c === 0)).toBe(
+      true,
+    )
   })
 })
 
@@ -181,5 +197,18 @@ describe("derivePercentile", () => {
   it("last place in a full 100-row ladder -> Top 100%", () => {
     const rows = lb(Array.from({ length: 100 }, (_, i) => `p${i}`))
     expect(derivePercentile(rows, "p99")).toBe("Top 100%")
+  })
+})
+
+describe("matchRecordsQuerySpec", () => {
+  it("scopes the query key by source so own vs public never collide", () => {
+    const own = matchRecordsQuerySpec("u1", "own")
+    const pub = matchRecordsQuerySpec("u1", "public")
+    expect(own.queryKey).toEqual(["matchRecords", "own", "u1"])
+    expect(pub.queryKey).toEqual(["matchRecords", "public", "u1"])
+  })
+  it("uses 'anon' when no user id is given and defaults scope to own", () => {
+    const spec = matchRecordsQuerySpec(undefined)
+    expect(spec.queryKey).toEqual(["matchRecords", "own", "anon"])
   })
 })

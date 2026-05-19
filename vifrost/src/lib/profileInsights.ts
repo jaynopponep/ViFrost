@@ -24,6 +24,9 @@ export function deriveRatingTimeline(
 
 export interface HeatmapData {
   cells: number[]
+  // raw per-day match count, same length/indexing as cells (cells is the
+  // clamped 0..4 level; counts is the unclamped real number, for tooltips).
+  counts: number[]
   total: number
   weeks: number
 }
@@ -61,7 +64,7 @@ export function deriveActivityHeatmap(
     counts[days - 1 - offset]++
     total++
   }
-  return { cells: counts.map(levelForCount), total, weeks }
+  return { cells: counts.map(levelForCount), counts, total, weeks }
 }
 
 export interface AchievementView {
@@ -75,7 +78,7 @@ export interface AchievementView {
 // the original 5 demo achievements. only the two that map to real data are
 // evaluated; the rest are permanently locked (no backing data captured yet).
 export function deriveAchievements(
-  profile: Profile | null,
+  profile: Pick<Profile, "wins"> | null,
   records: MatchRecord[],
 ): AchievementView[] {
   const wins = profile?.wins ?? 0

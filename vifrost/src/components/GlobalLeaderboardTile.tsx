@@ -36,6 +36,7 @@ export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProp
   // rank is 1-based index; fields with no real backing (country, apm, change) use neutral values.
   const ALL_ROWS: LeaderboardRowData[] = leaderboardRows.map((r, i) => ({
     id: i + 1,
+    userId: r.id,
     player: r.display_name,
     country: "",
     wins: r.wins,

@@ -50,6 +50,21 @@ export interface LeaderboardRow {
   ties: number
 }
 
+// safe public subset returned by get_public_profile(p_user) — no
+// email/role/status. shaped to satisfy the `wins` field deriveAchievements
+// reads, so it can flow through useProfileInsights like a Profile.
+export interface PublicProfile {
+  id: string
+  display_name: string
+  rating: number
+  peak_rating: number
+  wins: number
+  losses: number
+  ties: number
+  current_streak: number
+  created_at: string
+}
+
 export interface AdminStats {
   total: number
   pending: number

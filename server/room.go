@@ -25,11 +25,12 @@ func generateColors() (string, string) {
 func NewRoom(hub *Hub, p1, p2 *Player, mode string) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
-	name, snippet, tests, _, err := LoadSnippetWithTests(SnippetsDir, "")
+	name, snippet, tests, description, err := LoadSnippetWithTests(SnippetsDir, "")
 	if err != nil {
 		LogErr("failed to load snippet: %v", err)
 		snippet = ""
 		name = "unknown"
+		description = ""
 	}
 	// mode is the pool the pair was matched in, frozen at enqueue. it is NOT
 	// re-derived from p1.Mode here: a concurrent re-queue could have flipped
@@ -43,9 +44,30 @@ func NewRoom(hub *Hub, p1, p2 *Player, mode string) *Room {
 		TestsContent: tests,
 		Mode:         mode,
 		Challenge:    name,
+		Description:  description,
 		Timer:        GameDurationSec,
 		done:         make(chan struct{}),
 		readyCh:      make(chan struct{}, 2),
+	}
+}
+
+// gameStartPayload builds the game_start payload from player i's perspective.
+// extracted from Start() so the problem-title/statement wiring is unit-testable
+// without driving the ready/countdown channels.
+func (r *Room) gameStartPayload(i int) GameStartPayload {
+	opponentName := ""
+	if opp := r.Players[1-i]; opp != nil {
+		opponentName = opp.Username
+	}
+	return GameStartPayload{
+		RoomID:           r.ID,
+		Snippet:          r.Snippet,
+		Duration:         GameDurationSec,
+		OpponentName:     opponentName,
+		PlayerColor:      r.Colors[i],
+		OpponentColor:    r.Colors[1-i],
+		ProblemTitle:     r.Challenge,
+		ProblemStatement: r.Description,
 	}
 }
 
@@ -57,19 +79,7 @@ func (r *Room) Start() {
 		if p == nil {
 			continue
 		}
-		opponent := r.Players[1-i]
-		opponentName := ""
-		if opponent != nil {
-			opponentName = opponent.Username
-		}
-		start := EnvelopeFromType(MsgGameStart, GameStartPayload{
-			RoomID:        r.ID,
-			Snippet:       r.Snippet,
-			Duration:      GameDurationSec,
-			OpponentName:  opponentName,
-			PlayerColor:   r.Colors[i],
-			OpponentColor: r.Colors[1-i],
-		})
+		start := EnvelopeFromType(MsgGameStart, r.gameStartPayload(i))
 		select {
 		case p.Send <- MustMarshal(start):
 		default:

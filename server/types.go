@@ -20,6 +20,11 @@ type GameStartPayload struct {
 	OpponentName  string `json:"opponentName"`
 	PlayerColor   string `json:"playerColor"`
 	OpponentColor string `json:"opponentColor"`
+	// the loaded challenge name and (optional) statement. omitempty so an
+	// absent .desc.txt is omitted entirely, letting the frontend's nullish
+	// `?? fallback` fire instead of rendering an empty string.
+	ProblemTitle     string `json:"problemTitle,omitempty"`
+	ProblemStatement string `json:"problemStatement,omitempty"`
 }
 
 type KeybindPayload struct {
@@ -111,6 +116,7 @@ type Room struct {
 	ID           string
 	Mode         string
 	Challenge    string
+	Description  string
 	Hub          *Hub
 	Players      [2]*Player
 	Colors       [2]string

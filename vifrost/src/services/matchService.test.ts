@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest"
-import { toMatchRow } from "./matchService"
-import type { MatchRecord } from "@/types/profile"
+import {
+  toMatchRow,
+  fetchMatchRecords,
+  firstPublicProfile,
+  fetchPublicProfile,
+  fetchPublicMatchRecords,
+} from "./matchService"
+import type { MatchRecord, PublicProfile } from "@/types/profile"
 
 const base: MatchRecord = {
   id: "m1",
@@ -54,10 +60,40 @@ describe("toMatchRow", () => {
   })
 })
 
-import { fetchMatchRecords } from "./matchService"
-
 describe("fetchMatchRecords", () => {
   it("is exported as a function", () => {
     expect(typeof fetchMatchRecords).toBe("function")
+  })
+})
+
+const pub: PublicProfile = {
+  id: "u1",
+  display_name: "Ada",
+  rating: 1200,
+  peak_rating: 1300,
+  wins: 10,
+  losses: 4,
+  ties: 1,
+  current_streak: 3,
+  created_at: new Date("2026-01-02").toISOString(),
+}
+
+describe("firstPublicProfile", () => {
+  it("returns the first row when the RPC returned rows", () => {
+    expect(firstPublicProfile([pub])).toEqual(pub)
+  })
+  it("returns null for an empty array (player not found)", () => {
+    expect(firstPublicProfile([])).toBeNull()
+  })
+  it("returns null for null/undefined data", () => {
+    expect(firstPublicProfile(null)).toBeNull()
+    expect(firstPublicProfile(undefined)).toBeNull()
+  })
+})
+
+describe("fetchPublicProfile / fetchPublicMatchRecords", () => {
+  it("are exported as functions", () => {
+    expect(typeof fetchPublicProfile).toBe("function")
+    expect(typeof fetchPublicMatchRecords).toBe("function")
   })
 })

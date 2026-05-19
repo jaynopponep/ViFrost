@@ -1,3 +1,4 @@
+import { useRef, useState } from "react"
 import { Panel } from "../ui/panel"
 import { SectionLabel } from "../ui/section-label"
 
@@ -15,13 +16,43 @@ const LEVEL_COLORS = [
 
 export interface ActivityHeatmapProps {
   cells: number[] // length weeks*7, value 0..4, index 0 = oldest day
+  // raw per-day match count, same indexing as cells. when present, each cell
+  // gets an instant hover tooltip with that day's match count.
+  counts?: number[]
   total: number
   weeks: number
 }
 
-export function ActivityHeatmap({ cells, total, weeks }: ActivityHeatmapProps) {
+function matchLabel(n: number): string {
+  if (n <= 0) return "No matches"
+  return n === 1 ? "1 match" : `${n} matches`
+}
+
+interface HoverState {
+  x: number
+  y: number
+  n: number
+}
+
+export function ActivityHeatmap({
+  cells,
+  counts,
+  total,
+  weeks,
+}: ActivityHeatmapProps) {
   const width = weeks * (CELL + GAP)
   const height = 7 * (CELL + GAP)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const [hover, setHover] = useState<HoverState | null>(null)
+
+  // pointer position relative to the grid container so the tooltip can be
+  // absolutely positioned regardless of the svg's responsive scaling.
+  const trackPointer = (e: { clientX: number; clientY: number }, n: number) => {
+    const box = gridRef.current?.getBoundingClientRect()
+    if (!box) return
+    setHover({ x: e.clientX - box.left, y: e.clientY - box.top, n })
+  }
+
   return (
     <Panel>
       <div className="mb-4 flex items-baseline justify-between">
@@ -49,28 +80,49 @@ export function ActivityHeatmap({ cells, total, weeks }: ActivityHeatmapProps) {
           No match activity in the last {weeks} weeks.
         </div>
       ) : (
-        <svg
-          width="100%"
-          viewBox={`0 0 ${width} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
-          className="block"
-        >
-          {cells.map((level, i) => {
-            const col = Math.floor(i / 7)
-            const row = i % 7
-            return (
-              <rect
-                key={i}
-                x={col * (CELL + GAP)}
-                y={row * (CELL + GAP)}
-                width={CELL}
-                height={CELL}
-                rx={2}
-                fill={LEVEL_COLORS[level]}
-              />
-            )
-          })}
-        </svg>
+        <div ref={gridRef} className="relative">
+          <svg
+            width="100%"
+            viewBox={`0 0 ${width} ${height}`}
+            preserveAspectRatio="xMidYMid meet"
+            className="block"
+          >
+            {cells.map((level, i) => {
+              const col = Math.floor(i / 7)
+              const row = i % 7
+              const n = counts?.[i]
+              const interactive = n !== undefined
+              return (
+                <rect
+                  key={i}
+                  x={col * (CELL + GAP)}
+                  y={row * (CELL + GAP)}
+                  width={CELL}
+                  height={CELL}
+                  rx={2}
+                  fill={LEVEL_COLORS[level]}
+                  style={interactive ? { cursor: "pointer" } : undefined}
+                  onMouseEnter={
+                    interactive ? (e) => trackPointer(e, n) : undefined
+                  }
+                  onMouseMove={
+                    interactive ? (e) => trackPointer(e, n) : undefined
+                  }
+                  onMouseLeave={interactive ? () => setHover(null) : undefined}
+                />
+              )
+            })}
+          </svg>
+
+          {hover ? (
+            <div
+              className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-[color:var(--colorSoftBorder)] bg-[var(--colorPanel)] px-2 py-1 font-mono text-[11px] text-[var(--colorText)] shadow-md"
+              style={{ left: hover.x, top: hover.y - 8 }}
+            >
+              {matchLabel(hover.n)}
+            </div>
+          ) : null}
+        </div>
       )}
     </Panel>
   )

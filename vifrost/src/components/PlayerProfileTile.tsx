@@ -1,4 +1,5 @@
 import type { User } from "@supabase/supabase-js"
+import type { PublicProfile } from "@/types/profile"
 import { useNavigate } from "react-router-dom"
 import { displayNameFromUser } from "@/lib/displayNameFromUser"
 import profileData from "../data/profile.json"
@@ -17,6 +18,8 @@ export interface PlayerProfileTileProps {
   username: string
   /** When present, header and identity reflect this Supabase account (signup profile). */
   user?: User | null
+  /** When present, render another player's public profile (no owner chrome). */
+  publicProfile?: PublicProfile | null
 }
 
 function accountHandleFromEmail(email: string | undefined): string {
@@ -67,20 +70,35 @@ const DEMO_RATING_POINTS: number[] = (() => {
   return pts
 })()
 
-const DEMO_HEATMAP = {
-  cells: Array.from({ length: 12 * 7 }, (_, i) => {
+const DEMO_HEATMAP = (() => {
+  const cells = Array.from({ length: 12 * 7 }, (_, i) => {
     const v = (Math.sin(i * 2.31) + Math.cos(i * 0.77) + 2) / 4
     return v < 0.45 ? 0 : v < 0.7 ? 1 : v < 0.87 ? 2 : v < 0.96 ? 3 : 4
-  }),
-  total: 84,
-  weeks: 12,
-}
+  })
+  // representative per-day count for the showcase tooltip (rough inverse of
+  // levelForCount); the demo heatmap is already synthetic by design.
+  const LEVEL_TO_COUNT = [0, 1, 2, 4, 7]
+  return {
+    cells,
+    counts: cells.map((lvl) => LEVEL_TO_COUNT[lvl]),
+    total: 84,
+    weeks: 12,
+  }
+})()
 
-export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
+export function PlayerProfileTile({ username, user, publicProfile }: PlayerProfileTileProps) {
   const navigate = useNavigate()
   const { profile } = useProfile()
-  const insights = useProfileInsights(user?.id, profile ?? null)
-  const earnedCount = insights.achievements.filter((a) => a.earned).length
+  // hooks must run unconditionally; pass undefined args on the public path so
+  // the match-records query is disabled (useProfileInsights gates on !!userId)
+  const insights = useProfileInsights(
+    publicProfile ? undefined : user?.id,
+    publicProfile ? null : (profile ?? null),
+  )
+
+  if (publicProfile) {
+    return <PublicProfileBody publicProfile={publicProfile} />
+  }
 
   // live stats from the signed-in user's profile; fall back to zero until loaded
   const liveWins = profile?.wins ?? 0
@@ -93,6 +111,7 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
   const liveStreak = profile?.current_streak ?? 0
 
   if (user) {
+    const earnedCount = insights.achievements.filter((a) => a.earned).length
     const displayName = displayNameFromUser(user)
     const handle = accountHandleFromEmail(user.email ?? undefined)
     const joined = joinedFromUser(user.created_at)
@@ -139,6 +158,7 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
 
         <ActivityHeatmap
           cells={insights.heatmap.cells}
+          counts={insights.heatmap.counts}
           total={insights.heatmap.total}
           weeks={insights.heatmap.weeks}
         />
@@ -238,6 +258,7 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
 
       <ActivityHeatmap
         cells={DEMO_HEATMAP.cells}
+        counts={DEMO_HEATMAP.counts}
         total={DEMO_HEATMAP.total}
         weeks={DEMO_HEATMAP.weeks}
       />
@@ -284,6 +305,108 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
         >
           View full match history →
         </button>
+      </div>
+    </div>
+  )
+}
+
+function PublicProfileBody({
+  publicProfile,
+}: {
+  publicProfile: PublicProfile
+}) {
+  const insights = useProfileInsights(
+    publicProfile.id,
+    publicProfile,
+    "public",
+  )
+  const earnedCount = insights.achievements.filter((a) => a.earned).length
+
+  const wins = publicProfile.wins
+  const losses = publicProfile.losses
+  const ties = publicProfile.ties
+  const games = wins + losses + ties
+  const winRate = games > 0 ? Math.round((wins / games) * 100) : 0
+  const displayName = publicProfile.display_name
+  const handle = handleFromDisplayName(displayName)
+  const joined = joinedFromUser(publicProfile.created_at)
+  const bio = `${displayName}'s public profile.`
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+      <ProfileHeader
+        username={displayName}
+        handle={handle}
+        joined={joined}
+        bio={bio}
+        rating={publicProfile.rating}
+      />
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <StatBlock
+          label="Rating"
+          value={publicProfile.rating.toLocaleString("en-US")}
+          sub={`Peak ${publicProfile.peak_rating.toLocaleString("en-US")}`}
+          accent
+        />
+        <StatBlock
+          label="Percentile"
+          value={insights.percentile ?? "—"}
+          sub={insights.percentile ? "of ranked players" : "No ranked data yet"}
+        />
+        <StatBlock
+          label="Win Rate"
+          value={games > 0 ? `${winRate}%` : "—"}
+          sub={games > 0 ? `${wins}W · ${losses}L · ${ties}T` : "No ranked matches yet"}
+        />
+        <StatBlock
+          label="Streak"
+          value={publicProfile.current_streak > 0 ? `${publicProfile.current_streak}W` : "—"}
+          sub="Win streaks show here"
+          accent
+        />
+        <StatBlock label="APM" value="—" sub="Not tracked yet" />
+        <StatBlock label="Avg. match" value="—" sub="Not tracked yet" />
+      </div>
+
+      <RatingChart points={insights.ratingPoints} />
+
+      <ActivityHeatmap
+        cells={insights.heatmap.cells}
+        counts={insights.heatmap.counts}
+        total={insights.heatmap.total}
+        weeks={insights.heatmap.weeks}
+      />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
+        <Panel>
+          <SectionLabel className="mb-3.5">Most used commands</SectionLabel>
+          <p className="m-0 text-sm leading-relaxed text-[var(--colorTextMuted)]">
+            Command usage isn't tracked yet — it will appear here once
+            per-command stats are captured.
+          </p>
+        </Panel>
+
+        <Panel>
+          <div className="mb-3.5 flex items-baseline justify-between">
+            <SectionLabel>Achievements</SectionLabel>
+            <div className="font-mono text-[11px] text-[var(--colorTextMuted)]">
+              {earnedCount} / {insights.achievements.length}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            {insights.achievements.map((a) => (
+              <Achievement
+                key={a.title}
+                glyph={a.glyph}
+                title={a.title}
+                sub={a.sub}
+                earned={a.earned}
+                locked={a.locked}
+              />
+            ))}
+          </div>
+        </Panel>
       </div>
     </div>
   )
