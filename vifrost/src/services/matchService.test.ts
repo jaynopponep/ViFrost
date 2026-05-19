@@ -53,3 +53,11 @@ describe("toMatchRow", () => {
     expect(toMatchRow(noNames, "me").opponent).toBe("abcdef")
   })
 })
+
+import { fetchMatchRecords } from "./matchService"
+
+describe("fetchMatchRecords", () => {
+  it("is exported as a function", () => {
+    expect(typeof fetchMatchRecords).toBe("function")
+  })
+})

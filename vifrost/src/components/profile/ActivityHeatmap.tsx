@@ -4,9 +4,7 @@ import { SectionLabel } from "../ui/section-label"
 const CELL = 11
 const GAP = 3
 
-const MONTHS = ["Nov","Dec","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct"]
-
-// Heat progression: cyan (quiet days) pink (activity).
+// Heat progression: cyan (quiet days) -> pink (activity).
 const LEVEL_COLORS = [
   "color-mix(in srgb, var(--colorText) 6%, transparent)",
   "color-mix(in srgb, var(--colorCyan) 22%, transparent)",
@@ -15,20 +13,14 @@ const LEVEL_COLORS = [
   "var(--colorPink)",
 ]
 
-// 52 weeks × 7 days = 364 cells. Deterministic.
-const HEATMAP: number[] = Array.from({ length: 52 * 7 }, (_, i) => {
-  const r = (Math.sin(i * 2.31) + Math.cos(i * 0.77) + 2) / 4 // normalize to 0..1
-  if (r < 0.45) return 0
-  if (r < 0.70) return 1
-  if (r < 0.87) return 2
-  if (r < 0.96) return 3
-  return 4
-})
+export interface ActivityHeatmapProps {
+  cells: number[] // length weeks*7, value 0..4, index 0 = oldest day
+  total: number
+  weeks: number
+}
 
-const TOTAL_MATCHES = HEATMAP.reduce((a, v) => a + (v > 0 ? 1 : 0), 0)
-
-export function ActivityHeatmap() {
-  const width = 52 * (CELL + GAP)
+export function ActivityHeatmap({ cells, total, weeks }: ActivityHeatmapProps) {
+  const width = weeks * (CELL + GAP)
   const height = 7 * (CELL + GAP)
   return (
     <Panel>
@@ -36,7 +28,7 @@ export function ActivityHeatmap() {
         <div>
           <SectionLabel>Activity</SectionLabel>
           <div className="mt-1 text-sm text-[var(--colorText)]">
-            {TOTAL_MATCHES} matches in the last year
+            {total} matches in the last {weeks} weeks
           </div>
         </div>
         <div className="flex items-center gap-1.5 font-mono text-[11px] text-[var(--colorTextMuted)]">
@@ -52,21 +44,18 @@ export function ActivityHeatmap() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <div className="flex w-full font-mono text-[10px] text-[var(--colorTextMuted)]">
-          {MONTHS.map((m) => (
-            <div key={m} className="flex-1">
-              {m}
-            </div>
-          ))}
+      {total === 0 ? (
+        <div className="grid h-[98px] place-items-center font-mono text-[12px] text-[var(--colorTextMuted)]">
+          No match activity in the last {weeks} weeks.
         </div>
+      ) : (
         <svg
           width="100%"
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           className="block"
         >
-          {HEATMAP.map((level, i) => {
+          {cells.map((level, i) => {
             const col = Math.floor(i / 7)
             const row = i % 7
             return (
@@ -82,7 +71,7 @@ export function ActivityHeatmap() {
             )
           })}
         </svg>
-      </div>
+      )}
     </Panel>
   )
 }

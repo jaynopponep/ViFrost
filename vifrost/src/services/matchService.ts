@@ -50,3 +50,12 @@ export async function fetchMatchHistory(
   if (error) throw error
   return ((data ?? []) as MatchRecord[]).map((m) => toMatchRow(m, userId))
 }
+
+// raw match rows (no per-row perspective mapping) for profile insights.
+// same single get_match_history RPC as fetchMatchHistory; additive.
+export async function fetchMatchRecords(): Promise<MatchRecord[]> {
+  const sb = requireSupabase()
+  const { data, error } = await sb.rpc("get_match_history")
+  if (error) throw error
+  return (data ?? []) as MatchRecord[]
+}

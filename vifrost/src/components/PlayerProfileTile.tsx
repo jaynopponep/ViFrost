@@ -11,6 +11,7 @@ import { RatingChart } from "./profile/RatingChart"
 import { Panel } from "./ui/panel"
 import { SectionLabel } from "./ui/section-label"
 import { StatBlock } from "./ui/stat-block"
+import { useProfileInsights } from "@/hooks/useProfileInsights"
 
 export interface PlayerProfileTileProps {
   username: string
@@ -52,9 +53,34 @@ function bioFromUser(user: User): string {
 const ACHIEVEMENTS_EARNED = profileData.achievements.filter((a) => a.earned).length
 const ACHIEVEMENTS_TOTAL = 32 // static "X / 32" display — the full set is aspirational
 
+// deterministic sample data so the unsigned demo/showcase view keeps its
+// populated look without faking signed-in stats.
+const DEMO_RATING_POINTS: number[] = (() => {
+  const pts: number[] = []
+  let r = 1200
+  for (let i = 0; i < 90; i++) {
+    r += Math.sin(i * 1.8) * 6 + 1.8
+    r = Math.max(900, Math.min(1650, r))
+    pts.push(Math.round(r))
+  }
+  pts.push(1482)
+  return pts
+})()
+
+const DEMO_HEATMAP = {
+  cells: Array.from({ length: 12 * 7 }, (_, i) => {
+    const v = (Math.sin(i * 2.31) + Math.cos(i * 0.77) + 2) / 4
+    return v < 0.45 ? 0 : v < 0.7 ? 1 : v < 0.87 ? 2 : v < 0.96 ? 3 : 4
+  }),
+  total: 84,
+  weeks: 12,
+}
+
 export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
   const navigate = useNavigate()
   const { profile } = useProfile()
+  const insights = useProfileInsights(user?.id, profile ?? null)
+  const earnedCount = insights.achievements.filter((a) => a.earned).length
 
   // live stats from the signed-in user's profile; fall back to zero until loaded
   const liveWins = profile?.wins ?? 0
@@ -89,7 +115,11 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
             sub={`Peak ${livePeak.toLocaleString("en-US")}`}
             accent
           />
-          <StatBlock label="Percentile" value="—" sub="No ranked data yet" />
+          <StatBlock
+            label="Percentile"
+            value={insights.percentile ?? "—"}
+            sub={insights.percentile ? "of ranked players" : "No ranked data yet"}
+          />
           <StatBlock
             label="Win Rate"
             value={liveGames > 0 ? `${liveWinRate}%` : "—"}
@@ -101,24 +131,48 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
             sub="Win streaks show here"
             accent
           />
-          <StatBlock label="APM" value="—" sub="After your first games" />
-          <StatBlock label="Avg. match" value="—" sub="Median duration" />
+          <StatBlock label="APM" value="—" sub="Not tracked yet" />
+          <StatBlock label="Avg. match" value="—" sub="Not tracked yet" />
         </div>
 
-        <Panel>
-          <SectionLabel className="mb-2">Your ViFrost profile</SectionLabel>
-          <p className="m-0 max-w-[560px] text-sm leading-relaxed text-[var(--colorTextMuted)]">
-            Charts, command usage, activity heatmap, and achievements from the demo profile are hidden until we
-            sync real match data to your account. Jump into the lobby to start building your record.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate("/lobby")}
-            className="mt-4 cursor-pointer rounded-lg border border-[var(--colorCyan)] bg-[color-mix(in_srgb,var(--colorCyan)_18%,transparent)] px-4 py-2 font-mono text-sm font-medium text-[var(--colorCyan)] transition-colors hover:bg-[color-mix(in_srgb,var(--colorCyan)_28%,transparent)]"
-          >
-            Go to lobby →
-          </button>
-        </Panel>
+        <RatingChart points={insights.ratingPoints} />
+
+        <ActivityHeatmap
+          cells={insights.heatmap.cells}
+          total={insights.heatmap.total}
+          weeks={insights.heatmap.weeks}
+        />
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
+          <Panel>
+            <SectionLabel className="mb-3.5">Most used commands</SectionLabel>
+            <p className="m-0 text-sm leading-relaxed text-[var(--colorTextMuted)]">
+              Command usage isn't tracked yet — it will appear here once
+              per-command stats are captured.
+            </p>
+          </Panel>
+
+          <Panel>
+            <div className="mb-3.5 flex items-baseline justify-between">
+              <SectionLabel>Achievements</SectionLabel>
+              <div className="font-mono text-[11px] text-[var(--colorTextMuted)]">
+                {earnedCount} / {insights.achievements.length}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {insights.achievements.map((a) => (
+                <Achievement
+                  key={a.title}
+                  glyph={a.glyph}
+                  title={a.title}
+                  sub={a.sub}
+                  earned={a.earned}
+                  locked={a.locked}
+                />
+              ))}
+            </div>
+          </Panel>
+        </div>
 
         <div className="mt-2 text-right">
           <button
@@ -180,9 +234,13 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
         />
       </div>
 
-      <RatingChart />
+      <RatingChart points={DEMO_RATING_POINTS} />
 
-      <ActivityHeatmap />
+      <ActivityHeatmap
+        cells={DEMO_HEATMAP.cells}
+        total={DEMO_HEATMAP.total}
+        weeks={DEMO_HEATMAP.weeks}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
         <Panel>
