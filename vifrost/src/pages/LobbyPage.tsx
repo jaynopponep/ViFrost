@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { resolveQueueMode } from "../lib/resolveQueueMode";
 import type { GameStartPayload } from "../hooks/useWebSocket";
 import type { AppOutletContext } from "../App";
 import "./LobbyPage.css";
 import hintData from "../data/hints.json";
 import { animationFrames } from "../data/animationFrames";
 import { Loader } from "../components/ui/loader";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Hint {
   id: number;
@@ -18,6 +20,12 @@ export function LobbyPage() {
   const navigate = useNavigate();
   const { username, wsStatus, connectWs, sendJoinQueue, isWsOpen, lastMessage } =
     useOutletContext<AppOutletContext>();
+  const { session } = useAuth();
+  // mode comes from which landing card the player entered through
+  // (LandingPage navigates to /lobby with state.mode). direct navigation
+  // defaults to casual so it never silently joins the ranked ladder.
+  const { state } = useLocation();
+  const queueMode = resolveQueueMode(state);
 
   // hint rotation
   const [hint, setHint] = useState<Hint | null>(null);
@@ -86,11 +94,11 @@ export function LobbyPage() {
 
   useEffect(() => {
     if (isWsOpen && joinWhenOpenRef.current) {
-      sendJoinQueue(username!);
+      sendJoinQueue(username!, session?.access_token ?? "", queueMode);
       joinWhenOpenRef.current = false;
       setInQueue(true);
     }
-  }, [isWsOpen, sendJoinQueue, username]);
+  }, [isWsOpen, sendJoinQueue, username, session]);
 
   useEffect(() => {
     return () => {
@@ -100,7 +108,7 @@ export function LobbyPage() {
 
   const handleJoinQueue = () => {
     if (isWsOpen) {
-      sendJoinQueue(username!);
+      sendJoinQueue(username!, session?.access_token ?? "", queueMode);
       setInQueue(true);
     } else if (wsStatus === "closed" || wsStatus === "error") {
       joinWhenOpenRef.current = true;

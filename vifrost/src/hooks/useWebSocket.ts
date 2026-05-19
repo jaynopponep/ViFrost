@@ -161,7 +161,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   // all the websocket calls below
   const sendJoinQueue = useCallback(
-    (username: string) => send("join_queue", { username }),
+    (username: string, token: string, mode: "ranked" | "casual") =>
+      send("join_queue", { username, token, mode }),
     [send],
   );
   // the client only reports which vim event happened. the server owns the
