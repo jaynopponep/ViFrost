@@ -10,6 +10,12 @@ import {
   type MatchWinner,
 } from "./matchEndOutcome";
 
+export interface BannerBonuses {
+  keybind: number;
+  completion: number;
+  finish: number;
+}
+
 export interface MatchEndBannerProps {
   winner: MatchWinner;
   playerName: string;
@@ -18,6 +24,24 @@ export interface MatchEndBannerProps {
   opponentPct: number;
   playerStyle: number;
   opponentStyle: number;
+  playerBonuses: BannerBonuses;
+  opponentBonuses: BannerBonuses;
+}
+
+// the three end-of-match bonuses are added to raw score to decide win/loss.
+// surfacing them stops the result from being decided by hidden numbers.
+function BonusLines({ b }: { b: BannerBonuses }) {
+  const total = b.keybind + b.completion + b.finish;
+  return (
+    <>
+      <div className="match-end-banner__stat">Keybind bonus: +{b.keybind}</div>
+      <div className="match-end-banner__stat">
+        Completion bonus: +{b.completion}
+      </div>
+      <div className="match-end-banner__stat">Finish bonus: +{b.finish}</div>
+      <div className="match-end-banner__stat">Total bonus: +{total}</div>
+    </>
+  );
 }
 
 export function MatchEndBanner(props: MatchEndBannerProps) {
@@ -29,6 +53,8 @@ export function MatchEndBanner(props: MatchEndBannerProps) {
     opponentPct,
     playerStyle,
     opponentStyle,
+    playerBonuses,
+    opponentBonuses,
   } = props;
   const navigate = useNavigate();
   const outcome = matchEndOutcome(winner);
@@ -77,11 +103,13 @@ export function MatchEndBanner(props: MatchEndBannerProps) {
             <div className="match-end-banner__name">{playerName}</div>
             <div className="match-end-banner__stat">Tests: {Math.round(playerPct)}%</div>
             <div className="match-end-banner__stat">Style: {playerStyle}</div>
+            <BonusLines b={playerBonuses} />
           </div>
           <div>
             <div className="match-end-banner__name">{opponentName}</div>
             <div className="match-end-banner__stat">Tests: {Math.round(opponentPct)}%</div>
             <div className="match-end-banner__stat">Style: {opponentStyle}</div>
+            <BonusLines b={opponentBonuses} />
           </div>
         </div>
         <button

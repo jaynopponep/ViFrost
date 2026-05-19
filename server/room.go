@@ -178,7 +178,7 @@ func (r *Room) EndGame() {
 		}
 	}
 
-	keybindBonus := ApplyKeybindBonus(&scores, &keybinds)
+	keybindBonus := ApplyKeybindBonus(&scores, &keybinds, &passed)
 	completionBonus := ApplyCompletionBonus(&scores, totalTests, &passed)
 	finishBonus := ApplyFinishTimeBonus(&scores, &submitTimes)
 

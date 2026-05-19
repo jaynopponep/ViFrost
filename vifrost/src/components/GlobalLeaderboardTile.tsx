@@ -193,6 +193,16 @@ export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProp
             })}
             {visibleCount < REST.length ? (
               <div ref={sentinelRef} className="h-px" aria-hidden="true" />
+            ) : REST.length > 0 ? (
+              // terminal spacer: at least as tall as the bottom blur band
+              // (25% of the scroll viewport) so the last real player row can
+              // always scroll fully clear of the progressive blur.
+              <div
+                className="flex items-start justify-center pt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--colorTextMuted)]"
+                style={{ minHeight: "max(112px, calc(25vh - 120px))" }}
+              >
+                No more players to show
+              </div>
             ) : null}
           </div>
         </div>

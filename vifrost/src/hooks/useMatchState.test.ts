@@ -208,13 +208,20 @@ describe("matchReducer", () => {
             reason: "completed",
             playerKeybindScore: 42,
             opponentKeybindScore: 31,
+            playerCompletionBonus: 240,
+            opponentCompletionBonus: 0,
+            playerFinishBonus: 200,
+            opponentFinishBonus: 0,
           },
         },
       },
     );
     expect(after.phase).toBe("ended");
     expect(after.winner).toBe("player");
-    expect(after.finalKeybindScores).toEqual({ player: 42, opponent: 31 });
+    expect(after.finalBonuses).toEqual({
+      player: { keybind: 42, completion: 240, finish: 200 },
+      opponent: { keybind: 31, completion: 0, finish: 0 },
+    });
   });
 
   it("score_update records both totals while live", () => {
@@ -302,12 +309,19 @@ describe("matchReducer", () => {
             reason: "completed",
             playerKeybindScore: 10,
             opponentKeybindScore: 99,
+            playerCompletionBonus: 0,
+            opponentCompletionBonus: 240,
+            playerFinishBonus: 0,
+            opponentFinishBonus: 0,
           },
         },
       },
     );
     expect(after.winner).toBe("opponent");
-    expect(after.finalKeybindScores).toEqual({ player: 10, opponent: 99 });
+    expect(after.finalBonuses).toEqual({
+      player: { keybind: 10, completion: 0, finish: 0 },
+      opponent: { keybind: 99, completion: 240, finish: 0 },
+    });
   });
 
   it("match_end with winner='tie' maps to local winner='tie'", () => {
@@ -322,12 +336,19 @@ describe("matchReducer", () => {
             reason: "completed",
             playerKeybindScore: 0,
             opponentKeybindScore: 0,
+            playerCompletionBonus: 0,
+            opponentCompletionBonus: 0,
+            playerFinishBonus: 0,
+            opponentFinishBonus: 0,
           },
         },
       },
     );
     expect(after.phase).toBe("ended");
     expect(after.winner).toBe("tie");
-    expect(after.finalKeybindScores).toEqual({ player: 0, opponent: 0 });
+    expect(after.finalBonuses).toEqual({
+      player: { keybind: 0, completion: 0, finish: 0 },
+      opponent: { keybind: 0, completion: 0, finish: 0 },
+    });
   });
 });

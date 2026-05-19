@@ -25,6 +25,10 @@ export function adaptServerEnvelope(raw: RawEnvelope): ServerMessage | null {
       tied?: boolean;
       keybindBonus?: number;
       oppKeybindBonus?: number;
+      completionBonus?: number;
+      oppCompletionBonus?: number;
+      finishBonus?: number;
+      oppFinishBonus?: number;
     };
     return {
       type: "match_end",
@@ -34,8 +38,14 @@ export function adaptServerEnvelope(raw: RawEnvelope): ServerMessage | null {
         // strictly greater, so these are mutually exclusive.
         winner: p.tied ? "tie" : p.won ? "me" : "opponent",
         reason: "completed",
+        // all three end-of-match bonuses are surfaced so the banner can show
+        // what actually decided the result (raw score + these three).
         playerKeybindScore: p.keybindBonus ?? 0,
         opponentKeybindScore: p.oppKeybindBonus ?? 0,
+        playerCompletionBonus: p.completionBonus ?? 0,
+        opponentCompletionBonus: p.oppCompletionBonus ?? 0,
+        playerFinishBonus: p.finishBonus ?? 0,
+        opponentFinishBonus: p.oppFinishBonus ?? 0,
       },
     };
   }

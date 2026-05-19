@@ -18,6 +18,8 @@ const base: MatchRecord = {
   player2_rating_after: 384,
   challenge: "reverse a list",
   duration_seconds: 73,
+  player1_name: "Ada",
+  player2_name: "Linus",
 }
 
 describe("toMatchRow", () => {
@@ -25,7 +27,7 @@ describe("toMatchRow", () => {
     const row = toMatchRow(base, "me")
     expect(row.outcome).toBe("W")
     expect(row.ratingChange).toBe(16)
-    expect(row.opponent).toBe("foe")
+    expect(row.opponent).toBe("Linus")
     expect(row.mode).toBe("Ranked")
   })
 
@@ -33,11 +35,21 @@ describe("toMatchRow", () => {
     const row = toMatchRow(base, "foe")
     expect(row.outcome).toBe("L")
     expect(row.ratingChange).toBe(-16)
-    expect(row.opponent).toBe("me")
+    expect(row.opponent).toBe("Ada")
   })
 
   it("derives a tie when winner_id is null", () => {
     const row = toMatchRow({ ...base, winner_id: null }, "me")
     expect(row.outcome).toBe("D")
+  })
+
+  it("falls back to a short id when no opponent name is present", () => {
+    const noNames: MatchRecord = {
+      ...base,
+      player2_id: "abcdef123456",
+      player1_name: undefined,
+      player2_name: undefined,
+    }
+    expect(toMatchRow(noNames, "me").opponent).toBe("abcdef")
   })
 })

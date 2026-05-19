@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -24,8 +26,25 @@ type Hub struct {
 	rooms   map[string]*Room
 	roomMu  sync.RWMutex
 	nextID  atomic.Uint64
-	cfg     supabaseConfig
-	auth    *authVerifier
+	// runID is unique per server process. room ids embed it so they never
+	// collide across restarts -- room_id is record_match_result's conflict
+	// key, and the old bare per-process counter (room-1, room-2, ...) reset
+	// every `go run .`, making every post-restart match settle as a no-op
+	// (already_settled) and silently vanish from the matches table.
+	runID string
+	cfg   supabaseConfig
+	auth  *authVerifier
+}
+
+// newRunToken returns a short random per-process token. crypto/rand failure
+// is effectively impossible here; if it ever did, panicking is correct --
+// without a unique run id every settled match would be silently discarded.
+func newRunToken() string {
+	b := make([]byte, 6)
+	if _, err := rand.Read(b); err != nil {
+		panic("newRunToken: " + err.Error())
+	}
+	return hex.EncodeToString(b)
 }
 
 func NewHub(cfg supabaseConfig) *Hub {
@@ -38,6 +57,7 @@ func NewHub(cfg supabaseConfig) *Hub {
 	h := &Hub{
 		waiting: make(chan queuedPlayer, 2),
 		rooms:   make(map[string]*Room),
+		runID:   newRunToken(),
 		cfg:     cfg,
 		auth:    av,
 	}
@@ -157,7 +177,9 @@ func (h *Hub) Enqueue(p *Player) {
 
 func (h *Hub) NextRoomID() string {
 	n := h.nextID.Add(1)
-	return "room-" + strconv.FormatUint(n, 10)
+	// room-<runID>-<n>: the counter keeps logs readable/ordered within a
+	// run; runID guarantees global uniqueness so settle never false-dedupes.
+	return "room-" + h.runID + "-" + strconv.FormatUint(n, 10)
 }
 
 func (h *Hub) RemoveRoom(roomID string) {

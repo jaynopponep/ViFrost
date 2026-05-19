@@ -34,6 +34,11 @@ export interface MatchRecord {
   player2_rating_after: number
   challenge: string
   duration_seconds: number
+  // resolved by the get_match_history RPC (joins profiles, which the browser
+  // cannot read directly under select-own RLS). optional so direct `matches`
+  // reads / older callers still type-check.
+  player1_name?: string
+  player2_name?: string
 }
 
 export interface LeaderboardRow {

@@ -75,6 +75,10 @@ export type MatchEndPayload = {
   reason: "completed" | "forfeit";
   playerKeybindScore: number;
   opponentKeybindScore: number;
+  playerCompletionBonus: number;
+  opponentCompletionBonus: number;
+  playerFinishBonus: number;
+  opponentFinishBonus: number;
 };
 
 export type ServerMessage =

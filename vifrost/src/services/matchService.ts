@@ -12,12 +12,16 @@ export function toMatchRow(m: MatchRecord, userId: string): MatchRowData {
     m.winner_id === null ? "D" : m.winner_id === userId ? "W" : "L"
   const youScore = isP1 ? m.player1_score : m.player2_score
   const oppScore = isP1 ? m.player2_score : m.player1_score
+  // get_match_history resolves these via a security-definer join; fall back to
+  // a short id slice if a name is missing (e.g. a raw `matches` read).
+  const oppName = isP1 ? m.player2_name : m.player1_name
+  const oppId = isP1 ? m.player2_id : m.player1_id
   return {
     id: m.id.slice(0, 6),
     outcome,
     mode: m.mode === "ranked" ? "Ranked" : "Casual",
     challenge: m.challenge || "Practice",
-    opponent: isP1 ? m.player2_id : m.player1_id,
+    opponent: oppName || oppId.slice(0, 6),
     oppRating: isP1 ? m.player2_rating_after : m.player1_rating_after,
     ratingChange: after - before,
     you: { keystrokes: youScore, time: m.duration_seconds, wpm: 0 },
@@ -39,12 +43,10 @@ export async function fetchMatchHistory(
   userId: string,
 ): Promise<MatchRowData[]> {
   const sb = requireSupabase()
-  const { data, error } = await sb
-    .from("matches")
-    .select("*")
-    .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
-    .order("created_at", { ascending: false })
-    .limit(50)
+  // get_match_history is a security-definer RPC: it scopes rows to the caller
+  // (auth.uid()) and resolves opponent display names, which a direct `matches`
+  // read cannot do under select-own profiles RLS.
+  const { data, error } = await sb.rpc("get_match_history")
   if (error) throw error
   return ((data ?? []) as MatchRecord[]).map((m) => toMatchRow(m, userId))
 }

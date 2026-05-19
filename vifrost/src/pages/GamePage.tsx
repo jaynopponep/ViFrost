@@ -167,6 +167,20 @@ export function GamePage() {
             opponentPct={match.opponentPct}
             playerStyle={endStyle.player}
             opponentStyle={endStyle.opponent}
+            playerBonuses={
+              match.finalBonuses?.player ?? {
+                keybind: 0,
+                completion: 0,
+                finish: 0,
+              }
+            }
+            opponentBonuses={
+              match.finalBonuses?.opponent ?? {
+                keybind: 0,
+                completion: 0,
+                finish: 0,
+              }
+            }
           />
         )}
       </div>

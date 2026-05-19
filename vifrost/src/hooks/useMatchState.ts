@@ -5,6 +5,12 @@ const DEFAULT_TOTAL_TESTS = 5;
 
 export type MatchPhase = "waiting" | "countdown" | "live" | "ended";
 
+export interface BonusBreakdown {
+  keybind: number;
+  completion: number;
+  finish: number;
+}
+
 export interface MatchState {
   phase: MatchPhase;
   playerReady: boolean;
@@ -14,7 +20,9 @@ export interface MatchState {
   opponentTests: boolean[];
   totalTests: number;
   winner: "player" | "opponent" | "tie" | null;
-  finalKeybindScores: { player: number; opponent: number } | null;
+  // the three end-of-match bonuses per side. these (plus raw score) are what
+  // actually decide win/loss, so the banner surfaces them.
+  finalBonuses: { player: BonusBreakdown; opponent: BonusBreakdown } | null;
   submitted: boolean;
   playerScore: number;
   opponentScore: number;
@@ -36,7 +44,7 @@ export function initialMatchState(totalTests: number): MatchState {
     opponentTests: [],
     totalTests,
     winner: null,
-    finalKeybindScores: null,
+    finalBonuses: null,
     submitted: false,
     playerScore: 0,
     opponentScore: 0,
@@ -124,9 +132,17 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
                 : envelope.payload.winner === "tie"
                   ? "tie"
                   : "opponent",
-            finalKeybindScores: {
-              player: envelope.payload.playerKeybindScore,
-              opponent: envelope.payload.opponentKeybindScore,
+            finalBonuses: {
+              player: {
+                keybind: envelope.payload.playerKeybindScore,
+                completion: envelope.payload.playerCompletionBonus,
+                finish: envelope.payload.playerFinishBonus,
+              },
+              opponent: {
+                keybind: envelope.payload.opponentKeybindScore,
+                completion: envelope.payload.opponentCompletionBonus,
+                finish: envelope.payload.opponentFinishBonus,
+              },
             },
           };
 
