@@ -1,13 +1,12 @@
 import { useMemo, useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import type { AppOutletContext } from "../App"
-import matchHistoryData from "../data/matchHistory.json"
+import { useAuth } from "@/contexts/AuthContext"
+import { useMatchHistory } from "@/hooks/useMatchHistory"
 import { MatchFilterBar, type MatchFilter } from "./match/MatchFilterBar"
 import { MatchRow, type MatchRowData } from "./match/MatchRow"
 import { StatBlock } from "./ui/stat-block"
 import { TileHeader } from "./ui/tile-header"
-
-const MATCHES: MatchRowData[] = matchHistoryData as MatchRowData[]
 
 const COLUMN_GRID =
   "grid grid-cols-[72px_260px_1fr_90px_80px_80px_24px] gap-5 px-5 pb-2 pt-0"
@@ -30,11 +29,13 @@ function applyFilter(filter: MatchFilter, rows: MatchRowData[]): MatchRowData[] 
 export function MatchHistoryTile() {
   const { username } = useOutletContext<AppOutletContext>()
   const safeName = username ?? "Guest"
+  const { user } = useAuth()
+  const { data: MATCHES = [], isLoading } = useMatchHistory(user?.id)
 
   const [filter, setFilter] = useState<MatchFilter>("All")
-  const [expandedId, setExpandedId] = useState<string | null>(MATCHES[0]?.id ?? null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const filtered = useMemo(() => applyFilter(filter, MATCHES), [filter])
+  const filtered = useMemo(() => applyFilter(filter, MATCHES), [filter, MATCHES])
 
   const summary = useMemo(() => {
     const wins = MATCHES.filter((m) => m.outcome === "W").length
@@ -61,7 +62,7 @@ export function MatchHistoryTile() {
       bestDiff,
       winRate,
     }
-  }, [])
+  }, [MATCHES])
 
   const streak = useMemo(() => {
     // Leading streak: consecutive Ws from index 0.
@@ -71,7 +72,15 @@ export function MatchHistoryTile() {
       else break
     }
     return n
-  }, [])
+  }, [MATCHES])
+
+  if (isLoading) {
+    return (
+      <div className="flex w-full flex-col gap-7">
+        <TileHeader title="Match History" subtitle="Loading…" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex w-full flex-col gap-7">

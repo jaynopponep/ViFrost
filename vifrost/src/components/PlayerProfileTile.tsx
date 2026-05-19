@@ -1,8 +1,8 @@
 import type { User } from "@supabase/supabase-js"
 import { useNavigate } from "react-router-dom"
 import { displayNameFromUser } from "@/lib/displayNameFromUser"
-import leaderboardData from "../data/globalLeaderboard.json"
 import profileData from "../data/profile.json"
+import { useProfile } from "@/contexts/ProfileContext"
 import { Achievement } from "./profile/Achievement"
 import { ActivityHeatmap } from "./profile/ActivityHeatmap"
 import { CommandBar } from "./profile/CommandBar"
@@ -49,24 +49,25 @@ function bioFromUser(user: User): string {
   return "New ViFrost player — your stats and achievements will appear as you play."
 }
 
-type LeaderboardRowLite = { player: string; rating: number }
-
-const LIFETIME_WINS = 72
-const LIFETIME_LOSSES = 41
-const LIFETIME_GAMES = LIFETIME_WINS + LIFETIME_LOSSES
-const LIFETIME_WIN_RATE = Math.round((LIFETIME_WINS / LIFETIME_GAMES) * 100)
-
 const ACHIEVEMENTS_EARNED = profileData.achievements.filter((a) => a.earned).length
 const ACHIEVEMENTS_TOTAL = 32 // static "X / 32" display — the full set is aspirational
 
 export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
   const navigate = useNavigate()
-  const rows = leaderboardData as LeaderboardRowLite[]
+  const { profile } = useProfile()
+
+  // live stats from the signed-in user's profile; fall back to zero until loaded
+  const liveWins = profile?.wins ?? 0
+  const liveLosses = profile?.losses ?? 0
+  const liveTies = profile?.ties ?? 0
+  const liveGames = liveWins + liveLosses + liveTies
+  const liveWinRate = liveGames > 0 ? Math.round((liveWins / liveGames) * 100) : 0
+  const liveRating = profile?.rating ?? 400
+  const livePeak = profile?.peak_rating ?? 400
+  const liveStreak = profile?.current_streak ?? 0
 
   if (user) {
     const displayName = displayNameFromUser(user)
-    const myRow = rows.find((r) => r.player === displayName)
-    const rating = myRow?.rating ?? 1000
     const handle = accountHandleFromEmail(user.email ?? undefined)
     const joined = joinedFromUser(user.created_at)
     const bio = bioFromUser(user)
@@ -78,19 +79,28 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
           handle={handle}
           joined={joined}
           bio={bio}
-          rating={rating}
+          rating={liveRating}
         />
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <StatBlock
             label="Rating"
-            value={myRow ? rating.toLocaleString("en-US") : "—"}
-            sub={myRow ? "From leaderboard data" : "Unranked · play ranked to get listed"}
+            value={liveRating.toLocaleString("en-US")}
+            sub={`Peak ${livePeak.toLocaleString("en-US")}`}
             accent
           />
           <StatBlock label="Percentile" value="—" sub="No ranked data yet" />
-          <StatBlock label="Win rate" value="—" sub="No ranked matches yet" />
-          <StatBlock label="Streak" value="—" sub="Win streaks show here" accent />
+          <StatBlock
+            label="Win Rate"
+            value={liveGames > 0 ? `${liveWinRate}%` : "—"}
+            sub={liveGames > 0 ? `${liveWins}W · ${liveLosses}L · ${liveTies}T` : "No ranked matches yet"}
+          />
+          <StatBlock
+            label="Streak"
+            value={liveStreak > 0 ? `${liveStreak}W` : "—"}
+            sub="Win streaks show here"
+            accent
+          />
           <StatBlock label="APM" value="—" sub="After your first games" />
           <StatBlock label="Avg. match" value="—" sub="Median duration" />
         </div>
@@ -123,8 +133,7 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
     )
   }
 
-  const myRow = rows.find((r) => r.player === username)
-  const rating = myRow?.rating ?? 1482
+  const rating = liveRating
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -140,7 +149,7 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
         <StatBlock
           label="Rating"
           value={rating.toLocaleString("en-US")}
-          sub={`Peak ${profileData.peak.toLocaleString("en-US")}`}
+          sub={`Peak ${livePeak.toLocaleString("en-US")}`}
           accent
         />
         <StatBlock
@@ -150,13 +159,13 @@ export function PlayerProfileTile({ username, user }: PlayerProfileTileProps) {
         />
         <StatBlock
           label="Win Rate"
-          value={`${LIFETIME_WIN_RATE}%`}
-          sub={`${LIFETIME_WINS}W · ${LIFETIME_LOSSES}L`}
+          value={liveGames > 0 ? `${liveWinRate}%` : "—"}
+          sub={liveGames > 0 ? `${liveWins}W · ${liveLosses}L · ${liveTies}T` : "No ranked matches yet"}
         />
         <StatBlock
           label="Streak"
-          value={`${profileData.streak}W`}
-          sub="current · peak 8W"
+          value={liveStreak > 0 ? `${liveStreak}W` : "—"}
+          sub="current streak"
           accent
         />
         <StatBlock

@@ -31,6 +31,12 @@ const profile: Profile = {
   status: "approved",
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-01-02T00:00:00Z",
+  rating: 400,
+  peak_rating: 400,
+  wins: 0,
+  losses: 0,
+  ties: 0,
+  current_streak: 0,
 };
 
 describe("persistedProfile", () => {

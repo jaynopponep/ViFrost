@@ -10,6 +10,39 @@ export interface Profile {
   status: UserStatus
   created_at: string
   updated_at: string
+  rating: number
+  peak_rating: number
+  wins: number
+  losses: number
+  ties: number
+  current_streak: number
+}
+
+export interface MatchRecord {
+  id: string
+  created_at: string
+  room_id: string
+  mode: "ranked" | "casual"
+  player1_id: string
+  player2_id: string
+  player1_score: number
+  player2_score: number
+  winner_id: string | null
+  player1_rating_before: number
+  player1_rating_after: number
+  player2_rating_before: number
+  player2_rating_after: number
+  challenge: string
+  duration_seconds: number
+}
+
+export interface LeaderboardRow {
+  id: string
+  display_name: string
+  rating: number
+  wins: number
+  losses: number
+  ties: number
 }
 
 export interface AdminStats {

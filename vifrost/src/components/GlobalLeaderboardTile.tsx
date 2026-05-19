@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
-import globalLeaderboardData from "../data/globalLeaderboard.json"
+import { useLeaderboard } from "@/hooks/useLeaderboard"
 import {
   LeaderboardRow,
   type LeaderboardRowData,
@@ -13,12 +13,6 @@ import { ProgressiveBlur } from "./ui/progressive-blur"
 export interface GlobalLeaderboardTileProps {
   currentUser: string
 }
-
-const ALL_ROWS: LeaderboardRowData[] =
-  globalLeaderboardData as LeaderboardRowData[]
-
-const TOP_THREE = ALL_ROWS.slice(0, 3)
-const REST = ALL_ROWS.slice(3)
 
 const PAGE_SIZE = 20
 
@@ -35,6 +29,24 @@ export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProp
   const scrollRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const myRowRef = useRef<HTMLDivElement>(null)
+
+  const { data: leaderboardRows = [], isLoading } = useLeaderboard()
+
+  // adapt leaderboard rows to the shape LeaderboardRow/PodiumCard sub-components expect;
+  // rank is 1-based index; fields with no real backing (country, apm, change) use neutral values.
+  const ALL_ROWS: LeaderboardRowData[] = leaderboardRows.map((r, i) => ({
+    id: i + 1,
+    player: r.display_name,
+    country: "",
+    wins: r.wins,
+    losses: r.losses,
+    rating: r.rating,
+    apm: 0,
+    change: 0,
+  }))
+
+  const TOP_THREE = ALL_ROWS.slice(0, 3)
+  const REST = ALL_ROWS.slice(3)
 
   const myIndex = REST.findIndex((r) => r.player === currentUser)
   const myRowInRest = myIndex >= 0 ? REST[myIndex] : undefined
@@ -55,7 +67,15 @@ export function GlobalLeaderboardTile({ currentUser }: GlobalLeaderboardTileProp
     )
     io.observe(sentinel)
     return () => io.disconnect()
-  }, [visibleCount])
+  }, [visibleCount, REST.length])
+
+  if (isLoading) {
+    return (
+      <div className="flex w-full flex-col gap-6">
+        <TileHeader title="Leaderboard" subtitle="Loading…" />
+      </div>
+    )
+  }
 
   const jumpToMe = () => {
     if (!myRowInRest || myIndex < 0) return

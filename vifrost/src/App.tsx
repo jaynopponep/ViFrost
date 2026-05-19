@@ -17,7 +17,7 @@ export interface AppOutletContext {
   wsStatus: WebSocketStatus;
   connectWs: () => void;
   isWsOpen: boolean;
-  sendJoinQueue: (username: string) => void;
+  sendJoinQueue: (username: string, token: string, mode: "ranked" | "casual") => void;
   sendKeybindEvent: (kind: KeybindEventKind, count?: number) => void;
   sendRunCode: (code: string) => void;
   sendReady: () => void;
