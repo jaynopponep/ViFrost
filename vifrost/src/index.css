@@ -57,7 +57,7 @@
   --colorSurfaceAlt: #e2eeec;
   --colorBorder: #b8d0cc;
   --colorText: #0f2832;
-  --colorTextMuted: #4a7a72;
+  --colorTextMuted: #38605a;
   --colorAccent: #646cff;
   --colorAccentHover: #535bf2;
   --colorDanger: #ef4444;
@@ -241,3 +241,45 @@ button:focus-visible {
     @apply font-sans;
   }
 }
+
+/* route page-transition overlay (see src/providers/TransitionProvider.tsx).
+   strokes point at theme tokens, so the colours auto-swap with .dark. */
+:root {
+  --transition-stroke-1: var(--colorPink);
+  --transition-stroke-2: var(--colorCyan);
+}
+
+.transition-svg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.transition-svg--active {
+  pointer-events: auto;
+}
+
+.transition-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: var(--colorMain);
+  opacity: 0;
+}
+
+.transition-svg svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%) scale(1.5);
+}
+
+.transition-svg path {
+  stroke-dashoffset: 99999;
+  stroke-dasharray: 99999;
+}
+
