@@ -1,0 +1,43 @@
+.opp-panel {
+  background: var(--colorSurface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* keep the opponent panel flush with the editor / player panel in dark. */
+.dark .opp-panel {
+  background: var(--colorMain);
+}
+
+.opp-panel__blur {
+  flex: 1;
+  min-height: 0;
+  filter: blur(7px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.opp-panel__blur > div,
+.opp-panel__blur .cm-theme,
+.opp-panel__blur .cm-editor {
+  height: 100%;
+}
+
+.opp-panel__blur .cm-scroller {
+  overflow: auto;
+}
+
+.opp-panel__empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--colorTextMuted);
+  filter: blur(2px);
+}

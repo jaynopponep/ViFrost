@@ -1,26 +1,29 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import TransitionProvider from "./providers/TransitionProvider";
 import { AuthRedirect } from "./components/guards/AuthRedirect";
 import { useAuth } from "./contexts/AuthContext";
 import { useProfile } from "./contexts/ProfileContext";
 import { displayNameFromUser } from "./lib/displayNameFromUser";
 import { useWebSocket } from "./hooks/useWebSocket";
-import type { Envelope, WebSocketStatus } from "./hooks/useWebSocket";
+import type { ServerMessage, WebSocketStatus } from "./hooks/useWebSocket";
+import type { KeybindEventKind } from "./hooks/vimPenalty";
 
 const USERNAME_KEY = "vifrost_username";
 
 export interface AppOutletContext {
-  username: string | null
-  setUsername: (name: string) => void
-  wsStatus: WebSocketStatus
-  connectWs: () => void
-  isWsOpen: boolean
-  sendJoinQueue: (username: string) => void
-  sendScoreUpdate: (delta: number, keybindDelta?: number) => void
-  sendRunCode: (code: string) => void
-  sendSubmit: () => void
-  lastMessage: Envelope | null
+  username: string | null;
+  setUsername: (name: string) => void;
+  wsStatus: WebSocketStatus;
+  connectWs: () => void;
+  isWsOpen: boolean;
+  sendJoinQueue: (username: string, token: string, mode: "ranked" | "casual") => void;
+  sendKeybindEvent: (kind: KeybindEventKind, count?: number) => void;
+  sendRunCode: (code: string) => void;
+  sendReady: () => void;
+  sendSubmit: () => void;
+  lastMessage: ServerMessage | null;
 }
 
 function App() {
@@ -46,15 +49,16 @@ function App() {
     lastMessage,
     connect,
     sendJoinQueue,
-    sendScoreUpdate,
+    sendKeybindEvent,
     sendRunCode,
+    sendReady,
     sendSubmit,
   } = useWebSocket({
     connectImmediately: false,
   });
 
   return (
-    <>
+    <TransitionProvider>
       <AuthRedirect />
       <Navbar />
       <Outlet
@@ -66,14 +70,15 @@ function App() {
             connectWs: connect,
             isWsOpen: status === "open",
             sendJoinQueue,
-            sendScoreUpdate,
+            sendKeybindEvent,
             sendRunCode,
+            sendReady,
             sendSubmit,
             lastMessage,
           } satisfies AppOutletContext
         }
       />
-    </>
+    </TransitionProvider>
   );
 }
 
