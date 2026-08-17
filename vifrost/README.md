@@ -1,6 +1,41 @@
-# React + TypeScript + Vite
+# ViFrost Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript client for ViFrost, built with Vite.
+
+## Prerequisites
+
+- Node.js 20+ and npm
+- A [Supabase](https://supabase.com) project (for auth, profiles, and leaderboard data)
+- The ViFrost backend running for matchmaking/gameplay features — see [server/README.md](../server/README.md)
+
+## Installation
+
+```bash
+cd vifrost
+npm install
+```
+
+`VITE_SERVER_URL` is optional — it defaults to `ws://<current-host>:8080/ws` if unset. Auth/profile/leaderboard features are disabled at runtime (not a crash) if the Supabase variables are missing.
+
+## Running locally
+
+```bash
+npm run dev
+```
+
+Starts the Vite dev server at `http://localhost:5173`.
+
+## Other scripts
+
+```bash
+npm run build    # type-check (tsc -b) and produce a production build in dist/
+npm run preview  # serve the production build locally
+npm run lint     # run ESLint
+```
+
+---
+
+This project was scaffolded from the React + TypeScript + Vite template, which provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
 
