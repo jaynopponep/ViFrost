@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { Avatar } from "../ui/avatar"
 import { ChangeBadge } from "../ui/change-badge"
 import { TierBadge } from "../ui/tier-badge"
@@ -9,6 +10,7 @@ const MEDAL_COLORS: Record<1 | 2 | 3, string> = {
 }
 
 export interface PodiumCardRow {
+  userId: string
   player: string
   country: string
   rating: number
@@ -72,7 +74,12 @@ export function PodiumCard({ row, position }: PodiumCardProps) {
         <Avatar name={row.player} size={44} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-mono text-sm text-[var(--colorText)]">
-            {row.player}
+            <Link
+              to={`/profile/${row.userId}`}
+              className="hover:text-[var(--colorCyan)] hover:underline underline-offset-4 focus-visible:text-[var(--colorCyan)]"
+            >
+              {row.player}
+            </Link>
           </div>
           <div className="mt-0.5 flex items-center gap-2 font-mono text-[11px] text-[var(--colorTextMuted)]">
             <span>{row.country}</span>
