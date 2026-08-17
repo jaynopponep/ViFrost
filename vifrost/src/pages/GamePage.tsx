@@ -1,235 +1,212 @@
-import { useState, useEffect, useCallback } from "react";
-import { useLocation, Navigate } from "react-router-dom";
-import { useOutletContext } from "react-router-dom";
-import { GameScreen } from "../components/GameScreen";
-import { Avatar } from "../components/Avatar";
-import { useKeybindListener } from "../hooks/useKeybindListener";
-import type {
-  GameStartPayload,
-  ScoreUpdateServerPayload,
-  RunResultPayload,
-  TimerTickPayload,
-  GameEndPayload,
-} from "../hooks/useWebSocket";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useLocation, Navigate, useOutletContext } from "react-router-dom";
 import type { AppOutletContext } from "../App";
+import type { GameStartPayload } from "../hooks/useWebSocket";
+import { useMatchState } from "../hooks/useMatchState";
+import { useKeybindListener } from "../hooks/useKeybindListener";
+import { ProblemDialog } from "../components/match/ProblemDialog";
+import { MatchScoreboard } from "../components/match/MatchScoreboard";
+import { TestDetailPopover } from "../components/match/TestDetailPopover";
+import { PlayerCodePanel } from "../components/match/PlayerCodePanel";
+import { OpponentCodePanel } from "../components/match/OpponentCodePanel";
+import { MatchEndBanner } from "../components/match/MatchEndBanner";
+import { matchEndStyleScores } from "../components/match/matchEndStats";
 import "./GamePage.css";
 
 export function GamePage() {
   const location = useLocation();
-  const { username, sendScoreUpdate, sendRunCode, sendSubmit, lastMessage } =
-    useOutletContext<AppOutletContext>();
+  const {
+    username,
+    sendKeybindEvent,
+    sendRunCode,
+    sendReady,
+    sendSubmit,
+    lastMessage,
+    wsStatus,
+  } = useOutletContext<AppOutletContext>();
+
   const gameData = location.state as GameStartPayload | null;
 
   const [editorValue, setEditorValue] = useState(gameData?.snippet ?? "");
-  const [playerScore, setPlayerScore] = useState(0);
-  const [opponentScore, setOpponentScore] = useState(0);
-  const [runResults, setRunResults] = useState<boolean[] | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(gameData?.duration ?? 120);
-  const [gameResult, setGameResult] = useState<"win" | "lose" | "tie" | null>(
-    null,
-  );
-  const [bonusStack, setBonusStack] = useState<
-    { label: string; amount: number; side: "player" | "opponent" }[]
-  >([]);
+  const [runResults, setRunResults] = useState<boolean[] | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
+  const [problemForceOpen, setProblemForceOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
-  const { attachVimModeListener, scoreExtension } =
-    useKeybindListener(sendScoreUpdate);
+  const infoBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  const match = useMatchState(gameData, lastMessage);
+  const {
+    attachVimModeListener,
+    scoreExtension,
+    vimDeltas,
+    dismissVimDelta,
+  } = useKeybindListener(
+    sendKeybindEvent,
+    match.phase === "live" && !match.submitted,
+  );
 
   useEffect(() => {
-    if (!lastMessage) return;
-
-    const handlers: Partial<Record<string, () => (() => void) | void>> = {
-      score_update: () => {
-        const payload = lastMessage.payload as ScoreUpdateServerPayload;
-        setPlayerScore(payload.myScore);
-        setOpponentScore(payload.opponentScore);
-      },
-      run_result: () => {
-        const payload = lastMessage.payload as RunResultPayload;
-        setRunResults(payload.results);
-        setIsRunning(false);
-      },
-      timer_tick: () => {
-        const payload = lastMessage.payload as TimerTickPayload;
-        setTimeLeft(payload.remaining);
-      },
-      game_end: () => {
-        const payload = lastMessage.payload as GameEndPayload;
-        setGameResult(payload.tied ? "tie" : payload.won ? "win" : "lose");
-
-        const rawPlayer = payload.score - payload.keybindBonus - payload.completionBonus - payload.finishBonus;
-        const rawOpp = payload.opponentScore - payload.oppKeybindBonus - payload.oppCompletionBonus - payload.oppFinishBonus;
-        setPlayerScore(rawPlayer);
-        setOpponentScore(rawOpp);
-
-        const steps = [
-          { my: payload.keybindBonus,    opp: payload.oppKeybindBonus,    label: "efficient keybind usage" },
-          { my: payload.completionBonus, opp: payload.oppCompletionBonus, label: "highest completion" },
-          { my: payload.finishBonus,     opp: payload.oppFinishBonus,     label: "finishing early" },
-        ];
-
-        const timeouts: number[] = [];
-        let delay = 1000;
-        for (const step of steps) {
-          const { my, opp, label } = step;
-          timeouts.push(window.setTimeout(() => {
-            setPlayerScore((prev) => prev + my);
-            setOpponentScore((prev) => prev + opp);
-            const amount = my || opp;
-            if (amount > 0) {
-              setBonusStack((prev) => [...prev, { label, amount, side: my > 0 ? "player" : "opponent" }]);
-            }
-          }, delay));
-          delay += 1000;
-        }
-        return () => timeouts.forEach(clearTimeout);
-      },
-    };
-
-    return handlers[lastMessage.type]?.();
+    if (lastMessage?.type === "run_result") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI state with websocket event stream
+      setRunResults(lastMessage.payload.results);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI state with websocket event stream
+      setRunError(lastMessage.payload.error ?? null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI state with websocket event stream
+      setIsRunning(false);
+    }
   }, [lastMessage]);
 
+  useEffect(() => {
+    // a run only clears isRunning via run_result. if the match ends or the
+    // socket drops mid-run that frame never arrives, so clear it here too,
+    // otherwise the run button stays disabled until a reload.
+    if (match.phase === "ended" || wsStatus !== "open") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing UI state with match/socket lifecycle
+      setIsRunning(false);
+    }
+  }, [match.phase, wsStatus]);
+
   const handleRun = useCallback(() => {
+    if (match.phase !== "live" || match.submitted) return;
+    setRunResults(null);
+    setRunError(null);
     setIsRunning(true);
     sendRunCode(editorValue);
-  }, [sendRunCode, editorValue]);
+  }, [match.phase, match.submitted, sendRunCode, editorValue]);
+
+  const { markPlayerReady, markSubmitted } = match;
+  const handleReadyClick = useCallback(() => {
+    markPlayerReady();
+    sendReady();
+  }, [markPlayerReady, sendReady]);
 
   const handleSubmit = useCallback(() => {
-    setIsSubmitted(true);
+    if (match.phase !== "live" || match.submitted) return;
+    markSubmitted();
     sendSubmit();
-  }, [sendSubmit]);
-
-  const flipResult = (r: typeof gameResult) => {
-    return r === "win" ? "lose" : r === "lose" ? "win" : r;
-  };
-
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-  };
+  }, [match.phase, match.submitted, markSubmitted, sendSubmit]);
 
   if (!gameData) {
     return <Navigate to="/" replace />;
   }
 
+  const problemTitle = gameData.problemTitle ?? "Untitled problem";
+  const problemStatement =
+    gameData.problemStatement ?? `Fix the bug:\n\n${gameData.snippet}`;
+
+  const dialogOpen =
+    match.phase === "waiting" ||
+    match.phase === "countdown" ||
+    problemForceOpen;
+
+  const dialogReadOnly = match.phase !== "waiting" && match.phase !== "countdown";
+
+  // per-player accumulated style for the end banner, identical to the live
+  // scoreboard's vim figure (never the comparative keybind bonus).
+  const endStyle =
+    match.phase === "ended" && match.winner
+      ? matchEndStyleScores({
+          playerVim: match.playerVim,
+          opponentVim: match.opponentVim,
+        })
+      : null;
+
   return (
     <main className="game">
-      <div className="game-arena">
-        <div className="game-arena-header">
-          <div className="game-arena-header-player">
-            {username && (
-              <Avatar
-                name={username}
-                side="player"
-                color={gameData.playerColor}
-                result={gameResult}
-              />
-            )}
-          </div>
-          <div className="game-arena-header-center">
-            <div
-              className={`game-timer${timeLeft <= 12 ? " game-timer-urgent" : ""}`}
-            >
-              <span className="game-timer-dot" />
-              <span className="game-timer-value">{formatTime(timeLeft)}</span>
-            </div>
-            <div className="game-score-row">
-              <div className="game-bonus-slot game-bonus-slot--left">
-                {bonusStack
-                  .filter((b) => b.side === "player")
-                  .map((b, i) => (
-                    <span key={i} className="game-bonus-label">
-                      +{b.amount} {b.label}
-                    </span>
-                  ))}
-              </div>
-              <div className="game-score">
-                <span className="game-score-label">SCORE</span>
-                <span className="game-score-value">
-                  {playerScore} - {opponentScore}
-                </span>
-              </div>
-              <div className="game-bonus-slot game-bonus-slot--right">
-                {bonusStack
-                  .filter((b) => b.side === "opponent")
-                  .map((b, i) => (
-                    <span key={i} className="game-bonus-label">
-                      +{b.amount} {b.label}
-                    </span>
-                  ))}
-              </div>
-            </div>
-          </div>
-          <div className="game-arena-header-opponent">
-            <Avatar
-              name={gameData.opponentName || "Opponent"}
-              side="opponent"
-              color={gameData.opponentColor}
-              result={flipResult(gameResult)}
-            />
-          </div>
+      <div className="game__stage">
+        <MatchScoreboard
+          ref={infoBtnRef}
+          player={{
+            name: username ?? "you",
+            color: gameData.playerColor,
+            pct: match.playerPct,
+            // both vim figures are derived from the server-authoritative
+            // score (see deriveVim), so a client cannot inflate its own.
+            vim: match.playerVim,
+          }}
+          opponent={{
+            name: gameData.opponentName ?? "opponent",
+            color: gameData.opponentColor,
+            pct: match.opponentPct,
+            vim: match.opponentVim,
+          }}
+          onInfoClick={() => setPopoverOpen((v) => !v)}
+          onReopenProblem={() => setProblemForceOpen(true)}
+          vimDeltas={vimDeltas}
+          onDismissVimDelta={dismissVimDelta}
+        />
+
+        <div className="game__panels">
+          <PlayerCodePanel
+            value={editorValue}
+            onChange={setEditorValue}
+            editable={match.phase === "live" && !match.submitted}
+            onCreateEditor={attachVimModeListener}
+            scoreExtension={scoreExtension}
+            onRun={handleRun}
+            isRunning={isRunning}
+            runResults={runResults}
+            runError={runError}
+            onSubmit={handleSubmit}
+            submitted={match.submitted}
+          />
+          <OpponentCodePanel
+            starterCode={gameData.snippet}
+            opponentName={gameData.opponentName ?? "opponent"}
+          />
         </div>
 
-        <div className="game-arena-screens">
-          <div className="game-player-screen">
-            <GameScreen
-              value={editorValue}
-              onChange={setEditorValue}
-              onCreateEditor={attachVimModeListener}
-              vimMode
-              readOnly={isSubmitted}
-              height="400px"
-              width="600px"
-              theme="dark"
-              extensions={scoreExtension}
-            />
-            <div className="game-player-footer">
-              {runResults && (
-                <div className="game-run-results">
-                  {runResults.map((passed, i) => (
-                    <span
-                      key={i}
-                      className={`game-run-result game-run-result-${passed ? "pass" : "fail"}`}
-                    >
-                      T{i + 1} {passed ? "✓" : "✗"}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <button
-                className="game-run-btn"
-                onClick={handleRun}
-                disabled={isRunning || isSubmitted}
-              >
-                {isRunning ? "..." : "RUN"}
-              </button>
-              <button
-                className="game-submit-btn"
-                onClick={handleSubmit}
-                disabled={isSubmitted}
-              >
-                SUBMIT
-              </button>
-            </div>
-          </div>
-          <div className="game-opponent-screen">
-            <GameScreen
-              value={gameData.snippet}
-              readOnly
-              vimMode={false}
-              height="400px"
-              width="600px"
-              theme="dark"
-            />
-            <div className="game-opponent-overlay">
-              <span className="game-opponent-overlay-text">OPPONENT</span>
-            </div>
-          </div>
-        </div>
+        {endStyle && match.winner && (
+          <MatchEndBanner
+            winner={match.winner}
+            playerName={username ?? "you"}
+            opponentName={gameData.opponentName ?? "opponent"}
+            playerPct={match.playerPct}
+            opponentPct={match.opponentPct}
+            playerStyle={endStyle.player}
+            opponentStyle={endStyle.opponent}
+            playerBonuses={
+              match.finalBonuses?.player ?? {
+                keybind: 0,
+                completion: 0,
+                finish: 0,
+              }
+            }
+            opponentBonuses={
+              match.finalBonuses?.opponent ?? {
+                keybind: 0,
+                completion: 0,
+                finish: 0,
+              }
+            }
+          />
+        )}
       </div>
+
+      <ProblemDialog
+        open={dialogOpen}
+        problemTitle={problemTitle}
+        problemStatement={problemStatement}
+        playerReady={match.playerReady}
+        opponentReady={match.opponentReady}
+        countdown={match.countdown}
+        onReadyClick={dialogReadOnly ? undefined : handleReadyClick}
+        onOpenChange={(open) => {
+          if (!open) setProblemForceOpen(false);
+        }}
+      />
+
+      <TestDetailPopover
+        open={popoverOpen}
+        onOpenChange={setPopoverOpen}
+        anchorRef={infoBtnRef}
+        playerTests={match.playerTests}
+        opponentTests={match.opponentTests}
+        playerName={username ?? "you"}
+        opponentName={gameData.opponentName ?? "opponent"}
+      />
     </main>
   );
 }

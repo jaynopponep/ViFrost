@@ -111,32 +111,17 @@ export function MatchDetail({
       <Stat label="WPM" a={you.wpm} b={opp.wpm} aWins={you.wpm > opp.wpm} />
 
       <div className="mt-4 flex justify-center gap-2.5">
-        <button
-          type="button"
-          onClick={() => {}}
-          className="cursor-pointer rounded-[5px] border px-3.5 py-[7px] font-mono text-[12px]"
-          style={{
-            backgroundColor: "var(--colorAccentSoft)",
-            borderColor: "var(--colorAccentBorder)",
-            color: "var(--colorCyan)",
-          }}
-        >
-          ▶ Replay
-        </button>
-        <button
-          type="button"
-          onClick={() => {}}
-          className="cursor-pointer rounded-[5px] border border-[color:var(--colorBorder)] px-3.5 py-[7px] font-mono text-[12px] text-[var(--colorTextMuted)]"
-        >
-          View solution
-        </button>
-        <button
-          type="button"
-          onClick={() => {}}
-          className="cursor-pointer rounded-[5px] border border-[color:var(--colorBorder)] px-3.5 py-[7px] font-mono text-[12px] text-[var(--colorTextMuted)]"
-        >
-          Rematch
-        </button>
+        {["▶ Replay", "View solution", "Rematch"].map((label) => (
+          <button
+            key={label}
+            type="button"
+            disabled
+            title="Coming soon"
+            className="cursor-not-allowed rounded-[5px] border border-[color:var(--colorBorder)] px-3.5 py-[7px] font-mono text-[12px] text-[var(--colorTextMuted)] opacity-50"
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   )
