@@ -32,19 +32,26 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
-	results := RunTests(body.Code, body.Tests)
+	results, runErr := RunTests(body.Code, body.Tests)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"results": results})
+	resp := map[string]interface{}{"results": results}
+	if runErr != "" {
+		resp["error"] = runErr
+	}
+	json.NewEncoder(w).Encode(resp)
 }
 
 func main() {
+	loadDotEnv(".env")
+	cfg := mustSupabaseConfig()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = DefaultPort
 	}
 	addr := ":" + port
 
-	hub := NewHub()
+	hub := NewHub(cfg)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ServeWs(hub, w, r)
 	})
