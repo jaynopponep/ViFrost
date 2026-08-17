@@ -35,6 +35,15 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	player.readPump(hub)
 }
 
+// modeOrDefault normalizes the client-supplied mode; anything other than
+// "ranked" falls back to "casual" (the gentler-points pool).
+func modeOrDefault(m string) string {
+	if m == "ranked" {
+		return "ranked"
+	}
+	return "casual"
+}
+
 func (p *Player) readPump(hub *Hub) {
 	defer func() {
 		p.mu.Lock()
@@ -61,16 +70,49 @@ func (p *Player) readPump(hub *Hub) {
 		}
 		switch e.Type {
 		case MsgJoinQueue:
-			if m, ok := e.Payload.(map[string]interface{}); ok {
-				if name, ok := m["username"].(string); ok {
-					p.Username = name
-				}
+			m, ok := e.Payload.(map[string]interface{})
+			if !ok {
+				sendErr(p, "invalid join_queue payload")
+				continue
+			}
+			if name, ok := m["username"].(string); ok {
+				p.Username = name
+			}
+			// guarded: the matchmaking goroutine freezes this under p.mu at
+			// Enqueue. an unlocked write here races that read (handler.go and
+			// matchmaking are separate goroutines on the same *Player).
+			rawMode := asString(m["mode"])
+			p.mu.Lock()
+			p.Mode = modeOrDefault(rawMode)
+			p.mu.Unlock()
+			// diagnostic: ground truth for what each client actually queued.
+			LogInfo("join_queue player=%s raw=%q normalized=%s", p.ID, rawMode, p.Mode)
+			// identity: the JWT sub is the player's profiles.id. without a
+			// valid token the match cannot be attributed, so refuse to queue.
+			token := asString(m["token"])
+			uid, verr := hub.auth.verify(token)
+			if verr != nil {
+				LogErr("join_queue auth failed for %s: %v", p.ID, verr)
+				sendErr(p, "authentication required to queue")
+				continue
+			}
+			p.UserID = uid
+			// if still in a room, end it first. otherwise the abandoned room
+			// keeps running and broadcasts old game messages into this
+			// player's channel after they join a new match.
+			if old := p.room(); old != nil {
+				old.EndGame()
 			}
 			ResetStateToRequeue(p)
 			hub.Enqueue(p)
 		case MsgKeybind:
-			if p.Room == nil {
+			room := p.room()
+			if room == nil {
 				sendErr(p, "not in a game")
+				continue
+			}
+			if !room.AcceptsGameplay() {
+				sendErr(p, "match not in progress")
 				continue
 			}
 			payload, ok := parseKeybindPayload(e.Payload)
@@ -78,21 +120,39 @@ func (p *Player) readPump(hub *Hub) {
 				sendErr(p, "invalid keybind payload")
 				continue
 			}
-			p.Room.HandleKeybind(p, payload)
-		case MsgScoreUpdate:
-			if p.Room == nil {
+			room.HandleKeybind(p, payload)
+		case MsgKeybindEvent:
+			room := p.room()
+			if room == nil {
 				sendErr(p, "not in a game")
 				continue
 			}
-			delta, keybindDelta, ok := parseScoreUpdatePayload(e.Payload)
+			if !room.AcceptsGameplay() {
+				sendErr(p, "match not in progress")
+				continue
+			}
+			// a player who already submitted is locked out of further scoring.
+			if p.hasSubmitted() {
+				continue
+			}
+			kind, count, ok := parseKeybindEventPayload(e.Payload)
 			if !ok {
-				sendErr(p, "invalid score_update payload")
+				sendErr(p, "invalid keybind_event payload")
 				continue
 			}
-			p.Room.HandleScoreUpdate(p, delta, keybindDelta)
+			room.HandleKeybindEvent(p, kind, count)
 		case MsgRunCode:
-			if p.Room == nil {
+			room := p.room()
+			if room == nil {
 				sendErr(p, "not in a game")
+				continue
+			}
+			if !room.AcceptsGameplay() {
+				sendErr(p, "match not in progress")
+				continue
+			}
+			if p.hasSubmitted() {
+				sendErr(p, "already submitted")
 				continue
 			}
 			m, ok := e.Payload.(map[string]interface{})
@@ -105,13 +165,25 @@ func (p *Player) readPump(hub *Hub) {
 				sendErr(p, "invalid run_code payload")
 				continue
 			}
-			go p.Room.HandleRunCode(p, code)
+			go room.HandleRunCode(p, code)
 		case MsgSubmit:
-			if p.Room == nil {
+			room := p.room()
+			if room == nil {
 				sendErr(p, "not in a game")
 				continue
 			}
-			go p.Room.HandleSubmit(p)
+			if !room.AcceptsGameplay() {
+				sendErr(p, "match not in progress")
+				continue
+			}
+			go room.HandleSubmit(p)
+		case MsgPlayerReady:
+			room := p.room()
+			if room == nil {
+				sendErr(p, "not in a game")
+				continue
+			}
+			room.HandleReady(p)
 		case MsgPing:
 			select {
 			case p.Send <- MustMarshal(EnvelopeFromType(MsgPong, nil)):
@@ -122,17 +194,34 @@ func (p *Player) readPump(hub *Hub) {
 	}
 }
 
-func parseScoreUpdatePayload(p interface{}) (delta int, keybindDelta int, ok bool) {
+// room returns the player's current room under the lock. the matchmaking
+// goroutine writes p.Room while readPump reads it, so the read must be guarded.
+func (p *Player) room() *Room {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.Room
+}
+
+func (p *Player) hasSubmitted() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.Submitted
+}
+
+func parseKeybindEventPayload(p interface{}) (kind string, count int, ok bool) {
 	m, mOk := p.(map[string]interface{})
 	if !mOk {
-		return 0, 0, false
+		return "", 0, false
 	}
-	d, dOk := m["delta"].(float64)
-	if !dOk {
-		return 0, 0, false
+	k, kOk := m["kind"].(string)
+	if !kOk || k == "" {
+		return "", 0, false
 	}
-	kd, _ := m["keybindDelta"].(float64)
-	return int(d), int(kd), true
+	count = 1
+	if v, vOk := m["count"].(float64); vOk {
+		count = int(v)
+	}
+	return k, count, true
 }
 
 func parseKeybindPayload(p interface{}) (KeybindPayload, bool) {
@@ -172,4 +261,10 @@ func (p *Player) writePump() {
 			return
 		}
 	}
+}
+
+// asString safely extracts a string from a decoded JSON map value.
+func asString(v interface{}) string {
+	s, _ := v.(string)
+	return s
 }

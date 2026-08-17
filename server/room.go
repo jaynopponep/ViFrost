@@ -22,14 +22,19 @@ func generateColors() (string, string) {
 	return fmt.Sprintf("hsl(%d, 65%%, 55%%)", h1), fmt.Sprintf("hsl(%d, 65%%, 55%%)", h2)
 }
 
-func NewRoom(hub *Hub, p1, p2 *Player) *Room {
+func NewRoom(hub *Hub, p1, p2 *Player, mode string) *Room {
 	roomID := hub.NextRoomID()
 	c1, c2 := generateColors()
-	snippet, tests, _, err := LoadSnippetWithTests(SnippetsDir, "")
+	name, snippet, tests, description, err := LoadSnippetWithTests(SnippetsDir, "")
 	if err != nil {
 		LogErr("failed to load snippet: %v", err)
 		snippet = ""
+		name = "unknown"
+		description = ""
 	}
+	// mode is the pool the pair was matched in, frozen at enqueue. it is NOT
+	// re-derived from p1.Mode here: a concurrent re-queue could have flipped
+	// that field, which would mis-settle ELO (see settle.go p_mode).
 	return &Room{
 		ID:           roomID,
 		Hub:          hub,
@@ -37,8 +42,32 @@ func NewRoom(hub *Hub, p1, p2 *Player) *Room {
 		Colors:       [2]string{c1, c2},
 		Snippet:      snippet,
 		TestsContent: tests,
+		Mode:         mode,
+		Challenge:    name,
+		Description:  description,
 		Timer:        GameDurationSec,
 		done:         make(chan struct{}),
+		readyCh:      make(chan struct{}, 2),
+	}
+}
+
+// gameStartPayload builds the game_start payload from player i's perspective.
+// extracted from Start() so the problem-title/statement wiring is unit-testable
+// without driving the ready/countdown channels.
+func (r *Room) gameStartPayload(i int) GameStartPayload {
+	opponentName := ""
+	if opp := r.Players[1-i]; opp != nil {
+		opponentName = opp.Username
+	}
+	return GameStartPayload{
+		RoomID:           r.ID,
+		Snippet:          r.Snippet,
+		Duration:         GameDurationSec,
+		OpponentName:     opponentName,
+		PlayerColor:      r.Colors[i],
+		OpponentColor:    r.Colors[1-i],
+		ProblemTitle:     r.Challenge,
+		ProblemStatement: r.Description,
 	}
 }
 
@@ -50,24 +79,46 @@ func (r *Room) Start() {
 		if p == nil {
 			continue
 		}
-		opponent := r.Players[1-i]
-		opponentName := ""
-		if opponent != nil {
-			opponentName = opponent.Username
-		}
-		start := EnvelopeFromType(MsgGameStart, GameStartPayload{
-			RoomID:        r.ID,
-			Snippet:       r.Snippet,
-			Duration:      GameDurationSec,
-			OpponentName:  opponentName,
-			PlayerColor:   r.Colors[i],
-			OpponentColor: r.Colors[1-i],
-		})
+		start := EnvelopeFromType(MsgGameStart, r.gameStartPayload(i))
 		select {
 		case p.Send <- MustMarshal(start):
 		default:
 		}
 	}
+
+	// wait for both players to ready up. there is intentionally no automatic
+	// start: the match only begins once everyone has readied.
+	//
+	// if you guys want 15s fallback timeout (auto-start even if a player
+	// never readies, so an idle or disconnected player cannot hang the room),
+	// uncomment the four lines marked FALLBACK below.
+	// readyDeadline := time.After(15 * time.Second) // FALLBACK
+	// readyWait:                                    // FALLBACK
+	for !r.bothReady() {
+		select {
+		case <-r.done:
+			return
+		case <-r.readyCh:
+			// re-check loop condition
+			// case <-readyDeadline: // FALLBACK
+			// 	break readyWait    // FALLBACK
+		}
+	}
+
+	// additive: 3..2..1 countdown then match_start
+	for s := 3; s >= 1; s-- {
+		select {
+		case <-r.done:
+			return
+		default:
+		}
+		r.Broadcast(MustMarshal(EnvelopeFromType(MsgMatchCountdown, MatchCountdownPayload{Seconds: s})))
+		time.Sleep(1 * time.Second)
+	}
+	r.mu.Lock()
+	r.live = true
+	r.mu.Unlock()
+	r.Broadcast(MustMarshal(EnvelopeFromType(MsgMatchStart, nil)))
 
 	ticker := time.NewTicker(TickIntervalSec * time.Second)
 	defer ticker.Stop()
@@ -137,7 +188,7 @@ func (r *Room) EndGame() {
 		}
 	}
 
-	keybindBonus := ApplyKeybindBonus(&scores, &keybinds)
+	keybindBonus := ApplyKeybindBonus(&scores, &keybinds, &passed)
 	completionBonus := ApplyCompletionBonus(&scores, totalTests, &passed)
 	finishBonus := ApplyFinishTimeBonus(&scores, &submitTimes)
 
@@ -167,10 +218,21 @@ func (r *Room) EndGame() {
 		}
 	}
 
+	// persist the result + award ELO. async + best-effort: never block or
+	// crash match teardown on a Supabase hiccup.
+	if r.Hub != nil {
+		go settleMatch(r.Hub.cfg, r, scores)
+	}
+
 	r.Hub.RemoveRoom(r.ID)
 }
 
 func (r *Room) HandleSubmit(from *Player) {
+	// the goroutine may have been scheduled just before the match ended.
+	if !r.AcceptsGameplay() {
+		return
+	}
+
 	from.mu.Lock()
 	if from.Submitted {
 		from.mu.Unlock()
@@ -189,6 +251,54 @@ func (r *Room) HandleSubmit(from *Player) {
 
 	tick := EnvelopeFromType(MsgTimerTick, TimerTickPayload{Remaining: remaining})
 	r.Broadcast(MustMarshal(tick))
+}
+
+func (r *Room) HandleReady(from *Player) {
+	from.mu.Lock()
+	already := from.Ready
+	from.Ready = true
+	from.mu.Unlock()
+	if already {
+		return
+	}
+	// tell the opponent this player is ready
+	for _, p := range r.Players {
+		if p != nil && p != from {
+			msg := EnvelopeFromType(MsgOpponentReady, nil)
+			select {
+			case p.Send <- MustMarshal(msg):
+			default:
+			}
+		}
+	}
+	select {
+	case r.readyCh <- struct{}{}:
+	default:
+	}
+}
+
+// AcceptsGameplay reports whether run_code/submit/keybind/score_update should
+// be honored. the ready/countdown pre-game window and the post-game state both
+// reject gameplay so server score cannot diverge from what the ui shows.
+func (r *Room) AcceptsGameplay() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.live && !r.ended
+}
+
+func (r *Room) bothReady() bool {
+	for _, p := range r.Players {
+		if p == nil {
+			continue
+		}
+		p.mu.Lock()
+		ready := p.Ready
+		p.mu.Unlock()
+		if !ready {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *Room) PlayerIndex(p *Player) int {

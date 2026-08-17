@@ -40,10 +40,10 @@ func LogErr(format string, args ...interface{}) {
 
 // loadFromDir picks a random problem subdirectory and loads its snippet, tests, and description.
 // Expected layout: dir/{problem}/{problem}.txt + .tests.py + optional .desc.txt
-func loadFromDir(dir string) (snippet, tests, description string, err error) {
+func loadFromDir(dir string) (name, snippet, tests, description string, err error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 	var problems []string
 	for _, e := range entries {
@@ -52,7 +52,7 @@ func loadFromDir(dir string) (snippet, tests, description string, err error) {
 		}
 	}
 	if len(problems) == 0 {
-		return "", "", "", os.ErrNotExist
+		return "", "", "", "", os.ErrNotExist
 	}
 	chosen := problems[rand.Intn(len(problems))]
 	problemDir := filepath.Join(dir, chosen)
@@ -60,7 +60,7 @@ func loadFromDir(dir string) (snippet, tests, description string, err error) {
 	snippetPath := filepath.Join(problemDir, chosen+".txt")
 	data, err := os.ReadFile(snippetPath)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 	snippet = string(data)
 
@@ -70,16 +70,16 @@ func loadFromDir(dir string) (snippet, tests, description string, err error) {
 	if descData, descErr := os.ReadFile(filepath.Join(problemDir, chosen+".desc.txt")); descErr == nil {
 		description = string(descData)
 	}
-	return snippet, tests, description, nil
+	return chosen, snippet, tests, description, nil
 }
 
 // LoadSnippetWithTests tries to load from the difficulty-specific subdirectory first,
 // then falls back to the root snippets directory.
-func LoadSnippetWithTests(dir string, difficulty string) (snippet, tests, description string, err error) {
+func LoadSnippetWithTests(dir string, difficulty string) (name, snippet, tests, description string, err error) {
 	if difficulty != "" {
 		diffDir := filepath.Join(dir, difficulty)
-		if sn, t, d, e := loadFromDir(diffDir); e == nil {
-			return sn, t, d, nil
+		if n, sn, t, d, e := loadFromDir(diffDir); e == nil {
+			return n, sn, t, d, nil
 		}
 	}
 	return loadFromDir(dir)
