@@ -22,6 +22,7 @@ import { PendingApprovalPage } from "./pages/PendingApprovalPage.tsx"
 import { BannedPage, RejectedPage } from "./pages/AccountRestrictedPage.tsx"
 import { UnauthorizedPage } from "./pages/UnauthorizedPage.tsx"
 import { AdminDashboardPage } from "./pages/AdminDashboardPage.tsx"
+import { PublicProfilePage } from "./pages/PublicProfilePage.tsx"
 import { ApprovedRoute } from "./components/guards/ApprovedRoute.tsx"
 import { AdminRoute } from "./components/guards/AdminRoute.tsx"
 import { ProtectedRoute } from "./components/guards/ProtectedRoute.tsx"
@@ -66,6 +67,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile/:userId",
+        element: (
+          <ProtectedRoute>
+            <PublicProfilePage />
           </ProtectedRoute>
         ),
       },

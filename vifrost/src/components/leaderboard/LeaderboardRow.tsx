@@ -1,4 +1,5 @@
 import { forwardRef } from "react"
+import { Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { Avatar } from "../ui/avatar"
 import { ChangeBadge } from "../ui/change-badge"
@@ -6,6 +7,7 @@ import { TierBadge } from "../ui/tier-badge"
 
 export interface LeaderboardRowData {
   id: number
+  userId: string
   player: string
   country: string
   wins: number
@@ -45,9 +47,12 @@ export const LeaderboardRow = forwardRef<HTMLDivElement, LeaderboardRowProps>(
           <Avatar name={row.player} size={34} />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="truncate font-mono text-sm text-[var(--colorText)]">
+              <Link
+                to={`/profile/${row.userId}`}
+                className="truncate font-mono text-sm text-[var(--colorText)] underline-offset-4 hover:text-[var(--colorCyan)] hover:underline focus-visible:text-[var(--colorCyan)] focus-visible:underline"
+              >
                 {row.player}
-              </span>
+              </Link>
               {isYou ? (
                 <span className="rounded-[3px] border border-[color:var(--colorAccentBorder)] bg-[var(--colorCyanDim)] px-1.5 py-px font-mono text-[9px] font-bold tracking-[0.08em] text-[var(--colorCyan)]">
                   YOU
